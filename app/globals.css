@@ -123,3 +123,17 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Marketing Landing Page Animations */
+@keyframes pulse-subtle {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 4s ease-in-out infinite;
+}
