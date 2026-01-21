@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Building2, ArrowLeft, Trash2 } from "lucide-react"
@@ -36,7 +36,28 @@ const objektTypLabels: Record<string, string> = {
 
 const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444"]
 
+// Loading component for Suspense
+function LoadingState() {
+  return (
+    <div className="flex h-screen items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
+        <p className="text-muted-foreground">Lade Vergleichsdaten...</p>
+      </div>
+    </div>
+  )
+}
+
+// Main page wrapper with Suspense
 export default function VergleichPage() {
+  return (
+    <Suspense fallback={<LoadingState />}>
+      <VergleichContent />
+    </Suspense>
+  )
+}
+
+function VergleichContent() {
   const searchParams = useSearchParams()
   const [comparisons, setComparisons] = useState<ComparisonData[]>([])
   const [isLoading, setIsLoading] = useState(true)
