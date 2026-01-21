@@ -8,6 +8,9 @@ import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { generatePDFReport, downloadPDF } from "@/components/modules/analyse/pdf-report"
 import { saveBewertung, updateBewertung } from "@/lib/api/bewertungen"
+import { useAuth } from "@/hooks/use-auth"
+import { LoginPromptModal } from "@/components/login-prompt-modal"
+import { UserMenu } from "@/components/user-menu"
 import type { AnalyseResultData, AnalyseFormData } from "@/lib/types"
 
 interface AnalyseHeaderProps {
@@ -20,8 +23,10 @@ interface AnalyseHeaderProps {
 }
 
 export function AnalyseHeader({ address, onNewAnalysis, resultData, formData, bewertungId, onSaved }: AnalyseHeaderProps) {
+  const { user } = useAuth()
   const [isSaving, setIsSaving] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false)
 
   const handlePDFExport = () => {
     if (resultData && formData) {
@@ -32,6 +37,12 @@ export function AnalyseHeader({ address, onNewAnalysis, resultData, formData, be
 
   const handleSave = async () => {
     if (!resultData || !formData) return
+
+    // Check if user is authenticated
+    if (!user) {
+      setShowLoginPrompt(true)
+      return
+    }
 
     setIsSaving(true)
     setSaveSuccess(false)
@@ -52,6 +63,7 @@ export function AnalyseHeader({ address, onNewAnalysis, resultData, formData, be
           formData,
           resultData,
           adresse: address,
+          userId: user.id,
         })
         if (error) throw error
         if (data) onSaved?.(data.id)
@@ -162,7 +174,17 @@ export function AnalyseHeader({ address, onNewAnalysis, resultData, formData, be
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
+
+        <UserMenu />
       </div>
+
+      <LoginPromptModal
+        open={showLoginPrompt}
+        onOpenChange={setShowLoginPrompt}
+        title="Anmelden um zu speichern"
+        description="Um Ihre Bewertung zu speichern und später darauf zugreifen zu können, benötigen Sie ein kostenloses Konto."
+        feature="save"
+      />
     </header>
   )
 }

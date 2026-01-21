@@ -6,11 +6,12 @@ export interface BewertungInput {
   formData: AnalyseFormData
   resultData: AnalyseResultData
   adresse?: string
+  userId?: string | null
 }
 
 // Convert form data to database format
 function formDataToDbFormat(input: BewertungInput): BewertungInsert {
-  const { formData, resultData, adresse } = input
+  const { formData, resultData, adresse, userId } = input
   
   return {
     adresse: adresse || `${formData.plz} ${formData.stadt}`,
@@ -34,6 +35,7 @@ function formDataToDbFormat(input: BewertungInput): BewertungInsert {
     kaufpreis: parseFloat(formData.kaufpreis) || null,
     ergebnisse: resultData as unknown as Record<string, unknown>,
     status: 'aktiv',
+    user_id: userId || null,
   }
 }
 
@@ -61,13 +63,21 @@ export function dbFormatToFormData(bewertung: Bewertung): AnalyseFormData {
   }
 }
 
+// Get current user ID
+async function getCurrentUserId(): Promise<string | null> {
+  const { data: { user } } = await supabase.auth.getUser()
+  return user?.id || null
+}
+
 // Save a new bewertung
 export async function saveBewertung(input: BewertungInput): Promise<{ data: Bewertung | null; error: Error | null }> {
   if (!isSupabaseConfigured()) {
     return { data: null, error: new Error('Supabase is not configured') }
   }
 
-  const dbData = formDataToDbFormat(input)
+  // Get current user ID if not provided
+  const userId = input.userId ?? await getCurrentUserId()
+  const dbData = formDataToDbFormat({ ...input, userId })
   
   const { data, error } = await supabase
     .from('bewertungen')
@@ -78,17 +88,26 @@ export async function saveBewertung(input: BewertungInput): Promise<{ data: Bewe
   return { data, error: error ? new Error(error.message) : null }
 }
 
-// Get all bewertungen
+// Get all bewertungen (filtered by user if authenticated)
 export async function getBewertungen(): Promise<{ data: Bewertung[] | null; error: Error | null }> {
   if (!isSupabaseConfigured()) {
     return { data: null, error: new Error('Supabase is not configured') }
   }
 
-  const { data, error } = await supabase
+  const userId = await getCurrentUserId()
+  
+  let query = supabase
     .from('bewertungen')
     .select('*')
     .eq('status', 'aktiv')
-    .order('created_at', { ascending: false })
+  
+  // If user is logged in, show only their bewertungen
+  // Otherwise, RLS will handle visibility
+  if (userId) {
+    query = query.eq('user_id', userId)
+  }
+  
+  const { data, error } = await query.order('created_at', { ascending: false })
 
   return { data, error: error ? new Error(error.message) : null }
 }
@@ -201,11 +220,15 @@ export async function duplicateBewertung(id: string): Promise<{ data: Bewertung 
     return { data: null, error: fetchError || new Error('Bewertung not found') }
   }
 
+  // Get current user ID (duplicate should belong to current user)
+  const userId = await getCurrentUserId()
+
   // Create a copy without id and timestamps
   const { id: _, created_at, updated_at, ...copyData } = original
   const newData: BewertungInsert = {
     ...copyData,
     adresse: `${original.adresse} (Kopie)`,
+    user_id: userId, // Assign to current user
   }
 
   const { data, error } = await supabase

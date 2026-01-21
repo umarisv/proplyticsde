@@ -14,6 +14,7 @@ export interface Database {
           id: string
           created_at: string
           updated_at: string
+          user_id: string | null
           adresse: string | null
           plz: string | null
           stadt: string | null
@@ -40,6 +41,7 @@ export interface Database {
           id?: string
           created_at?: string
           updated_at?: string
+          user_id?: string | null
           adresse?: string | null
           plz?: string | null
           stadt?: string | null
@@ -66,6 +68,7 @@ export interface Database {
           id?: string
           created_at?: string
           updated_at?: string
+          user_id?: string | null
           adresse?: string | null
           plz?: string | null
           stadt?: string | null
@@ -89,6 +92,32 @@ export interface Database {
           status?: string
         }
       }
+      profiles: {
+        Row: {
+          id: string
+          email: string | null
+          full_name: string | null
+          avatar_url: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          email?: string | null
+          full_name?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          email?: string | null
+          full_name?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
@@ -102,7 +131,11 @@ export interface Database {
   }
 }
 
-// Convenience type for Bewertung row
+// Convenience types
 export type Bewertung = Database['public']['Tables']['bewertungen']['Row']
 export type BewertungInsert = Database['public']['Tables']['bewertungen']['Insert']
 export type BewertungUpdate = Database['public']['Tables']['bewertungen']['Update']
+
+export type Profile = Database['public']['Tables']['profiles']['Row']
+export type ProfileInsert = Database['public']['Tables']['profiles']['Insert']
+export type ProfileUpdate = Database['public']['Tables']['profiles']['Update']

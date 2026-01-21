@@ -3,11 +3,14 @@
 import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { useAuth } from "@/hooks/use-auth"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { BewertungenTable } from "@/components/bewertungen-table"
 import { ChatPanel } from "@/components/dashboard/chat-panel"
+import { UserMenu } from "@/components/user-menu"
+import { RateLimitBanner } from "@/components/rate-limit-banner"
 import { getBewertungen, deleteBewertung, duplicateBewertung } from "@/lib/api/bewertungen"
 import { isSupabaseConfigured } from "@/lib/supabase"
 import type { Bewertung } from "@/lib/database.types"
@@ -119,18 +122,22 @@ export default function DashboardPage() {
   if (!isConfigured) {
     return (
       <div className="flex h-screen flex-col bg-background">
+        <RateLimitBanner />
         <header className="flex h-14 shrink-0 items-center justify-between border-b px-6">
           <div className="flex items-center">
             <Building2 className="w-6 h-6 mr-2 text-primary" />
             <h1 className="text-lg font-semibold tracking-tight">proplytics.de</h1>
             <span className="ml-2 text-sm text-muted-foreground">Bewertungsübersicht</span>
           </div>
-          <Link href="/analyse">
-            <Button size="sm" variant="default">
-              <Plus className="w-4 h-4 mr-2" />
-              Neue Analyse
-            </Button>
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link href="/analyse">
+              <Button size="sm" variant="default">
+                <Plus className="w-4 h-4 mr-2" />
+                Neue Analyse
+              </Button>
+            </Link>
+            <UserMenu />
+          </div>
         </header>
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center max-w-md px-4">
@@ -159,17 +166,21 @@ export default function DashboardPage() {
   if (isMobile) {
     return (
       <div className="flex h-screen flex-col bg-background">
+        <RateLimitBanner />
         <header className="flex h-14 shrink-0 items-center justify-between border-b px-4">
           <div className="flex items-center">
             <Building2 className="w-5 h-5 mr-2 text-primary" />
             <h1 className="text-lg font-semibold tracking-tight">proplytics.de</h1>
           </div>
-          <Link href="/analyse">
-            <Button size="sm" variant="default">
-              <Plus className="w-4 h-4 mr-1" />
-              Neu
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link href="/analyse">
+              <Button size="sm" variant="default">
+                <Plus className="w-4 h-4 mr-1" />
+                Neu
+              </Button>
+            </Link>
+            <UserMenu />
+          </div>
         </header>
         <Tabs defaultValue="bewertungen" className="flex flex-1 flex-col overflow-hidden">
           <TabsList className="mx-4 mt-2 grid w-auto grid-cols-2">
@@ -214,6 +225,7 @@ export default function DashboardPage() {
 
   return (
     <div className="flex h-screen flex-col bg-background">
+      <RateLimitBanner />
       <header className="flex h-14 shrink-0 items-center justify-between border-b px-6">
         <div className="flex items-center">
           <Building2 className="w-6 h-6 mr-2 text-primary" />
@@ -239,6 +251,7 @@ export default function DashboardPage() {
               Neue Analyse
             </Button>
           </Link>
+          <UserMenu />
         </div>
       </header>
       <div className="flex flex-1 overflow-hidden">
