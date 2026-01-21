@@ -1,11 +1,13 @@
 "use client"
 
-import { Building2, Plus, FileDown, MapPin, ArrowLeft } from "lucide-react"
+import { useState } from "react"
+import { Building2, Plus, FileDown, MapPin, ArrowLeft, Save, Check, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { generatePDFReport, downloadPDF } from "@/components/modules/analyse/pdf-report"
+import { saveBewertung, updateBewertung } from "@/lib/api/bewertungen"
 import type { AnalyseResultData, AnalyseFormData } from "@/lib/types"
 
 interface AnalyseHeaderProps {
@@ -13,13 +15,54 @@ interface AnalyseHeaderProps {
   onNewAnalysis: () => void
   resultData?: AnalyseResultData
   formData?: AnalyseFormData
+  bewertungId?: string | null
+  onSaved?: (id: string) => void
 }
 
-export function AnalyseHeader({ address, onNewAnalysis, resultData, formData }: AnalyseHeaderProps) {
+export function AnalyseHeader({ address, onNewAnalysis, resultData, formData, bewertungId, onSaved }: AnalyseHeaderProps) {
+  const [isSaving, setIsSaving] = useState(false)
+  const [saveSuccess, setSaveSuccess] = useState(false)
+
   const handlePDFExport = () => {
     if (resultData && formData) {
       const htmlContent = generatePDFReport({ resultData, formData, address })
       downloadPDF(htmlContent, `Marktpreiseinschaetzung_${formData.plz}.pdf`)
+    }
+  }
+
+  const handleSave = async () => {
+    if (!resultData || !formData) return
+
+    setIsSaving(true)
+    setSaveSuccess(false)
+
+    try {
+      if (bewertungId) {
+        // Update existing
+        const { data, error } = await updateBewertung(bewertungId, {
+          formData,
+          resultData,
+          adresse: address,
+        })
+        if (error) throw error
+        if (data) onSaved?.(data.id)
+      } else {
+        // Create new
+        const { data, error } = await saveBewertung({
+          formData,
+          resultData,
+          adresse: address,
+        })
+        if (error) throw error
+        if (data) onSaved?.(data.id)
+      }
+      setSaveSuccess(true)
+      setTimeout(() => setSaveSuccess(false), 2000)
+    } catch (error) {
+      console.error('Fehler beim Speichern:', error)
+      alert('Fehler beim Speichern. Bitte versuchen Sie es erneut.')
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -70,6 +113,33 @@ export function AnalyseHeader({ address, onNewAnalysis, resultData, formData }: 
             </TooltipTrigger>
             <TooltipContent>
               <p>Neue Bewertung starten</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleSave} 
+                disabled={!resultData || !formData || isSaving}
+              >
+                {isSaving ? (
+                  <Loader2 className="w-4 h-4 sm:mr-2 animate-spin" />
+                ) : saveSuccess ? (
+                  <Check className="w-4 h-4 sm:mr-2 text-green-500" />
+                ) : (
+                  <Save className="w-4 h-4 sm:mr-2" />
+                )}
+                <span className="hidden sm:inline">
+                  {isSaving ? 'Speichern...' : saveSuccess ? 'Gespeichert!' : 'Speichern'}
+                </span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Bewertung speichern</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>

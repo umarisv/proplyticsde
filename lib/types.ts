@@ -34,6 +34,16 @@ export interface AnalyseFormData {
   grundstueck: string
   baujahr: string
   zustand: string
+  // Erweiterte Parameter
+  ausstattung: 'einfach' | 'mittel' | 'gehoben' | 'luxus'
+  lage: 'einfach' | 'mittel' | 'gut' | 'sehr_gut'
+  energieeffizienz: string
+  anzahlWohnungen: string
+  stellplaetze: string
+  keller: boolean
+  balkon: boolean
+  aufzug: boolean
+  // Finanzen
   istMiete: string
   bodenrichtwert: string
   kaufpreis: string

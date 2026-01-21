@@ -4,11 +4,12 @@ import { useState, useRef, useEffect } from "react"
 import { Building2, Send, ExternalLink } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/lib/utils"
 import type { AnalyseFormData } from "@/lib/types"
 
 type MessageType = "bot" | "user"
-type StepType = "plz" | "objekttyp" | "flaechen" | "baujahr" | "miete" | "bodenrichtwert" | "kaufpreis" | "complete"
+type StepType = "plz" | "objekttyp" | "flaechen" | "baujahr" | "ausstattung" | "lage" | "energie" | "details" | "miete" | "bodenrichtwert" | "kaufpreis" | "complete"
 
 interface Message {
   id: number
@@ -16,8 +17,9 @@ interface Message {
   content: string
   options?: { label: string; value: string; description?: string }[]
   inputType?: "text" | "number" | "form"
-  formFields?: { label: string; key: string; placeholder: string; suffix?: string }[]
+  formFields?: { label: string; key: string; placeholder: string; suffix?: string; type?: "text" | "checkbox" }[]
   showBorisLink?: boolean
+  showExtras?: boolean
 }
 
 interface ChatWizardProps {
@@ -54,6 +56,33 @@ const zustandOptionen = [
   { label: "Sanierungsbedarf", value: "sanierung" },
 ]
 
+const ausstattungOptionen = [
+  { label: "Einfach", value: "einfach", description: "Standardausstattung" },
+  { label: "Mittel", value: "mittel", description: "Gehobene Standardausstattung" },
+  { label: "Gehoben", value: "gehoben", description: "Hochwertige Ausstattung" },
+  { label: "Luxus", value: "luxus", description: "Exklusive Ausstattung" },
+]
+
+const lageOptionen = [
+  { label: "Einfach", value: "einfach", description: "Randlage, wenig Infrastruktur" },
+  { label: "Mittel", value: "mittel", description: "Durchschnittliche Wohnlage" },
+  { label: "Gut", value: "gut", description: "Gute Wohnlage" },
+  { label: "Sehr gut", value: "sehr_gut", description: "Beste Wohnlage" },
+]
+
+const energieOptionen = [
+  { label: "A+", value: "A+" },
+  { label: "A", value: "A" },
+  { label: "B", value: "B" },
+  { label: "C", value: "C" },
+  { label: "D", value: "D" },
+  { label: "E", value: "E" },
+  { label: "F", value: "F" },
+  { label: "G", value: "G" },
+  { label: "H", value: "H" },
+  { label: "Unbekannt", value: "unbekannt" },
+]
+
 export function ChatWizard({ onDataChange, onCalculate }: ChatWizardProps) {
   const [messages, setMessages] = useState<Message[]>(initialMessages)
   const [currentStep, setCurrentStep] = useState<StepType>("plz")
@@ -66,6 +95,14 @@ export function ChatWizard({ onDataChange, onCalculate }: ChatWizardProps) {
     grundstueck: "",
     baujahr: "",
     zustand: "",
+    ausstattung: "mittel",
+    lage: "mittel",
+    energieeffizienz: "unbekannt",
+    anzahlWohnungen: "",
+    stellplaetze: "",
+    keller: false,
+    balkon: false,
+    aufzug: false,
     istMiete: "",
     bodenrichtwert: "",
     kaufpreis: "",
@@ -109,10 +146,57 @@ export function ChatWizard({ onDataChange, onCalculate }: ChatWizardProps) {
         setTimeout(() => {
           addMessage({
             type: "bot",
-            content: "Wie hoch ist die aktuelle monatliche Kaltmiete (Ist-Miete)?",
-            inputType: "number",
+            content: "Wie würden Sie die Ausstattungsqualität beschreiben?",
+            options: ausstattungOptionen,
           })
-          setCurrentStep("miete")
+          setCurrentStep("ausstattung")
+        }, 400)
+        break
+
+      case "ausstattung":
+        const dataWithAusstattung = { ...formData, ausstattung: value as AnalyseFormData['ausstattung'] }
+        setFormData(dataWithAusstattung)
+        onDataChange({ ausstattung: value as AnalyseFormData['ausstattung'] })
+        setTimeout(() => {
+          addMessage({
+            type: "bot",
+            content: "Wie ist die Lagequalität des Standorts?",
+            options: lageOptionen,
+          })
+          setCurrentStep("lage")
+        }, 400)
+        break
+
+      case "lage":
+        const dataWithLage = { ...formData, lage: value as AnalyseFormData['lage'] }
+        setFormData(dataWithLage)
+        onDataChange({ lage: value as AnalyseFormData['lage'] })
+        setTimeout(() => {
+          addMessage({
+            type: "bot",
+            content: "Welche Energieeffizienzklasse hat das Gebäude?",
+            options: energieOptionen,
+          })
+          setCurrentStep("energie")
+        }, 400)
+        break
+
+      case "energie":
+        const dataWithEnergie = { ...formData, energieeffizienz: value }
+        setFormData(dataWithEnergie)
+        onDataChange({ energieeffizienz: value })
+        setTimeout(() => {
+          addMessage({
+            type: "bot",
+            content: "Bitte geben Sie weitere Details zum Objekt ein:",
+            inputType: "form",
+            formFields: [
+              { label: "Wohnungen", key: "anzahlWohnungen", placeholder: "z.B. 6" },
+              { label: "Stellplätze", key: "stellplaetze", placeholder: "z.B. 4" },
+            ],
+            showExtras: true,
+          })
+          setCurrentStep("details")
         }, 400)
         break
     }
@@ -239,6 +323,33 @@ export function ChatWizard({ onDataChange, onCalculate }: ChatWizardProps) {
           })
         }, 400)
         break
+
+      case "details":
+        const detailsData = { 
+          ...formData, 
+          anzahlWohnungen: data.anzahlWohnungen || "",
+          stellplaetze: data.stellplaetze || "",
+          keller: data.keller === "true",
+          balkon: data.balkon === "true",
+          aufzug: data.aufzug === "true",
+        }
+        setFormData(detailsData)
+        onDataChange({ 
+          anzahlWohnungen: data.anzahlWohnungen,
+          stellplaetze: data.stellplaetze,
+          keller: data.keller === "true",
+          balkon: data.balkon === "true",
+          aufzug: data.aufzug === "true",
+        })
+        setTimeout(() => {
+          addMessage({
+            type: "bot",
+            content: "Wie hoch ist die aktuelle monatliche Kaltmiete (Ist-Miete)?",
+            inputType: "number",
+          })
+          setCurrentStep("miete")
+        }, 400)
+        break
     }
   }
 
@@ -293,7 +404,12 @@ export function ChatWizard({ onDataChange, onCalculate }: ChatWizardProps) {
 
               {/* Form Fields */}
               {message.inputType === "form" && message.formFields && (
-                <FormInputs fields={message.formFields} onSubmit={handleFormSubmit} defaultValues={formData} />
+                <FormInputs 
+                  fields={message.formFields} 
+                  onSubmit={handleFormSubmit} 
+                  defaultValues={formData}
+                  showExtras={message.showExtras}
+                />
               )}
             </div>
             {message.type === "user" && (
@@ -341,18 +457,39 @@ function FormInputs({
   fields,
   onSubmit,
   defaultValues,
+  showExtras = false,
 }: {
-  fields: { label: string; key: string; placeholder: string; suffix?: string }[]
+  fields: { label: string; key: string; placeholder: string; suffix?: string; type?: "text" | "checkbox" }[]
   onSubmit: (data: Record<string, string>) => void
-  defaultValues: Record<string, string>
+  defaultValues: Record<string, string | boolean>
+  showExtras?: boolean
 }) {
   const [values, setValues] = useState<Record<string, string>>(() => {
     const initial: Record<string, string> = {}
     fields.forEach((f) => {
-      initial[f.key] = (defaultValues[f.key as keyof typeof defaultValues] as string) || ""
+      const val = defaultValues[f.key as keyof typeof defaultValues]
+      initial[f.key] = typeof val === 'boolean' ? String(val) : (val as string) || ""
     })
     return initial
   })
+  const [extras, setExtras] = useState({
+    keller: false,
+    balkon: false,
+    aufzug: false,
+  })
+
+  const handleSubmit = () => {
+    if (showExtras) {
+      onSubmit({
+        ...values,
+        keller: String(extras.keller),
+        balkon: String(extras.balkon),
+        aufzug: String(extras.aufzug),
+      })
+    } else {
+      onSubmit(values)
+    }
+  }
 
   return (
     <div className="mt-3 space-y-2">
@@ -371,7 +508,32 @@ function FormInputs({
           </div>
         </div>
       ))}
-      <Button size="sm" className="w-full mt-2" onClick={() => onSubmit(values)}>
+      {showExtras && (
+        <div className="flex flex-wrap gap-4 pt-2">
+          <label className="flex items-center gap-2 text-xs cursor-pointer">
+            <Checkbox 
+              checked={extras.keller} 
+              onCheckedChange={(checked) => setExtras(prev => ({ ...prev, keller: !!checked }))}
+            />
+            Keller
+          </label>
+          <label className="flex items-center gap-2 text-xs cursor-pointer">
+            <Checkbox 
+              checked={extras.balkon} 
+              onCheckedChange={(checked) => setExtras(prev => ({ ...prev, balkon: !!checked }))}
+            />
+            Balkon/Terrasse
+          </label>
+          <label className="flex items-center gap-2 text-xs cursor-pointer">
+            <Checkbox 
+              checked={extras.aufzug} 
+              onCheckedChange={(checked) => setExtras(prev => ({ ...prev, aufzug: !!checked }))}
+            />
+            Aufzug
+          </label>
+        </div>
+      )}
+      <Button size="sm" className="w-full mt-2" onClick={handleSubmit}>
         Weiter
       </Button>
     </div>

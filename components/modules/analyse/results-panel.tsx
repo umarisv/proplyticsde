@@ -8,15 +8,16 @@ import { CashFlowChart, ModernizationChart } from "@/components/charts"
 import { LoadingState } from "@/components/ui/loading-state"
 import { EmptyState } from "@/components/ui/empty-state"
 import { formatCurrency, formatPercent } from "@/lib/format"
-import type { AnalyseResultData } from "@/lib/types"
+import type { AnalyseResultData, AnalyseFormData } from "@/lib/types"
 
 interface ResultsPanelProps {
   data?: AnalyseResultData | null
+  formData?: AnalyseFormData
   onRecalculate: () => void
   isCalculating: boolean
 }
 
-export function ResultsPanel({ data, onRecalculate, isCalculating }: ResultsPanelProps) {
+export function ResultsPanel({ data, formData, onRecalculate, isCalculating }: ResultsPanelProps) {
   const [showErtragswertDetails, setShowErtragswertDetails] = useState(false)
   const [showSachwertDetails, setShowSachwertDetails] = useState(false)
 
@@ -219,7 +220,7 @@ export function ResultsPanel({ data, onRecalculate, isCalculating }: ResultsPane
           <CardTitle className="text-sm font-medium">Cash Flow (10 Jahre)</CardTitle>
         </CardHeader>
         <CardContent className="p-2">
-          <CashFlowChart />
+          <CashFlowChart data={data || undefined} />
         </CardContent>
       </Card>
 
@@ -229,7 +230,7 @@ export function ResultsPanel({ data, onRecalculate, isCalculating }: ResultsPane
           <CardTitle className="text-sm font-medium">Modernisierungs-ROI</CardTitle>
         </CardHeader>
         <CardContent className="p-2">
-          <ModernizationChart />
+          <ModernizationChart formData={formData} />
         </CardContent>
       </Card>
 

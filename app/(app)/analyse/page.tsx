@@ -16,6 +16,14 @@ const defaultFormData: AnalyseFormData = {
   grundstueck: "1200",
   baujahr: "1965",
   zustand: "gepflegt",
+  ausstattung: "mittel",
+  lage: "mittel",
+  energieeffizienz: "D",
+  anzahlWohnungen: "6",
+  stellplaetze: "4",
+  keller: true,
+  balkon: true,
+  aufzug: false,
   istMiete: "12500",
   bodenrichtwert: "580",
   kaufpreis: "3200000",
@@ -27,6 +35,7 @@ export default function AnalysePage() {
   const [address, setAddress] = useState("Musterstraße 123, 40239 Düsseldorf")
   const [isCalculating, setIsCalculating] = useState(false)
   const [resultData, setResultData] = useState<AnalyseResultData>(() => calculateValuation(defaultFormData))
+  const [bewertungId, setBewertungId] = useState<string | null>(null)
 
   const handleNewAnalysis = () => {
     window.location.reload()
@@ -56,11 +65,22 @@ export default function AnalysePage() {
     }, 1000)
   }
 
+  const handleSaved = (id: string) => {
+    setBewertungId(id)
+  }
+
   // Mobile Layout
   if (isMobile) {
     return (
       <div className="flex flex-col h-screen bg-background">
-        <AnalyseHeader address={address} onNewAnalysis={handleNewAnalysis} resultData={resultData} formData={formData} />
+        <AnalyseHeader 
+          address={address} 
+          onNewAnalysis={handleNewAnalysis} 
+          resultData={resultData} 
+          formData={formData}
+          bewertungId={bewertungId}
+          onSaved={handleSaved}
+        />
         <Tabs defaultValue="chat" className="flex-1 flex flex-col">
           <TabsList className="w-full grid grid-cols-3 bg-card border-b border-border rounded-none h-12">
             <TabsTrigger value="chat" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
@@ -80,7 +100,7 @@ export default function AnalysePage() {
             <MapPanel address={address} />
           </TabsContent>
           <TabsContent value="results" className="flex-1 m-0 overflow-hidden">
-            <ResultsPanel data={resultData} onRecalculate={handleRecalculate} isCalculating={isCalculating} />
+            <ResultsPanel data={resultData} formData={formData} onRecalculate={handleRecalculate} isCalculating={isCalculating} />
           </TabsContent>
         </Tabs>
       </div>
@@ -90,11 +110,18 @@ export default function AnalysePage() {
   // Desktop Layout
   return (
     <div className="flex flex-col h-screen bg-background">
-      <AnalyseHeader address={address} onNewAnalysis={handleNewAnalysis} resultData={resultData} formData={formData} />
+      <AnalyseHeader 
+        address={address} 
+        onNewAnalysis={handleNewAnalysis} 
+        resultData={resultData} 
+        formData={formData}
+        bewertungId={bewertungId}
+        onSaved={handleSaved}
+      />
       <div className="flex-1 flex overflow-hidden">
         {/* Left Panel - Results */}
         <aside className="w-[28%] min-w-[320px] max-w-[400px] border-r border-border bg-card/50">
-          <ResultsPanel data={resultData} onRecalculate={handleRecalculate} isCalculating={isCalculating} />
+          <ResultsPanel data={resultData} formData={formData} onRecalculate={handleRecalculate} isCalculating={isCalculating} />
         </aside>
 
         {/* Center Panel - Chat */}
