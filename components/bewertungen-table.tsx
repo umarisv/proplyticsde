@@ -41,6 +41,8 @@ interface BewertungenTableProps {
   onSelectionChange: (ids: string[]) => void
   onDelete: (id: string) => Promise<void>
   onDuplicate: (id: string) => Promise<void>
+  onDragStart?: (bewertung: Bewertung) => void
+  onDragEnd?: () => void
   isLoading?: boolean
 }
 
@@ -58,6 +60,8 @@ export function BewertungenTable({
   onSelectionChange,
   onDelete,
   onDuplicate,
+  onDragStart,
+  onDragEnd,
   isLoading,
 }: BewertungenTableProps) {
   const [deleteId, setDeleteId] = useState<string | null>(null)
@@ -151,7 +155,13 @@ export function BewertungenTable({
               const rendite = ergebnisse?.bruttoRendite || 0
 
               return (
-                <TableRow key={bewertung.id}>
+                <TableRow 
+                  key={bewertung.id}
+                  draggable={!!onDragStart}
+                  onDragStart={() => onDragStart?.(bewertung)}
+                  onDragEnd={() => onDragEnd?.()}
+                  className={onDragStart ? "cursor-grab active:cursor-grabbing" : ""}
+                >
                   <TableCell>
                     <Checkbox
                       checked={selectedIds.includes(bewertung.id)}

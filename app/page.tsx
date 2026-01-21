@@ -7,12 +7,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { BewertungenTable } from "@/components/bewertungen-table"
-import { CasesPanel } from "@/components/dashboard/cases-panel"
-import { DetailsPanel } from "@/components/dashboard/details-panel"
 import { ChatPanel } from "@/components/dashboard/chat-panel"
 import { getBewertungen, deleteBewertung, duplicateBewertung } from "@/lib/api/bewertungen"
 import { isSupabaseConfigured } from "@/lib/supabase"
-import { mockCases } from "@/lib/mock-data"
 import type { Bewertung } from "@/lib/database.types"
 import type { Case } from "@/lib/types"
 import { Plus, Search, Building2, RefreshCw } from "lucide-react"
@@ -26,11 +23,33 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null)
   const [isConfigured, setIsConfigured] = useState(false)
 
-  // Legacy support for old dashboard
-  const [cases] = useState<Case[]>(mockCases)
-  const [selectedCase, setSelectedCase] = useState<Case | null>(null)
+  // Drag-and-drop für KI-Agent
   const [activeChatCase, setActiveChatCase] = useState<Case | null>(null)
-  const [draggingCase, setDraggingCase] = useState<Case | null>(null)
+  const [draggingBewertung, setDraggingBewertung] = useState<Bewertung | null>(null)
+
+  // Konvertiert Bewertung zu Case-Format für ChatPanel
+  const bewertungToCase = (b: Bewertung): Case => {
+    const ergebnisse = b.ergebnisse as Record<string, number> | null
+    return {
+      id: b.id,
+      address: b.adresse || '',
+      city: b.stadt || '',
+      zip: b.plz || '',
+      createdAt: b.created_at,
+      status: 'done',
+      marktwert: ergebnisse?.marktwert || 0,
+      bodenrichtwert: b.bodenrichtwert || 0,
+      objekttyp: b.objekttyp || '',
+      baujahr: b.baujahr || 0,
+      wohnflaeche: b.wohnflaeche || 0,
+      grundstueck: b.grundstueck || 0,
+      istMiete: b.ist_miete || 0,
+      ertragswert: ergebnisse?.ertragswert || 0,
+      sachwert: ergebnisse?.sachwert || 0,
+      faktor: ergebnisse?.faktor || 0,
+      rendite: ergebnisse?.bruttoRendite || 0,
+    }
+  }
 
   const loadBewertungen = useCallback(async () => {
     setIsLoading(true)
@@ -86,14 +105,13 @@ export default function DashboardPage() {
     )
   })
 
-  // Legacy handlers
-  const handleCaseSelect = (caseItem: Case) => setSelectedCase(caseItem)
-  const handleDragStart = (caseItem: Case) => setDraggingCase(caseItem)
-  const handleDragEnd = () => setDraggingCase(null)
+  // Drag-and-drop handlers
+  const handleDragStart = (bewertung: Bewertung) => setDraggingBewertung(bewertung)
+  const handleDragEnd = () => setDraggingBewertung(null)
   const handleDropOnChat = () => {
-    if (draggingCase) {
-      setActiveChatCase(draggingCase)
-      setDraggingCase(null)
+    if (draggingBewertung) {
+      setActiveChatCase(bewertungToCase(draggingBewertung))
+      setDraggingBewertung(null)
     }
   }
 
@@ -154,9 +172,8 @@ export default function DashboardPage() {
           </Link>
         </header>
         <Tabs defaultValue="bewertungen" className="flex flex-1 flex-col overflow-hidden">
-          <TabsList className="mx-4 mt-2 grid w-auto grid-cols-3">
+          <TabsList className="mx-4 mt-2 grid w-auto grid-cols-2">
             <TabsTrigger value="bewertungen">Bewertungen</TabsTrigger>
-            <TabsTrigger value="details">Details</TabsTrigger>
             <TabsTrigger value="chat">KI-Agent</TabsTrigger>
           </TabsList>
           <TabsContent value="bewertungen" className="flex-1 overflow-auto p-4">
@@ -177,16 +194,15 @@ export default function DashboardPage() {
               onSelectionChange={setSelectedIds}
               onDelete={handleDelete}
               onDuplicate={handleDuplicate}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
               isLoading={isLoading}
             />
-          </TabsContent>
-          <TabsContent value="details" className="flex-1 overflow-hidden">
-            <DetailsPanel selectedCase={selectedCase} />
           </TabsContent>
           <TabsContent value="chat" className="flex-1 overflow-hidden">
             <ChatPanel
               activeChatCase={activeChatCase}
-              isDragging={!!draggingCase}
+              isDragging={!!draggingBewertung}
               onDrop={handleDropOnChat}
               onRemoveCase={() => setActiveChatCase(null)}
             />
@@ -238,13 +254,15 @@ export default function DashboardPage() {
             onSelectionChange={setSelectedIds}
             onDelete={handleDelete}
             onDuplicate={handleDuplicate}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
             isLoading={isLoading}
           />
         </div>
         <div className="w-96 shrink-0 border-l">
           <ChatPanel
             activeChatCase={activeChatCase}
-            isDragging={!!draggingCase}
+            isDragging={!!draggingBewertung}
             onDrop={handleDropOnChat}
             onRemoveCase={() => setActiveChatCase(null)}
           />
