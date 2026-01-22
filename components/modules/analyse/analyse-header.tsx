@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Building2, Plus, FileDown, MapPin, ArrowLeft, Save, Check, Loader2 } from "lucide-react"
+import { Building2, Plus, FileDown, MapPin, ArrowLeft, Save, Check, Loader2, LayoutDashboard } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -115,6 +115,22 @@ export function AnalyseHeader({ address, onNewAnalysis, resultData, formData, be
 
       {/* Actions */}
       <div className="flex items-center gap-2">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Link href="https://dashboard.proplytics.de" target="_blank">
+                <Button variant="outline" size="sm">
+                  <LayoutDashboard className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Dashboard</span>
+                </Button>
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Zum Dashboard wechseln</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
