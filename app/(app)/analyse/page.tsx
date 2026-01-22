@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AnalyseHeader, ChatWizard, ResultsPanel, MapPanel } from "@/components/modules/analyse"
@@ -31,8 +32,11 @@ const defaultFormData: AnalyseFormData = {
 
 export default function AnalysePage() {
   const isMobile = useIsMobile()
+  const searchParams = useSearchParams()
+  const initialAddress = searchParams.get('address') || "Musterstraße 123, 40239 Düsseldorf"
+  
   const [formData, setFormData] = useState<AnalyseFormData>(defaultFormData)
-  const [address, setAddress] = useState("Musterstraße 123, 40239 Düsseldorf")
+  const [address, setAddress] = useState(initialAddress)
   const [isCalculating, setIsCalculating] = useState(false)
   const [resultData, setResultData] = useState<AnalyseResultData>(() => calculateValuation(defaultFormData))
   const [bewertungId, setBewertungId] = useState<string | null>(null)

@@ -14,7 +14,7 @@ import { getBewertungen, deleteBewertung, duplicateBewertung } from "@/lib/api/b
 import { isSupabaseConfigured } from "@/lib/supabase"
 import type { Bewertung } from "@/lib/database.types"
 import type { Case } from "@/lib/types"
-import { Plus, Search, RefreshCw } from "lucide-react"
+import { Plus, Search, RefreshCw, MapPin, ArrowRight } from "lucide-react"
 import { Logo } from "@/components/ui/logo"
 
 export default function DashboardPage() {
@@ -22,6 +22,7 @@ export default function DashboardPage() {
   const [bewertungen, setBewertungen] = useState<Bewertung[]>([])
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [searchQuery, setSearchQuery] = useState("")
+  const [newAddress, setNewAddress] = useState("")
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isConfigured, setIsConfigured] = useState(false)
@@ -115,6 +116,14 @@ export default function DashboardPage() {
     if (draggingBewertung) {
       setActiveChatCase(bewertungToCase(draggingBewertung))
       setDraggingBewertung(null)
+    }
+  }
+
+  // Neue Analyse mit Adresse starten
+  const handleStartAnalysis = () => {
+    if (newAddress.trim()) {
+      const encodedAddress = encodeURIComponent(newAddress.trim())
+      window.location.href = `https://proplytics.de/analyse?address=${encodedAddress}`
     }
   }
 
@@ -230,24 +239,41 @@ export default function DashboardPage() {
           <span className="text-sm text-muted-foreground">Bewertungsübersicht</span>
         </div>
         <div className="flex items-center gap-4">
-          <div className="relative w-64">
+          {/* Suche in bestehenden Bewertungen */}
+          <div className="relative w-48">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Bewertungen suchen..."
+              placeholder="Suchen..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
+              className="pl-9 h-9"
             />
           </div>
-          <Button variant="outline" size="icon" onClick={loadBewertungen} disabled={isLoading}>
+          {/* Neue Analyse mit Adresse */}
+          <div className="flex items-center gap-2">
+            <div className="relative w-64">
+              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Adresse für neue Analyse..."
+                value={newAddress}
+                onChange={(e) => setNewAddress(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleStartAnalysis()}
+                className="pl-9 h-9 pr-10"
+              />
+            </div>
+            <Button 
+              size="sm" 
+              variant="default" 
+              onClick={handleStartAnalysis}
+              disabled={!newAddress.trim()}
+              className="h-9"
+            >
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          </div>
+          <Button variant="outline" size="icon" onClick={loadBewertungen} disabled={isLoading} className="h-9 w-9">
             <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
           </Button>
-          <Link href="/analyse">
-            <Button size="sm" variant="default">
-              <Plus className="w-4 h-4 mr-2" />
-              Neue Analyse
-            </Button>
-          </Link>
           <UserMenu />
         </div>
       </header>
