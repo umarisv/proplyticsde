@@ -137,3 +137,128 @@
 .animate-pulse-subtle {
   animation: pulse-subtle 4s ease-in-out infinite;
 }
+
+/* Print Optimization for Finanzierungsmappe (A4) */
+@media print {
+  /* A4 Paper size: 210mm x 297mm */
+  @page {
+    size: A4;
+    margin: 15mm 20mm;
+  }
+
+  /* Hide non-print elements */
+  .no-print,
+  [data-no-print],
+  button,
+  nav,
+  header:not(.print-header),
+  footer:not(.print-footer),
+  .sidebar,
+  .tabs-trigger,
+  [role="tablist"] {
+    display: none !important;
+  }
+
+  /* Reset background colors for printing */
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 11pt;
+    line-height: 1.4;
+  }
+
+  /* Ensure cards and sections print properly */
+  .card,
+  [class*="rounded"] {
+    box-shadow: none !important;
+    border: 1px solid #e2e8f0 !important;
+    break-inside: avoid;
+  }
+
+  /* Keep gradients visible in print (Bank-Mappe header) */
+  .bg-gradient-to-br {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Page break handling */
+  .page-break {
+    break-after: page;
+  }
+
+  .avoid-break {
+    break-inside: avoid;
+  }
+
+  /* Table printing */
+  table {
+    break-inside: auto;
+  }
+
+  tr {
+    break-inside: avoid;
+    break-after: auto;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  tfoot {
+    display: table-footer-group;
+  }
+
+  /* Charts and graphs - ensure they print */
+  svg,
+  .recharts-wrapper {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    break-inside: avoid;
+  }
+
+  /* Links - show URLs in print */
+  a[href]:after {
+    content: none;
+  }
+
+  /* Progress bars */
+  .progress,
+  [role="progressbar"] {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Badge colors in print */
+  .badge,
+  [class*="bg-emerald"],
+  [class*="bg-amber"],
+  [class*="bg-red"] {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Grid layout for print */
+  .grid {
+    display: grid !important;
+  }
+
+  /* Finanzierungsmappe specific print styles */
+  .finanzierungsmappe-container {
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Footer for print */
+  .print-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 9pt;
+    color: #64748b;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 8px;
+  }
+}

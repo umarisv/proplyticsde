@@ -41,12 +41,6 @@ export default function BewertungPortalPage({ params }: { params: Promise<{ id: 
     loadData()
   }, [id])
 
-  const handleExportPDF = () => {
-    // In einer echten App würden wir hier einen PDF-Generator aufrufen
-    // Für jetzt öffnen wir das Druckfenster
-    window.print()
-  }
-
   if (loading) return <LoadingState message="Lade Objektdaten..." />
   if (error) return <ErrorState title="Fehler" message={error} />
   if (!formData || !resultData) return <ErrorState title="Fehler" message="Daten konnten nicht geladen werden" />
@@ -78,7 +72,7 @@ export default function BewertungPortalPage({ params }: { params: Promise<{ id: 
         <BankMappe 
           data={resultData} 
           formData={formData} 
-          onExportPDF={handleExportPDF} 
+          address={bewertung?.adresse}
         />
       </main>
     </div>
