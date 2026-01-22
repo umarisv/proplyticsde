@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { useAuth } from "@/hooks/use-auth"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
