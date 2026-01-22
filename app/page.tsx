@@ -1,22 +1,29 @@
-"use client"
+import { MarketingHeader } from "@/components/layout/marketing-header"
+import {
+  HeroSection,
+  SocialProof,
+  HowItWorks,
+  FeatureGrid,
+  ReportPreview,
+  TrustSection,
+  FinalCTA,
+  Footer,
+} from "@/components/sections"
 
-import { useEffect } from "react"
-import { useRouter } from "next/navigation"
-
-export default function HomePage() {
-  const router = useRouter()
-
-  useEffect(() => {
-    // Automatische Weiterleitung zum Dashboard
-    router.push("/dashboard")
-  }, [router])
-
+export default function LandingPage() {
   return (
-    <div className="flex h-screen items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold mb-2">proplytics.de</h1>
-        <p className="text-muted-foreground">Weiterleitung zum Dashboard...</p>
-      </div>
+    <div className="min-h-screen bg-white">
+      <MarketingHeader />
+      <main>
+        <HeroSection />
+        <SocialProof />
+        <HowItWorks />
+        <FeatureGrid />
+        <ReportPreview />
+        <TrustSection />
+        <FinalCTA />
+        <Footer />
+      </main>
     </div>
   )
 }
