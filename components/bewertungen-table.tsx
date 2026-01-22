@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { formatCurrency } from "@/lib/format"
-import { Building2, Eye, Pencil, Trash2, Copy, GitCompare, MoreHorizontal } from "lucide-react"
+import { Building2, Eye, Pencil, Trash2, Copy, GitCompare, MoreHorizontal, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
@@ -204,6 +204,12 @@ export function BewertungenTable({
                           <Link href={`/analyse?id=${bewertung.id}`} className="flex items-center">
                             <Eye className="mr-2 h-4 w-4" />
                             Ansehen
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href={`/portal/bewertungen/${bewertung.id}`} className="flex items-center">
+                            <FileText className="mr-2 h-4 w-4 text-primary" />
+                            Bankmappe
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>

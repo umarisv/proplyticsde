@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
-import { User, LogOut, Settings, CreditCard } from 'lucide-react'
+import { User, LogOut, Settings, CreditCard, LayoutDashboard } from 'lucide-react'
 
 export function UserMenu() {
   const { user, profile, loading, signOut } = useAuth()
@@ -74,17 +74,29 @@ export function UserMenu() {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem disabled>
-          <User className="mr-2 h-4 w-4" />
-          <span>Profil</span>
+        <DropdownMenuItem asChild>
+          <Link href="/portal" className="flex items-center w-full">
+            <LayoutDashboard className="mr-2 h-4 w-4" />
+            <span>Portal Dashboard</span>
+          </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem disabled>
-          <Settings className="mr-2 h-4 w-4" />
-          <span>Einstellungen</span>
+        <DropdownMenuItem asChild>
+          <Link href="/portal/bewertungen" className="flex items-center w-full">
+            <User className="mr-2 h-4 w-4" />
+            <span>Meine Bewertungen</span>
+          </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem disabled>
-          <CreditCard className="mr-2 h-4 w-4" />
-          <span>Abonnement</span>
+        <DropdownMenuItem asChild>
+          <Link href="/portal/einstellungen" className="flex items-center w-full">
+            <Settings className="mr-2 h-4 w-4" />
+            <span>Einstellungen</span>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/portal/einstellungen" className="flex items-center w-full">
+            <CreditCard className="mr-2 h-4 w-4" />
+            <span>Abonnement</span>
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut}>
