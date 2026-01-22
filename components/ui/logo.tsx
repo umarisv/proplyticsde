@@ -8,7 +8,7 @@ interface LogoProps {
   href?: string
 }
 
-export function Logo({ size = "md", showText = true, href = "/" }: LogoProps) {
+export function Logo({ size = "md", showText = true, href }: LogoProps) {
   const sizes = {
     sm: { svg: 20, text: "text-sm" },
     md: { svg: 28, text: "text-base" },
