@@ -47,6 +47,44 @@ export interface AnalyseFormData {
   istMiete: string
   bodenrichtwert: string
   kaufpreis: string
+  // ETW-spezifisch
+  mea: string                    // Miteigentumsanteil in ‰
+  etage: string                  // Etage (0 = EG, -1 = UG)
+  hausgeld: string               // Monatliches Hausgeld in €
+  // WGH-spezifisch
+  gewerbeflaeche: string         // Gewerbefläche in m²
+  gewerbemiete: string           // Monatliche Gewerbemiete in €
+  // MFH-spezifisch
+  vermieteteEinheiten: string    // Anzahl vermieteter Einheiten
+  // Dokumente
+  uploadedFiles: UploadedFile[]
+}
+
+// Dokument-Upload Types
+export type FileCategory = 'aussen' | 'innen' | 'grundriss' | 'energie' | 'expose' | 'sonstiges'
+
+export interface UploadedFile {
+  id: string
+  name: string
+  type: string
+  size: number
+  category: FileCategory
+  url: string
+  thumbnailUrl?: string
+  aiAnalysis?: AIAnalysisResult
+}
+
+export interface AIAnalysisResult {
+  zustandScore: number           // 1-10
+  ausstattungScore: number       // 1-10
+  erkannteExtras: string[]       // ["balkon", "einbaukueche", "parkett"]
+  warnungen: string[]            // ["Schimmel erkannt", "Alte Fenster"]
+  geschaetzteWohnflaeche?: number
+  energieeffizienz?: string
+  zimmeranzahl?: number
+  raumaufteilung?: string        // "gut" | "mittel" | "schlecht"
+  freitext: string               // KI-Zusammenfassung
+  kategorie: FileCategory
 }
 
 export interface AnalyseResultData {
@@ -96,4 +134,12 @@ export interface AnalyseResultData {
   cashflowMonat: number
   cashflowJahr: number
   eigenkapitalrendite: number
+  // KI-Korrekturen (optional)
+  aiKorrekturen?: {
+    zustandAnpassung: number
+    warnungen: string[]
+    extras: string[]
+    originalMarktwert: number
+    korrekturBetrag: number
+  }
 }

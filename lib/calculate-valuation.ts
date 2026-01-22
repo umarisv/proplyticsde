@@ -1,4 +1,4 @@
-import type { AnalyseFormData, AnalyseResultData } from "@/lib/types"
+import type { AnalyseFormData, AnalyseResultData, AIAnalysisResult } from "@/lib/types"
 
 export function calculateValuation(formData: AnalyseFormData): AnalyseResultData {
   const wohnflaeche = Number.parseFloat(formData.wohnflaeche) || 850
@@ -9,6 +9,18 @@ export function calculateValuation(formData: AnalyseFormData): AnalyseResultData
   const kaufpreis = Number.parseFloat(formData.kaufpreis) || 0
   const anzahlWohnungen = Number.parseInt(formData.anzahlWohnungen) || 1
   const stellplaetze = Number.parseInt(formData.stellplaetze) || 0
+  
+  // ETW-spezifische Werte
+  const mea = Number.parseFloat(formData.mea) || (wohnflaeche / 120 * 1000) // Default: Schätzung aus Wohnfläche
+  const etage = Number.parseInt(formData.etage) || 1
+  const hausgeld = Number.parseFloat(formData.hausgeld) || (wohnflaeche * 3.5) // Default: 3.50€/m²
+  
+  // WGH-spezifische Werte
+  const gewerbeflaeche = Number.parseFloat(formData.gewerbeflaeche) || 0
+  const gewerbemiete = Number.parseFloat(formData.gewerbemiete) || 0
+  
+  // MFH-spezifische Werte
+  const vermieteteEinheiten = Number.parseInt(formData.vermieteteEinheiten) || anzahlWohnungen
 
   // Zustandsfaktor
   const zustandFaktoren: Record<string, number> = {
@@ -55,8 +67,18 @@ export function calculateValuation(formData: AnalyseFormData): AnalyseResultData
   // NEU: Stellplatzwert (ca. 15.000€ pro Stellplatz in Großstädten)
   const stellplatzWert = stellplaetze * 15000
 
+  // ETW: Etagen-Faktor (beeinflusst den Wert)
+  let etagenFaktor = 1.0
+  if (formData.objekttyp === "etw") {
+    if (etage === 0) etagenFaktor = 0.95           // EG: -5%
+    else if (etage === 1 || etage === 2) etagenFaktor = 1.0  // 1-2 OG: ±0%
+    else if (etage >= 3 && etage < 10) etagenFaktor = 1.03   // 3+ OG: +3%
+    else if (etage >= 10) etagenFaktor = 1.10      // Penthouse/Hochhaus: +10%
+    else if (etage < 0) etagenFaktor = 0.85        // Souterrain: -15%
+  }
+  
   // Kombinierter Qualitätsfaktor
-  const qualitaetsFaktor = zustandFaktor * ausstattungFaktor * lageFaktor * energieFaktor
+  const qualitaetsFaktor = zustandFaktor * ausstattungFaktor * lageFaktor * energieFaktor * etagenFaktor
 
   // Restnutzungsdauer (max 80 Jahre, min 20)
   const gebaeudealter = 2024 - baujahr
@@ -78,10 +100,43 @@ export function calculateValuation(formData: AnalyseFormData): AnalyseResultData
   const liegenschaftszins = ((lzSaetze[formData.objekttyp] || 4.5) + lageZinsAnpassung) / 100
 
   // ERTRAGSWERT
-  const jahresrohertrag = istMieteMonat * 12
-  const bewirtschaftungskosten = jahresrohertrag * 0.18 // 18% BWK
-  const reinertrag = jahresrohertrag - bewirtschaftungskosten
-  const bodenwert = grundstueck * bodenrichtwert
+  // Bei WGH: Wohn- und Gewerbemiete zusammenrechnen
+  let jahresrohertrag = istMieteMonat * 12
+  if (formData.objekttyp === "wgh" && gewerbemiete > 0) {
+    jahresrohertrag = (istMieteMonat + gewerbemiete) * 12
+  }
+  
+  // Leerstandsberücksichtigung für MFH/WGH
+  let leerstandsFaktor = 1.0
+  if ((formData.objekttyp === "mfh" || formData.objekttyp === "wgh") && anzahlWohnungen > 0) {
+    leerstandsFaktor = vermieteteEinheiten / anzahlWohnungen
+  }
+  const effektiverJahresrohertrag = jahresrohertrag * leerstandsFaktor
+  
+  // BWK variieren nach Objekttyp
+  let bwkSatz = 0.18 // Standard 18%
+  if (formData.objekttyp === "etw") {
+    // Bei ETW: Hausgeld als Teil der BWK berücksichtigen
+    const hausgeldJahr = hausgeld * 12
+    bwkSatz = Math.min(0.25, (effektiverJahresrohertrag * 0.10 + hausgeldJahr) / effektiverJahresrohertrag)
+  } else if (formData.objekttyp === "wgh") {
+    bwkSatz = 0.15 // WGH haben oft niedrigere BWK wegen Gewerbe
+  }
+  
+  const bewirtschaftungskosten = effektiverJahresrohertrag * bwkSatz
+  const reinertrag = effektiverJahresrohertrag - bewirtschaftungskosten
+  
+  // Bodenwert: Bei ETW aus MEA berechnen
+  let bodenwert: number
+  if (formData.objekttyp === "etw") {
+    // MEA in ‰ (Promille) - anteiliger Bodenwert
+    // Annahme: Gesamtgrundstück ca. 500m² für typisches MFH
+    const geschaetztesGesamtgrundstueck = 500
+    bodenwert = (mea / 1000) * geschaetztesGesamtgrundstueck * bodenrichtwert
+  } else {
+    bodenwert = grundstueck * bodenrichtwert
+  }
+  
   const bodenwertverzinsung = bodenwert * liegenschaftszins
   const gebaeudertrag = reinertrag - bodenwertverzinsung
 
@@ -185,5 +240,95 @@ export function calculateValuation(formData: AnalyseFormData): AnalyseResultData
     cashflowMonat,
     cashflowJahr,
     eigenkapitalrendite,
+  }
+}
+
+/**
+ * Wendet KI-Erkenntnisse als Korrekturfaktoren auf die Bewertung an
+ */
+export function applyAICorrections(
+  baseResult: AnalyseResultData,
+  aiAnalyses: AIAnalysisResult[]
+): AnalyseResultData {
+  if (!aiAnalyses || aiAnalyses.length === 0) {
+    return baseResult
+  }
+
+  const originalMarktwert = baseResult.marktwert
+
+  // Durchschnittlichen Zustand aus allen Analysen berechnen
+  const zustandScores = aiAnalyses.filter(a => a.zustandScore > 0).map(a => a.zustandScore)
+  const avgZustand = zustandScores.length > 0
+    ? zustandScores.reduce((sum, s) => sum + s, 0) / zustandScores.length
+    : 5
+
+  // Alle erkannten Extras sammeln
+  const allExtras = [...new Set(aiAnalyses.flatMap(a => a.erkannteExtras || []))]
+  
+  // Alle Warnungen sammeln
+  const allWarnungen = [...new Set(aiAnalyses.flatMap(a => a.warnungen || []))]
+
+  // Kritische Warnungen identifizieren (führen zu Abschlägen)
+  const kritischeWarnungen = allWarnungen.filter(w => 
+    w.toLowerCase().includes('schimmel') ||
+    w.toLowerCase().includes('riss') ||
+    w.toLowerCase().includes('feucht') ||
+    w.toLowerCase().includes('asbest') ||
+    w.toLowerCase().includes('sanierung')
+  )
+
+  // Wertvolle Extras identifizieren (führen zu Zuschlägen)
+  const wertvolleExtras = allExtras.filter(e =>
+    e.toLowerCase().includes('parkett') ||
+    e.toLowerCase().includes('fussbodenheizung') ||
+    e.toLowerCase().includes('kamin') ||
+    e.toLowerCase().includes('einbaukueche') ||
+    e.toLowerCase().includes('klimaanlage') ||
+    e.toLowerCase().includes('smart')
+  )
+
+  // Zustandskorrektur: KI-Zustand vs. angenommener Mittelwert (5)
+  // Abweichung von 1 Punkt = ca. 2% Wertänderung
+  const zustandDifferenz = avgZustand - 5
+  const zustandKorrektur = zustandDifferenz * 0.02
+
+  // Warnungs-Abschlag: 2% pro kritische Warnung, max 10%
+  const warnungAbschlag = Math.min(0.10, kritischeWarnungen.length * 0.02)
+
+  // Extras-Zuschlag: 3.000€ pro wertvolles Extra, max 15.000€
+  const extraBonus = Math.min(15000, wertvolleExtras.length * 3000)
+
+  // Gesamtkorrektur berechnen
+  const korrekturFaktor = 1 + zustandKorrektur - warnungAbschlag
+  const korrigierterMarktwert = Math.round((baseResult.marktwert * korrekturFaktor + extraBonus) / 1000) * 1000
+  const korrekturBetrag = korrigierterMarktwert - originalMarktwert
+
+  // Neue Min/Max basierend auf korrigiertem Marktwert
+  const korrigierterMin = Math.round((korrigierterMarktwert * 0.9) / 1000) * 1000
+  const korrigierterMax = Math.round((korrigierterMarktwert * 1.1) / 1000) * 1000
+
+  // Kennzahlen neu berechnen
+  const effektiverKaufpreis = baseResult.kaufpreis > 0 ? baseResult.kaufpreis : korrigierterMarktwert
+  const neuerQmPreis = effektiverKaufpreis / (effektiverKaufpreis / baseResult.qmPreis)
+  const neuerFaktor = effektiverKaufpreis / baseResult.jahresrohertrag
+  const neueBruttoRendite = (baseResult.jahresrohertrag / effektiverKaufpreis) * 100
+  const neueNettoRendite = (baseResult.reinertrag / effektiverKaufpreis) * 100
+
+  return {
+    ...baseResult,
+    marktwert: korrigierterMarktwert,
+    marktwertMin: korrigierterMin,
+    marktwertMax: korrigierterMax,
+    qmPreis: neuerQmPreis,
+    faktor: neuerFaktor,
+    bruttoRendite: neueBruttoRendite,
+    nettoRendite: neueNettoRendite,
+    aiKorrekturen: {
+      zustandAnpassung: avgZustand,
+      warnungen: allWarnungen,
+      extras: allExtras,
+      originalMarktwert,
+      korrekturBetrag,
+    },
   }
 }

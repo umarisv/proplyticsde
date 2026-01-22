@@ -1,14 +1,15 @@
 "use client"
 
-import type { AnalyseResultData, AnalyseFormData } from "@/lib/types"
+import type { AnalyseResultData, AnalyseFormData, UploadedFile, AIAnalysisResult } from "@/lib/types"
 
 interface PDFReportProps {
   resultData: AnalyseResultData
   formData: AnalyseFormData
   address: string
+  uploadedFiles?: UploadedFile[]
 }
 
-export function generatePDFReport({ resultData, formData, address }: PDFReportProps) {
+export function generatePDFReport({ resultData, formData, address, uploadedFiles = [] }: PDFReportProps) {
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value)
 
@@ -295,9 +296,97 @@ export function generatePDFReport({ resultData, formData, address }: PDFReportPr
       justify-content: center;
     }
 
+    .page-break {
+      page-break-before: always;
+    }
+    
+    .image-section {
+      margin-bottom: 20px;
+    }
+    
+    .image-section h3 {
+      font-size: 12px;
+      font-weight: 600;
+      color: #022b25;
+      margin-bottom: 12px;
+    }
+    
+    .image-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    
+    .image-grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    
+    .image-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      overflow: hidden;
+      background: white;
+    }
+    
+    .image-card img {
+      width: 100%;
+      height: 100px;
+      object-fit: cover;
+    }
+    
+    .image-caption {
+      font-size: 8px;
+      padding: 4px;
+      text-align: center;
+      background: #f8fafc;
+      color: #64748b;
+    }
+    
+    .grundriss-container {
+      text-align: center;
+      margin: 16px 0;
+    }
+    
+    .grundriss-image {
+      max-width: 100%;
+      max-height: 350px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+    }
+    
+    .ai-insights {
+      background: #f0fdf4;
+      border: 1px solid #10b981;
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 16px;
+    }
+    
+    .ai-insights h4 {
+      font-size: 11px;
+      font-weight: 600;
+      color: #022b25;
+      margin-bottom: 8px;
+    }
+    
+    .ai-insight-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 10px;
+      margin-bottom: 4px;
+    }
+    
+    .ai-insight-item.success { color: #10b981; }
+    .ai-insight-item.warning { color: #f59e0b; }
+    .ai-insight-item.error { color: #ef4444; }
+
     @media print {
       body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       .page { width: 100%; padding: 10mm; }
+      .page-break { page-break-before: always; }
     }
   </style>
 </head>
@@ -451,11 +540,161 @@ export function generatePDFReport({ resultData, formData, address }: PDFReportPr
       <p style="margin-top: 12px; font-weight: 600;">Erstellt am: ${currentDate} | Tool: Proplytics v1.0</p>
     </div>
   </div>
+
+  ${generateImagePages(uploadedFiles, resultData)}
 </body>
 </html>
   `
 
   return htmlContent
+}
+
+function generateImagePages(uploadedFiles: UploadedFile[], resultData: AnalyseResultData): string {
+  if (!uploadedFiles || uploadedFiles.length === 0) {
+    return ''
+  }
+
+  const aussenBilder = uploadedFiles.filter(f => f.category === 'aussen' && f.type.startsWith('image/')).slice(0, 4)
+  const innenBilder = uploadedFiles.filter(f => f.category === 'innen' && f.type.startsWith('image/')).slice(0, 6)
+  const grundriss = uploadedFiles.find(f => f.category === 'grundriss')
+  
+  const hasImages = aussenBilder.length > 0 || innenBilder.length > 0
+  const hasGrundriss = !!grundriss
+  
+  if (!hasImages && !hasGrundriss) {
+    return ''
+  }
+
+  // Sammle alle KI-Erkenntnisse
+  const allAnalyses = uploadedFiles
+    .filter(f => f.aiAnalysis)
+    .map(f => f.aiAnalysis as AIAnalysisResult)
+  
+  const erkannteExtras = [...new Set(allAnalyses.flatMap(a => a.erkannteExtras || []))]
+  const warnungen = [...new Set(allAnalyses.flatMap(a => a.warnungen || []))]
+  const avgZustand = allAnalyses.length > 0 
+    ? allAnalyses.reduce((sum, a) => sum + (a.zustandScore || 0), 0) / allAnalyses.length 
+    : 0
+
+  let imagePageHtml = ''
+
+  // Seite 2: Objektdokumentation (Bilder)
+  if (hasImages) {
+    imagePageHtml += `
+    <div class="page page-break">
+      <div class="header" style="padding: 16px; margin-bottom: 16px;">
+        <h2 style="font-size: 18px; margin: 0;">OBJEKTDOKUMENTATION</h2>
+        <p style="opacity: 0.8; font-size: 11px; margin-top: 4px;">Hochgeladene Fotos und Bildmaterial</p>
+      </div>
+
+      ${aussenBilder.length > 0 ? `
+        <div class="image-section">
+          <h3>Außenansichten</h3>
+          <div class="image-grid-3">
+            ${aussenBilder.map(img => `
+              <div class="image-card">
+                <img src="${img.url}" alt="${img.name}" />
+                <p class="image-caption">${img.name.substring(0, 20)}${img.name.length > 20 ? '...' : ''}</p>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
+
+      ${innenBilder.length > 0 ? `
+        <div class="image-section">
+          <h3>Innenräume</h3>
+          <div class="image-grid-4">
+            ${innenBilder.map(img => `
+              <div class="image-card">
+                <img src="${img.url}" alt="${img.name}" />
+                <p class="image-caption">${img.name.substring(0, 15)}${img.name.length > 15 ? '...' : ''}</p>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
+
+      ${allAnalyses.length > 0 ? `
+        <div class="ai-insights">
+          <h4>KI-Bildanalyse</h4>
+          ${avgZustand > 0 ? `
+            <div class="ai-insight-item success">
+              <span>✓</span>
+              <span>Zustand aus Fotos: ${avgZustand.toFixed(1)}/10</span>
+            </div>
+          ` : ''}
+          ${erkannteExtras.map(extra => `
+            <div class="ai-insight-item success">
+              <span>✓</span>
+              <span>Erkannt: ${extra}</span>
+            </div>
+          `).join('')}
+          ${warnungen.map(warnung => `
+            <div class="ai-insight-item warning">
+              <span>⚠</span>
+              <span>${warnung}</span>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+    </div>
+    `
+  }
+
+  // Seite 3: Grundriss
+  if (hasGrundriss && grundriss) {
+    const grundrissAnalysis = grundriss.aiAnalysis
+    
+    imagePageHtml += `
+    <div class="page page-break">
+      <div class="header" style="padding: 16px; margin-bottom: 16px;">
+        <h2 style="font-size: 18px; margin: 0;">GRUNDRISS & RAUMANALYSE</h2>
+        <p style="opacity: 0.8; font-size: 11px; margin-top: 4px;">Raumaufteilung und Flächenanalyse</p>
+      </div>
+
+      <div class="grundriss-container">
+        <img src="${grundriss.url}" alt="Grundriss" class="grundriss-image" />
+      </div>
+
+      ${grundrissAnalysis ? `
+        <div class="two-column" style="margin-top: 16px;">
+          <div class="section">
+            <h2 class="section-title">Flächenanalyse</h2>
+            <table class="data-table">
+              <tr><td>Angegeben</td><td>${resultData.qmPreis > 0 ? Math.round(resultData.kaufpreis / resultData.qmPreis) : '-'} m²</td></tr>
+              ${grundrissAnalysis.geschaetzteWohnflaeche ? `
+                <tr><td>KI-Schätzung</td><td>ca. ${grundrissAnalysis.geschaetzteWohnflaeche} m²</td></tr>
+              ` : ''}
+              ${grundrissAnalysis.zimmeranzahl ? `
+                <tr><td>Zimmeranzahl</td><td>${grundrissAnalysis.zimmeranzahl}</td></tr>
+              ` : ''}
+            </table>
+          </div>
+          <div class="section">
+            <h2 class="section-title">Raumaufteilung</h2>
+            <p style="font-size: 10px; line-height: 1.6;">${grundrissAnalysis.freitext || 'Keine detaillierte Analyse verfügbar.'}</p>
+            ${grundrissAnalysis.raumaufteilung ? `
+              <p style="font-size: 10px; margin-top: 8px; font-weight: 600;">
+                Bewertung: ${grundrissAnalysis.raumaufteilung === 'gut' ? '✓ Guter Schnitt' : 
+                            grundrissAnalysis.raumaufteilung === 'mittel' ? '○ Durchschnittlich' : 
+                            '⚠ Verbesserungswürdig'}
+              </p>
+            ` : ''}
+          </div>
+        </div>
+      ` : `
+        <div class="section" style="margin-top: 16px;">
+          <p style="font-size: 10px; text-align: center; color: #64748b;">
+            Grundriss hochgeladen. Keine KI-Analyse durchgeführt.
+          </p>
+        </div>
+      `}
+    </div>
+    `
+  }
+
+  return imagePageHtml
 }
 
 export function downloadPDF(htmlContent: string, filename: string) {
