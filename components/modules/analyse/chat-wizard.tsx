@@ -1,11 +1,12 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { Building2, Send, ExternalLink } from "lucide-react"
+import { Building2, Send, ExternalLink, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/lib/utils"
+import { analyzeImageWithAI, fileToBase64 } from "@/lib/api/file-upload"
 import type { AnalyseFormData, UploadedFile } from "@/lib/types"
 
 type MessageType = "bot" | "user"
@@ -633,15 +634,40 @@ function UploadSection({
     handleFiles(droppedFiles)
   }
 
-  const handleFiles = (newFiles: File[]) => {
-    const uploadedFiles: UploadedFile[] = newFiles.map((file, index) => ({
-      id: `${Date.now()}-${index}`,
-      name: file.name,
-      type: file.type,
-      size: file.size,
-      category: detectCategory(file.name, file.type),
-      url: URL.createObjectURL(file),
-    }))
+  const handleFiles = async (newFiles: File[]) => {
+    const uploadedFiles: UploadedFile[] = []
+
+    for (const [index, file] of newFiles.entries()) {
+      const category = detectCategory(file.name, file.type)
+
+      // Basis-UploadedFile erstellen
+      const uploadedFile: UploadedFile = {
+        id: `${Date.now()}-${index}`,
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        category,
+        url: URL.createObjectURL(file),
+      }
+
+      // KI-Analyse für Bilder
+      if (file.type.startsWith('image/')) {
+        try {
+          const base64 = await fileToBase64(file)
+          const aiAnalysis = await analyzeImageWithAI(base64, category)
+
+          if (aiAnalysis) {
+            uploadedFile.aiAnalysis = aiAnalysis
+          }
+        } catch (error) {
+          console.error('KI-Analyse fehlgeschlagen:', error)
+          // Fortfahren ohne AI-Analyse
+        }
+      }
+
+      uploadedFiles.push(uploadedFile)
+    }
+
     setFiles(prev => [...prev, ...uploadedFiles])
   }
 

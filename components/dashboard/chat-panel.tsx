@@ -241,8 +241,8 @@ export function ChatPanel({
   }
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="border-b p-4">
+    <div className="flex flex-col h-full overflow-hidden">
+      <div className="border-b p-4 flex-shrink-0">
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/70">
             <Sparkles className="h-4 w-4 text-primary-foreground" />
@@ -263,7 +263,7 @@ export function ChatPanel({
         </div>
       </div>
 
-      <ScrollArea className="flex-1 p-4">
+      <ScrollArea className="flex-1 min-h-0">
         <div className="space-y-4">
           {messages.map((message) => (
             <div
@@ -312,7 +312,7 @@ export function ChatPanel({
         </div>
       </ScrollArea>
 
-      <div className="space-y-3 border-t p-4">
+      <div className="space-y-3 border-t p-4 flex-shrink-0">
         {activeChatCase ? (
           <Card className="bg-muted/50">
             <CardContent className="flex items-center justify-between p-3">

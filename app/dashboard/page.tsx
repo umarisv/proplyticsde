@@ -253,25 +253,27 @@ export default function DashboardPage() {
           <UserMenu />
         </div>
       </header>
-      <div className="flex flex-1 overflow-hidden">
-        <div className="flex-1 overflow-auto p-6">
+      <div className="flex flex-1 overflow-hidden min-h-0">
+        <div className="flex-1 overflow-auto p-6 min-h-0 flex flex-col">
           {error && (
-            <div className="mb-4 p-4 bg-destructive/10 text-destructive rounded-lg">
+            <div className="mb-4 p-4 bg-destructive/10 text-destructive rounded-lg flex-shrink-0">
               {error}
             </div>
           )}
-          <BewertungenTable
-            bewertungen={filteredBewertungen}
-            selectedIds={selectedIds}
-            onSelectionChange={setSelectedIds}
-            onDelete={handleDelete}
-            onDuplicate={handleDuplicate}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-            isLoading={isLoading}
-          />
+          <div className="flex-1 min-h-0">
+            <BewertungenTable
+              bewertungen={filteredBewertungen}
+              selectedIds={selectedIds}
+              onSelectionChange={setSelectedIds}
+              onDelete={handleDelete}
+              onDuplicate={handleDuplicate}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+              isLoading={isLoading}
+            />
+          </div>
         </div>
-        <div className="w-96 shrink-0 border-l">
+        <div className="w-96 shrink-0 border-l flex flex-col overflow-hidden">
           <ChatPanel
             activeChatCase={activeChatCase}
             isDragging={!!draggingBewertung}
