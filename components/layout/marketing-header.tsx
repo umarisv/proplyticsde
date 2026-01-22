@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { ArrowRight } from "lucide-react"
 
 export function MarketingHeader() {
   return (
@@ -9,8 +10,8 @@ export function MarketingHeader() {
       <div className="absolute inset-0 bg-white/80 backdrop-blur-xl border-b border-black/5" />
       <div className="relative mx-auto w-full max-w-6xl px-4 h-16 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2">
-          <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <Link href="/" className="flex items-center gap-2 group">
+          <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="transition-transform group-hover:scale-110">
             <defs>
               <linearGradient id="logoGradient" x1="0%" y1="100%" x2="100%" y2="0%">
                 <stop offset="0%" stopColor="#10B981" />
@@ -27,30 +28,38 @@ export function MarketingHeader() {
           </span>
         </Link>
 
+        {/* Navigation */}
+        <nav className="hidden md:flex items-center gap-6">
+          <Link href="#features" className="text-sm text-black/60 hover:text-black transition-colors">
+            Features
+          </Link>
+          <Link href="#how-it-works" className="text-sm text-black/60 hover:text-black transition-colors">
+            So funktioniert's
+          </Link>
+          <Link href="#security" className="text-sm text-black/60 hover:text-black transition-colors">
+            Sicherheit
+          </Link>
+        </nav>
+
         {/* Actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <Button 
             variant="ghost" 
             size="sm" 
             asChild
-            className="text-black/70 hover:text-black hover:bg-black/5"
+            className="hidden sm:flex text-black/70 hover:text-black hover:bg-black/5"
           >
-            <Link href="/analyse">Analyse</Link>
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            asChild
-            className="text-black/70 hover:text-black hover:bg-black/5"
-          >
-            <Link href="/dashboard">Dashboard</Link>
+            <Link href="/login">Anmelden</Link>
           </Button>
           <Button 
             size="sm"
             asChild
-            className="bg-black text-white hover:bg-black/90 rounded-full px-4 font-medium"
+            className="bg-emerald-500 text-white hover:bg-emerald-600 rounded-full px-5 font-medium shadow-lg shadow-emerald-500/25 transition-all hover:shadow-emerald-500/40"
           >
-            <Link href="/login">Anmelden</Link>
+            <Link href="/analyse" className="flex items-center gap-2">
+              Kostenlos starten
+              <ArrowRight className="h-4 w-4" />
+            </Link>
           </Button>
         </div>
       </div>

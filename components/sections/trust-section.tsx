@@ -22,7 +22,7 @@ const trustPoints = [
 
 export function TrustSection() {
   return (
-    <section className="py-16 md:py-24 bg-white border-t border-black/5">
+    <section id="security" className="py-16 md:py-24 bg-white border-t border-black/5">
       <div className="mx-auto w-full max-w-6xl px-4">
         <div className="max-w-3xl mx-auto">
           {/* Header */}
