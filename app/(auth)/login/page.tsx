@@ -19,7 +19,7 @@ function LoginForm() {
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const searchParams = useSearchParams()
-  const redirect = searchParams.get('redirect') || '/'
+  const redirect = searchParams.get('redirect') || 'https://dashboard.proplytics.de'
   const supabase = createClient()
 
   const handleLogin = async (e: React.FormEvent) => {

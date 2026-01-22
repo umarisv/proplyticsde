@@ -1,10 +1,29 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { ArrowRight } from "lucide-react"
+import { ArrowRight, LayoutDashboard } from "lucide-react"
+import { createClient } from "@/lib/supabase/client"
 
 export function MarketingHeader() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  
+  useEffect(() => {
+    const supabase = createClient()
+    if (!supabase) return
+    
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsLoggedIn(!!session)
+    })
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsLoggedIn(!!session)
+    })
+    
+    return () => subscription.unsubscribe()
+  }, [])
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-transparent">
       <div className="absolute inset-0 bg-white/80 backdrop-blur-xl border-b border-black/5" />
@@ -43,24 +62,39 @@ export function MarketingHeader() {
 
         {/* Actions */}
         <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            asChild
-            className="hidden sm:flex text-black/70 hover:text-black hover:bg-black/5"
-          >
-            <Link href="/auth/login">Anmelden</Link>
-          </Button>
-          <Button
-            size="sm"
-            asChild
-            className="bg-emerald-500 text-white hover:bg-emerald-600 rounded-full px-5 font-medium shadow-lg shadow-emerald-500/25 transition-all hover:shadow-emerald-500/40"
-          >
-            <Link href="/analyse" className="flex items-center gap-2">
-              Kostenlos starten
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </Button>
+          {isLoggedIn ? (
+            <Button
+              size="sm"
+              asChild
+              className="bg-emerald-500 text-white hover:bg-emerald-600 rounded-full px-5 font-medium shadow-lg shadow-emerald-500/25 transition-all hover:shadow-emerald-500/40"
+            >
+              <Link href="https://dashboard.proplytics.de" className="flex items-center gap-2">
+                <LayoutDashboard className="h-4 w-4" />
+                Dashboard
+              </Link>
+            </Button>
+          ) : (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                asChild
+                className="hidden sm:flex text-black/70 hover:text-black hover:bg-black/5"
+              >
+                <Link href="/login">Anmelden</Link>
+              </Button>
+              <Button
+                size="sm"
+                asChild
+                className="bg-emerald-500 text-white hover:bg-emerald-600 rounded-full px-5 font-medium shadow-lg shadow-emerald-500/25 transition-all hover:shadow-emerald-500/40"
+              >
+                <Link href="/analyse" className="flex items-center gap-2">
+                  Kostenlos starten
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </header>
