@@ -18,7 +18,6 @@ interface Message {
   options?: { label: string; value: string; description?: string }[]
   inputType?: "text" | "number" | "form" | "upload"
   formFields?: { label: string; key: string; placeholder: string; suffix?: string; type?: "text" | "checkbox" }[]
-  showBorisLink?: boolean
   showExtras?: boolean
 }
 
@@ -538,17 +537,6 @@ export function ChatWizard({ onDataChange, onCalculate }: ChatWizardProps) {
             >
               <p className="text-sm">{message.content}</p>
 
-              {message.showBorisLink && (
-                <a
-                  href="https://www.bodenrichtwerte-boris.de/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-xs text-primary hover:underline mt-2"
-                >
-                  <ExternalLink className="w-3 h-3" />
-                  BORIS-D Portal öffnen
-                </a>
-              )}
 
               {/* Option Buttons */}
               {message.options && (
