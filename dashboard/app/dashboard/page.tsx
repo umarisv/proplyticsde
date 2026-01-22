@@ -14,7 +14,8 @@ import { getBewertungen, deleteBewertung, duplicateBewertung } from "@/lib/api/b
 import { isSupabaseConfigured } from "@/lib/supabase"
 import type { Bewertung } from "@/lib/database.types"
 import type { Case } from "@/lib/types"
-import { Plus, Search, Building2, RefreshCw } from "lucide-react"
+import { Plus, Search, RefreshCw } from "lucide-react"
+import { Logo } from "@/components/ui/logo"
 
 export default function DashboardPage() {
   const isMobile = useIsMobile()
@@ -123,10 +124,9 @@ export default function DashboardPage() {
       <div className="flex h-screen flex-col bg-background">
         <RateLimitBanner />
         <header className="flex h-14 shrink-0 items-center justify-between border-b px-6">
-          <div className="flex items-center">
-            <Building2 className="w-6 h-6 mr-2 text-primary" />
-            <h1 className="text-lg font-semibold tracking-tight">proplytics.de</h1>
-            <span className="ml-2 text-sm text-muted-foreground">Bewertungsübersicht</span>
+          <div className="flex items-center gap-3">
+            <Logo size="md" href="https://proplytics.de" />
+            <span className="text-sm text-muted-foreground">Bewertungsübersicht</span>
           </div>
           <div className="flex items-center gap-4">
             <Link href="/analyse">
@@ -140,7 +140,9 @@ export default function DashboardPage() {
         </header>
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center max-w-md px-4">
-            <Building2 className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
+            <div className="mx-auto mb-4 opacity-50 flex justify-center">
+              <Logo size="lg" showText={false} href={undefined} />
+            </div>
             <h2 className="text-xl font-semibold mb-2">Datenbank nicht konfiguriert</h2>
             <p className="text-muted-foreground mb-6">
               Um Bewertungen zu speichern und zu verwalten, konfigurieren Sie bitte Supabase in den Umgebungsvariablen.
@@ -167,10 +169,7 @@ export default function DashboardPage() {
       <div className="flex h-screen flex-col bg-background">
         <RateLimitBanner />
         <header className="flex h-14 shrink-0 items-center justify-between border-b px-4">
-          <div className="flex items-center">
-            <Building2 className="w-5 h-5 mr-2 text-primary" />
-            <h1 className="text-lg font-semibold tracking-tight">proplytics.de</h1>
-          </div>
+          <Logo size="sm" href="https://proplytics.de" />
           <div className="flex items-center gap-2">
             <Link href="/analyse">
               <Button size="sm" variant="default">
