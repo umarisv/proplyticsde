@@ -1,12 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AnalyseHeader, ChatWizard, ResultsPanel, MapPanel } from "@/components/modules/analyse"
 import { calculateValuation } from "@/lib/calculate-valuation"
 import type { AnalyseFormData, AnalyseResultData } from "@/lib/types"
+import { Loader2 } from "lucide-react"
 
 // Default data for initial display
 const defaultFormData: AnalyseFormData = {
@@ -30,7 +31,7 @@ const defaultFormData: AnalyseFormData = {
   kaufpreis: "3200000",
 }
 
-export default function AnalysePage() {
+function AnalysePageContent() {
   const isMobile = useIsMobile()
   const searchParams = useSearchParams()
   const initialAddress = searchParams.get('address') || "Musterstraße 123, 40239 Düsseldorf"
@@ -139,5 +140,17 @@ export default function AnalysePage() {
         </aside>
       </div>
     </div>
+  )
+}
+
+export default function AnalysePage() {
+  return (
+    <Suspense fallback={
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    }>
+      <AnalysePageContent />
+    </Suspense>
   )
 }
