@@ -3,11 +3,9 @@
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
-import { MapPin, Layers, Edit3, Check, ExternalLink } from "lucide-react"
+import { MapPin, ExternalLink } from "lucide-react"
 
 interface MapPanelProps {
   address: string
@@ -24,15 +22,10 @@ const LAYER_OPTIONS: { value: MapLayer; label: string }[] = [
 
 export function MapPanel({ address, isLoading = false }: MapPanelProps) {
   const [layer, setLayer] = useState<MapLayer>("satellite")
-  const [bodenrichtwert, setBodenrichtwert] = useState("580")
-  const [isEditingBrw, setIsEditingBrw] = useState(false)
 
   const encodedAddress = encodeURIComponent(address)
   const mapUrl = `https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${encodedAddress}&maptype=${layer}&zoom=18`
 
-  const handleSaveBrw = () => {
-    setIsEditingBrw(false)
-  }
 
   if (isLoading) {
     return (
@@ -81,66 +74,6 @@ export function MapPanel({ address, isLoading = false }: MapPanelProps) {
         </div>
       </Card>
 
-      {/* Bodenrichtwert Card */}
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Layers className="w-4 h-4 text-primary" />
-              Bodenrichtwert
-            </CardTitle>
-            <Badge variant="outline" className="text-xs">
-              BORIS-D
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent className="pt-0">
-          {isEditingBrw ? (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Label htmlFor="brw" className="sr-only">Bodenrichtwert</Label>
-                <Input
-                  id="brw"
-                  type="number"
-                  value={bodenrichtwert}
-                  onChange={(e) => setBodenrichtwert(e.target.value)}
-                  className="flex-1 h-9"
-                  autoFocus
-                />
-                <span className="text-sm text-muted-foreground">€/m²</span>
-                <Button size="sm" onClick={handleSaveBrw}>
-                  <Check className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-2xl font-bold text-primary">{bodenrichtwert} €/m²</p>
-                <p className="text-xs text-muted-foreground mt-1">Stichtag: 01.01.2024</p>
-              </div>
-              <Button 
-                size="icon" 
-                variant="ghost" 
-                className="h-8 w-8" 
-                onClick={() => setIsEditingBrw(true)}
-              >
-                <Edit3 className="w-4 h-4" />
-              </Button>
-            </div>
-          )}
-          
-          <a
-            href="https://www.bodenrichtwerte-boris.de/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1 text-xs text-primary hover:underline mt-3"
-          >
-            <ExternalLink className="w-3 h-3" />
-            BORIS-D Portal öffnen
-          </a>
-        </CardContent>
-      </Card>
     </div>
   )
 }
