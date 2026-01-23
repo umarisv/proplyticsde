@@ -49,15 +49,18 @@ import {
   Cell,
   Legend,
 } from "recharts"
-import dynamic from "next/dynamic"
 
-// Dynamic import for PDF components - completely client-side only
-const PDFComponents = dynamic(
-  () => import("@/lib/pdf-components").then((mod) => mod.PDFComponents),
-  {
-    ssr: false,
-    loading: () => <Loader2 className="w-4 h-4 animate-spin" />
-  }
+// PDF functionality temporarily disabled to fix build
+// TODO: Implement as separate API route later
+const PDFComponents = () => (
+  <Button
+    size="lg"
+    className="gap-2 bg-gray-400 text-white shadow-lg w-full"
+    disabled
+  >
+    <FileDown className="w-4 h-4" />
+    PDF Export (bald verfügbar)
+  </Button>
 )
 
 interface BankMappeProps {
