@@ -69,51 +69,89 @@ const logoPositions = [
 export const HeroBackground = memo(function HeroBackground() {
   return (
     <>
-      {/* Base Background - White */}
-      <div className="absolute inset-0 bg-white" />
-      
-      {/* Subtle gradient accent */}
-      <div 
-        className="absolute top-0 left-0 w-full h-[60%] pointer-events-none"
-        style={{
-          background: 'radial-gradient(ellipse 80% 60% at 50% 0%, rgba(16,185,129,0.05) 0%, transparent 60%)',
-        }}
-      />
+      {/* Modern Background - Clean Gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-white to-slate-100" />
 
-      {/* Earth Image - positioned left side */}
-      <div 
-        className="absolute pointer-events-none"
-        style={{ 
-          top: '30%',
-          left: '-40%',
-          width: '100%',
-          height: '80%',
-        }}
-      >
-        {/* Earth image */}
-        <img 
-          src="/brand/earth-night.png" 
-          alt="" 
-          className="w-full h-full object-cover object-[50%_60%]"
-          loading="eager"
+      {/* Elegant Geometric Pattern */}
+      <div className="absolute inset-0 opacity-30">
+        {/* Large geometric shapes */}
+        <div className="absolute top-20 right-10 w-96 h-96 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 blur-3xl" />
+        <div className="absolute bottom-32 left-20 w-80 h-80 rounded-full bg-gradient-to-br from-blue-100 to-emerald-100 blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-gradient-to-br from-slate-200 to-emerald-50 blur-3xl" />
+
+        {/* Architectural inspired elements */}
+        <div className="absolute top-40 left-32 w-2 h-32 bg-gradient-to-b from-emerald-200 to-transparent rotate-12" />
+        <div className="absolute top-60 right-40 w-2 h-24 bg-gradient-to-b from-teal-200 to-transparent -rotate-6" />
+        <div className="absolute bottom-40 left-1/3 w-2 h-40 bg-gradient-to-b from-slate-300 to-transparent rotate-3" />
+
+        {/* Subtle grid pattern */}
+        <div
+          className="absolute inset-0 opacity-20"
           style={{
-            filter: 'saturate(0.9) brightness(1.1) contrast(1.1)',
-            maskImage: 'radial-gradient(ellipse 80% 80% at 20% 50%, black 20%, transparent 60%)',
-            WebkitMaskImage: 'radial-gradient(ellipse 80% 80% at 20% 50%, black 20%, transparent 60%)',
+            backgroundImage: `
+              linear-gradient(rgba(16,185,129,0.1) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(16,185,129,0.1) 1px, transparent 1px)
+            `,
+            backgroundSize: '60px 60px'
           }}
         />
-        
-        {/* Mini Proplytics Logos */}
-        {logoPositions.map((p, i) => (
-          <MiniLogo key={i} x={p.x} y={p.y} scale={p.scale} index={i} />
+      </div>
+
+      {/* Floating Property Icons */}
+      <div className="absolute inset-0 pointer-events-none">
+        {/* Modern property-inspired floating elements */}
+        {[
+          { icon: "🏠", x: 15, y: 25, scale: 1.5, delay: 0 },
+          { icon: "🏢", x: 85, y: 30, scale: 1.3, delay: 1 },
+          { icon: "🏘️", x: 20, y: 70, scale: 1.2, delay: 2 },
+          { icon: "🏗️", x: 80, y: 65, scale: 1.4, delay: 0.5 },
+          { icon: "🏡", x: 10, y: 45, scale: 1.1, delay: 1.5 },
+          { icon: "🌆", x: 90, y: 50, scale: 1.6, delay: 2.5 },
+        ].map((item, i) => (
+          <div
+            key={i}
+            className="absolute animate-pulse-subtle opacity-60"
+            style={{
+              left: `${item.x}%`,
+              top: `${item.y}%`,
+              animationDelay: `${item.delay}s`,
+              fontSize: `${item.scale}rem`,
+            }}
+          >
+            <div className="text-emerald-600/40 drop-shadow-sm">
+              {item.icon}
+            </div>
+          </div>
+        ))}
+
+        {/* Professional data points */}
+        {[
+          { label: "€2.5M", x: 25, y: 35, color: "text-emerald-600" },
+          { label: "4.8%", x: 75, y: 40, color: "text-teal-600" },
+          { label: "78%", x: 30, y: 60, color: "text-blue-600" },
+          { label: "A+", x: 70, y: 70, color: "text-slate-600" },
+        ].map((point, i) => (
+          <div
+            key={i}
+            className="absolute animate-pulse-subtle opacity-50"
+            style={{
+              left: `${point.x}%`,
+              top: `${point.y}%`,
+              animationDelay: `${i * 0.8}s`,
+            }}
+          >
+            <div className={`text-xs font-semibold ${point.color} bg-white/80 px-2 py-1 rounded-full border border-white/50 shadow-sm`}>
+              {point.label}
+            </div>
+          </div>
         ))}
       </div>
-      
-      {/* Gradient overlay for text readability */}
-      <div 
+
+      {/* Subtle gradient overlay for depth */}
+      <div
         className="absolute inset-0 pointer-events-none"
-        style={{ 
-          background: 'radial-gradient(ellipse 60% 50% at 50% 35%, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.7) 50%, transparent 100%)',
+        style={{
+          background: 'radial-gradient(ellipse 70% 60% at 50% 40%, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.6) 40%, transparent 80%)',
         }}
       />
     </>
