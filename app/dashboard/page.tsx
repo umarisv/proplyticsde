@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import Link from "next/link"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -14,7 +14,7 @@ import { getBewertungen, deleteBewertung, duplicateBewertung } from "@/lib/api/b
 import { isSupabaseConfigured } from "@/lib/supabase"
 import type { Bewertung } from "@/lib/database.types"
 import type { Case } from "@/lib/types"
-import { Plus, Search, Building2, RefreshCw } from "lucide-react"
+import { Plus, Search, Building2, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react"
 
 export default function DashboardPage() {
   const isMobile = useIsMobile()
@@ -24,13 +24,15 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isConfigured, setIsConfigured] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 20
 
   // Drag-and-drop für KI-Agent
   const [activeChatCase, setActiveChatCase] = useState<Case | null>(null)
   const [draggingBewertung, setDraggingBewertung] = useState<Bewertung | null>(null)
 
-  // Konvertiert Bewertung zu Case-Format für ChatPanel
-  const bewertungToCase = (b: Bewertung): Case => {
+  // Memoized Bewertung zu Case Konvertierung
+  const bewertungToCase = useCallback((b: Bewertung): Case => {
     const ergebnisse = b.ergebnisse as Record<string, number> | null
     return {
       id: b.id,
@@ -51,7 +53,7 @@ export default function DashboardPage() {
       faktor: ergebnisse?.faktor || 0,
       rendite: ergebnisse?.bruttoRendite || 0,
     }
-  }
+  }, [])
 
   const loadBewertungen = useCallback(async () => {
     setIsLoading(true)
@@ -97,15 +99,29 @@ export default function DashboardPage() {
     }
   }
 
-  const filteredBewertungen = bewertungen.filter(b => {
-    if (!searchQuery) return true
+  // Memoized filtered bewertungen for better performance
+  const filteredBewertungen = useMemo(() => {
+    if (!searchQuery) return bewertungen
     const search = searchQuery.toLowerCase()
-    return (
+    return bewertungen.filter(b =>
       b.adresse?.toLowerCase().includes(search) ||
       b.stadt?.toLowerCase().includes(search) ||
       b.plz?.includes(search)
     )
-  })
+  }, [bewertungen, searchQuery])
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredBewertungen.length / itemsPerPage)
+  const paginatedBewertungen = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage
+    const endIndex = startIndex + itemsPerPage
+    return filteredBewertungen.slice(startIndex, endIndex)
+  }, [filteredBewertungen, currentPage, itemsPerPage])
+
+  // Reset to first page when search changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery])
 
   // Drag-and-drop handlers
   const handleDragStart = (bewertung: Bewertung) => setDraggingBewertung(bewertung)
@@ -199,7 +215,7 @@ export default function DashboardPage() {
               </div>
             </div>
             <BewertungenTable
-              bewertungen={filteredBewertungen}
+              bewertungen={paginatedBewertungen}
               selectedIds={selectedIds}
               onSelectionChange={setSelectedIds}
               onDelete={handleDelete}
@@ -208,6 +224,56 @@ export default function DashboardPage() {
               onDragEnd={handleDragEnd}
               isLoading={isLoading}
             />
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-2 py-4">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span>
+                    {filteredBewertungen.length > 0
+                      ? `${(currentPage - 1) * itemsPerPage + 1}-${Math.min(currentPage * itemsPerPage, filteredBewertungen.length)} von ${filteredBewertungen.length}`
+                      : 'Keine Ergebnisse'
+                    }
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      const pageNumber = i + 1
+                      return (
+                        <Button
+                          key={pageNumber}
+                          variant={currentPage === pageNumber ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setCurrentPage(pageNumber)}
+                          className="w-8 h-8 p-0"
+                        >
+                          {pageNumber}
+                        </Button>
+                      )
+                    })}
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
           </TabsContent>
           <TabsContent value="chat" className="flex-1 overflow-hidden">
             <ChatPanel
@@ -262,7 +328,7 @@ export default function DashboardPage() {
           )}
           <div className="flex-1 min-h-0">
             <BewertungenTable
-              bewertungen={filteredBewertungen}
+              bewertungen={paginatedBewertungen}
               selectedIds={selectedIds}
               onSelectionChange={setSelectedIds}
               onDelete={handleDelete}
@@ -271,6 +337,33 @@ export default function DashboardPage() {
               onDragEnd={handleDragEnd}
               isLoading={isLoading}
             />
+
+            {/* Mobile Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 p-4 border-t bg-background">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+
+                <span className="text-sm text-muted-foreground px-2">
+                  {currentPage} / {totalPages}
+                </span>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </div>
         </div>
         <div className="w-96 shrink-0 border-l flex flex-col overflow-hidden">

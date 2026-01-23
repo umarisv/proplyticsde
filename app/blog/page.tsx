@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Calendar, Clock, User, ArrowRight, TrendingUp, Building2, Euro, Search, ExternalLink, Newspaper, LayoutDashboard, Home, BookOpen, Filter, Star, Eye, ThumbsUp, RefreshCw, AlertCircle } from "lucide-react"
+import { Calendar, Clock, User, ArrowRight, TrendingUp, Building2, Euro, Search, ExternalLink, Newspaper, LayoutDashboard, Home, BookOpen, Filter, Star, Eye, ThumbsUp, AlertCircle } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 
 // Mock blog data - in production, this would come from a CMS or database
@@ -173,7 +173,6 @@ export default function BlogPage() {
   const [selectedCategory, setSelectedCategory] = useState("Alle")
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [generatedArticles, setGeneratedArticles] = useState<any[]>([])
-  const [generatingArticles, setGeneratingArticles] = useState(false)
   const [lastGeneration, setLastGeneration] = useState<string | null>(null)
 
   // Combine static blog posts with generated articles
@@ -233,42 +232,6 @@ export default function BlogPage() {
     }
   }, [])
 
-  // Function to generate new articles
-  const generateNewArticles = async () => {
-    setGeneratingArticles(true)
-    try {
-      const response = await fetch('/api/generate-articles', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to generate articles')
-      }
-
-      const data = await response.json()
-
-      if (data.status === 'success') {
-        setGeneratedArticles(prev => [...prev, ...data.articles])
-        setLastGeneration(new Date().toISOString())
-
-        // Save to localStorage for persistence
-        localStorage.setItem('generated-blog-articles', JSON.stringify([...generatedArticles, ...data.articles]))
-        localStorage.setItem('generated-articles-timestamp', new Date().toISOString())
-
-        console.log(`${data.count} neue Artikel generiert`)
-      } else {
-        throw new Error(data.message || 'Unknown error')
-      }
-    } catch (error) {
-      console.error('Error generating articles:', error)
-      alert('Fehler beim Generieren neuer Artikel. Bitte versuchen Sie es später erneut.')
-    } finally {
-      setGeneratingArticles(false)
-    }
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50/30">
@@ -401,33 +364,12 @@ export default function BlogPage() {
                 ))}
               </select>
             </div>
-            <div className="flex items-center gap-2">
-              <Button
-                onClick={generateNewArticles}
-                disabled={generatingArticles}
-                size="sm"
-                variant="outline"
-                className="border-emerald-300 text-emerald-600 hover:bg-emerald-50"
-              >
-                {generatingArticles ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 animate-spin mr-2" />
-                    Generiere...
-                  </>
-                ) : (
-                  <>
-                    <Star className="w-4 h-4 mr-2" />
-                    Neue Artikel
-                  </>
-                )}
-              </Button>
-              {lastGeneration && (
-                <div className="text-xs text-slate-500 flex items-center gap-1">
-                  <AlertCircle className="w-3 h-3" />
-                  Letzte Generierung: {new Date(lastGeneration).toLocaleDateString('de-DE')}
-                </div>
-              )}
-            </div>
+            {lastGeneration && (
+              <div className="text-xs text-slate-500 flex items-center gap-1 bg-slate-50 px-3 py-2 rounded-full">
+                <AlertCircle className="w-3 h-3" />
+                Letzte Aktualisierung: {new Date(lastGeneration).toLocaleDateString('de-DE')}
+              </div>
+            )}
           </div>
         </div>
       </div>

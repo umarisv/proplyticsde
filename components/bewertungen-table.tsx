@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, memo } from "react"
 import Link from "next/link"
 import { formatCurrency } from "@/lib/format"
 import { Building2, Eye, Pencil, Trash2, Copy, GitCompare, MoreHorizontal, FileText } from "lucide-react"
@@ -54,7 +54,7 @@ const objektTypLabels: Record<string, string> = {
   wgh: "Wohn-/Geschäftshaus",
 }
 
-export function BewertungenTable({
+const BewertungenTableComponent = memo(function BewertungenTable({
   bewertungen,
   selectedIds,
   onSelectionChange,
@@ -270,4 +270,6 @@ export function BewertungenTable({
       </AlertDialog>
     </>
   )
-}
+})
+
+export { BewertungenTableComponent as BewertungenTable }
