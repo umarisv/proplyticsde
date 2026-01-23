@@ -12,7 +12,7 @@ import { getBewertungen, deleteBewertung, duplicateBewertung } from "@/lib/api/b
 import { isSupabaseConfigured } from "@/lib/supabase"
 import type { Bewertung } from "@/lib/database.types"
 import type { Case } from "@/lib/types"
-import { Plus, Search, Building2, RefreshCw, ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
+import { Plus, Search, Building2, RefreshCw, ChevronLeft, ChevronRight, Loader2, FileText } from "lucide-react"
 
 export default function DashboardPage() {
   const [bewertungen, setBewertungen] = useState<Bewertung[]>([])
@@ -168,13 +168,19 @@ export default function DashboardPage() {
             <span className="ml-2 text-sm text-muted-foreground">Bewertungsübersicht</span>
           </div>
           <div className="flex items-center gap-4">
-            <Link href="/analyse">
-              <Button size="sm" variant="default">
-                <Plus className="w-4 h-4 mr-2" />
-                Neue Analyse
-              </Button>
-            </Link>
-            <UserMenu />
+          <Link href="/analyse">
+            <Button size="sm" variant="default">
+              <Plus className="w-4 h-4 mr-2" />
+              Neue Analyse
+            </Button>
+          </Link>
+          <Link href="/finanzierung">
+            <Button size="sm" variant="outline">
+              <FileText className="w-4 h-4 mr-2" />
+              Finanzierung
+            </Button>
+          </Link>
+          <UserMenu />
           </div>
         </header>
         <div className="flex-1 flex items-center justify-center">
