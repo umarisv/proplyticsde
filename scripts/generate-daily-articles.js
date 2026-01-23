@@ -22,6 +22,15 @@ const path = require('path')
 // Configuration
 const API_BASE_URL = process.env.API_BASE_URL || 'https://proplytics.de'
 const API_ENDPOINT = '/api/generate-articles'
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY
+
+// Check for OpenAI API key
+if (!OPENAI_API_KEY) {
+  console.error('❌ OPENAI_API_KEY environment variable is not set')
+  console.error('Please set your OpenAI API key:')
+  console.error('export OPENAI_API_KEY="your-api-key-here"')
+  process.exit(1)
+}
 
 // Current market data (update weekly)
 const CURRENT_MARKET_DATA = {
@@ -41,196 +50,146 @@ const CURRENT_MARKET_DATA = {
   }
 }
 
-function generateZinsArticle() {
+async function generateArticleWithAI(topic, category, expert, tags) {
+  console.log(`🤖 Generating article about: ${topic}`)
+
   const date = new Date()
   const dateString = date.toISOString().split('T')[0]
 
-  return {
-    id: `zinsentwicklung-${dateString}`,
-    title: "Zinsentwicklung 2024: Wohin steuern die Immobilienzinsen?",
-    excerpt: `Aktuelle Zinsanalyse: ${CURRENT_MARKET_DATA.interestRate}% Sollzins bei 10 Jahren Festzins. Prognose für 2024 und Auswirkungen auf Immobilienkäufer und Investoren.`,
-    content: `
-# Zinsentwicklung 2024: Wohin steuern die Immobilienzinsen?
+  const prompt = `Schreibe einen umfassenden, fachlich fundierten Blog-Artikel über das Thema "${topic}" für Immobilieninvestoren und -käufer.
 
-## Aktuelle Zinslandschaft: Stand ${date.toLocaleDateString('de-DE')}
+**Anforderungen:**
+- Länge: Mindestens 2.500 Wörter (sehr detailliert)
+- Sprache: Deutsch, professionell und sachlich
+- Struktur: H1, H2, H3 Überschriften, Tabellen, Listen
+- Daten: Verwende aktuelle Marktdaten und Fakten
+- Quellen: Zitiere reale Quellen (Bulwiengesa, IVD, EZB, etc.)
+- SEO: Integriere relevante Keywords natürlich
+- Expertise: Schreibe aus Sicht eines erfahrenen Immobilienexperten
 
-**Zinsübersicht für Immobilienkredite:**
-| Laufzeit | Aktueller Zins | Historisches Minimum | Veränderung ggü. 2023 |
-|----------|----------------|---------------------|----------------------|
-| 5 Jahre fest | 3,42% | 0,8% (2020) | +0,8% |
-| 10 Jahre fest | ${CURRENT_MARKET_DATA.interestRate}% | 0,9% (2020) | +1,2% |
-| 15 Jahre fest | 3,95% | 1,0% (2020) | +1,1% |
-| 20 Jahre fest | 4,15% | 1,1% (2020) | +1,0% |
+**Thema-spezifische Inhalte:**
+- Aktuelle Daten und Statistiken
+- Marktanalyse und Trends
+- Praktische Tipps für Leser
+- Prognosen und Ausblicke
+- Risiken und Chancen
+- Handlungsempfehlungen
 
-Quelle: Interhyp, Stichtag: ${date.toLocaleDateString('de-DE')}
+**Struktur des Artikels:**
+1. Einleitung mit aktueller Marktlage
+2. Detaillierte Analyse des Themas
+3. Daten und Statistiken in Tabellen
+4. Praktische Beispiele und Berechnungen
+5. Prognosen und Zukunftsaussichten
+6. Handlungsempfehlungen
+7. FAQ-Bereich
+8. Fazit mit Expertenmeinung
 
-## EZB-Politik und Inflationsentwicklung
+**Aktuelle Marktdaten (verwende diese in deinen Berechnungen):**
+- Durchschnittszins 10 Jahre fest: ${CURRENT_MARKET_DATA.interestRate}%
+- Inflation Deutschland: ${CURRENT_MARKET_DATA.inflationRate}%
+- Arbeitslosenquote: ${CURRENT_MARKET_DATA.unemploymentRate}%
+- Ø Preis München: ${CURRENT_MARKET_DATA.averagePricePerSqm.munich} €/m²
+- Ø Preis Berlin: ${CURRENT_MARKET_DATA.averagePricePerSqm.berlin} €/m²
+- Marktprognose 2024: +${CURRENT_MARKET_DATA.forecast_2024}%
 
-**Inflationsdaten Deutschland:**
-- Verbraucherpreise: +${CURRENT_MARKET_DATA.inflationRate}% (jährlich)
-- Kerninflation: +2,8% (ohne Energie)
-- EZB-Ziel: 2,0%
-- Aktuelle EZB-Leitzins: 4,25%
+Schreibe den vollständigen Artikel-Text als Markdown mit allen Überschriften, Tabellen und formatierten Inhalten.`
 
-## Zinsprognose 2024-2026
+  try {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'gpt-4-turbo',
+        messages: [
+          {
+            role: 'system',
+            content: `Du bist ein erfahrener Immobilienökonom und Fachjournalist mit 15 Jahren Erfahrung. Du schreibst detaillierte, faktenbasierte Artikel für Immobilieninvestoren. Deine Artikel sind immer objektiv, gut recherchiert und enthalten konkrete Daten, Berechnungen und Handlungsempfehlungen. Antworte nur mit dem vollständigen Artikel-Text in Markdown-Format.`
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        max_tokens: 4000,
+        temperature: 0.7,
+      }),
+    })
 
-### Konservatives Szenario (Wahrscheinlichkeit: 40%)
-- **2024 Q4:** 3,8-4,0%
-- **2025:** 3,5-3,8%
-- **2026:** 3,2-3,5%
-- **Begründung:** Graduelle EZB-Zinssenkungen bei nachlassender Inflation
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`)
+    }
 
-### Realistisches Szenario (Wahrscheinlichkeit: 45%)
-- **2024 Q4:** 3,9-4,1%
-- **2025:** 3,8-4,0%
-- **2026:** 3,5-3,8%
-- **Begründung:** EZB wartet auf nachhaltige Inflationsreduktion
+    const data = await response.json()
+    const articleContent = data.choices[0]?.message?.content
 
-### Optimistisches Szenario (Wahrscheinlichkeit: 15%)
-- **2024 Q4:** 3,7-3,9%
-- **2025:** 3,3-3,6%
-- **2026:** 3,0-3,3%
-- **Begründung:** Schnellere konjunkturelle Erholung
+    if (!articleContent) {
+      throw new Error('No content received from OpenAI')
+    }
 
-## Auswirkungen auf Immobilienkäufer
+    // Extract title from content (first H1 heading)
+    const titleMatch = articleContent.match(/^#\s+(.+)$/m)
+    const title = titleMatch ? titleMatch[1].trim() : topic
 
-### Finanzierungsbeispiele
-**Beispielrechnung: 300.000€ Immobilie**
+    // Create excerpt (first 150 characters of first paragraph)
+    const excerptMatch = articleContent.match(/^[^#].*$/m)
+    const excerpt = excerptMatch ? excerptMatch[0].substring(0, 150).trim() + '...' : `Aktuelle Analyse zu ${topic}`
 
-**Bei 4% Zins (aktuell):**
-- Monatliche Rate: 1.419€
-- Gesamtkosten: 511.000€
-- Eigenkapitalbedarf: 60.000€
+    // Estimate reading time (roughly 200 words per minute)
+    const wordCount = articleContent.split(/\s+/).length
+    const readTime = Math.max(5, Math.ceil(wordCount / 200))
 
-**Bei 3% Zins (Prognose 2025):**
-- Monatliche Rate: 1.265€
-- Gesamtkosten: 456.000€
-- Eigenkapitalbedarf: 45.000€
+    return {
+      id: `${topic.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}-${dateString}`,
+      title,
+      excerpt,
+      content: articleContent,
+      author: expert,
+      date: dateString,
+      readTime: `${readTime} min`,
+      category,
+      tags,
+      featured: true
+    }
 
-**Ersparnis:** 55.000€ Gesamtkosten, 174€ monatliche Rate
-
-## Fazit: Zinsen bleiben moderat
-
-Die aktuellen Immobilienzinsen von ${CURRENT_MARKET_DATA.interestRate}% bieten weiterhin attraktive Finanzierungsmöglichkeiten. Die EZB-Politik deutet auf stabile bis leicht sinkende Zinsen hin.
-
-**Handlungsempfehlungen:**
-- Aktuelle Konditionen sichern bei Zinsbindung
-- Professionelle Beratung für individuelle Strategie
-- Marktbeobachtung für optimale Timing
-    `,
-    author: "Dr. Markus Weber, Zinsstratege",
-    date: dateString,
-    readTime: "12 min",
-    category: "Finanzierung",
-    tags: ["Zinsen", "EZB", "Immobilienkredit", "2024", "Prognose", "Finanzierung"],
-    featured: true
+  } catch (error) {
+    console.error(`❌ Error generating article for ${topic}:`, error.message)
+    throw error
   }
 }
 
-function generatePriceArticle() {
-  const date = new Date()
-  const dateString = date.toISOString().split('T')[0]
-
-  return {
-    id: `preisentwicklung-${dateString}`,
-    title: "Immobilienpreise 2024: Neue Höchststände in Top-Lagen",
-    excerpt: `Preisanalyse ${date.toLocaleDateString('de-DE')}: Ø ${CURRENT_MARKET_DATA.averagePricePerSqm.munich}€/m² in München. Rekorde in Top-Lagen, aber Stabilisierung erwartet.`,
-    content: `
-# Immobilienpreise 2024: Neue Höchststände in Top-Lagen
-
-## Preisübersicht ${date.toLocaleDateString('de-DE')}: Rekorde in allen Segmenten
-
-**Top 5 Städte nach Durchschnittspreis/m²:**
-| Stadt | Ø Preis/m² | Veränderung Q4 | Veränderung 2024 | Trend |
-|-------|------------|----------------|------------------|-------|
-| München | ${CURRENT_MARKET_DATA.averagePricePerSqm.munich} € | +3,2% | +11,2% | ↗️ Stark steigend |
-| Hamburg | ${CURRENT_MARKET_DATA.averagePricePerSqm.hamburg} € | +2,8% | +8,4% | ↗️ Steigend |
-| Frankfurt | ${CURRENT_MARKET_DATA.averagePricePerSqm.frankfurt} € | +3,5% | +9,7% | ↗️ Stark steigend |
-| Berlin | ${CURRENT_MARKET_DATA.averagePricePerSqm.berlin} € | +2,1% | +8,1% | ➡️ Stabil |
-| Köln | ${CURRENT_MARKET_DATA.averagePricePerSqm.cologne} € | +2,9% | +9,3% | ↗️ Steigend |
-
-Quelle: Bulwiengesa, IVD, empirische Daten Q4 2024
-
-## Marktanalyse: Treiber und Risiken
-
-**Nachfrageseitige Faktoren:**
-- Zuwanderung: +300.000 Personen jährlich
-- Urbanisierung: 85% der Bevölkerung in Städten
-- Demografischer Wandel: Höhere Nachfrage nach Wohnraum
-
-**Angebotsseitige Restriktionen:**
-- Baugenehmigungen: -15% gegenüber 2023
-- Baufertigstellungen: 280.000 Wohnungen (2024)
-- Flächenmangel: Beschränkte Neubauflächen
-
-## Fazit: Moderates Wachstum erwartet
-
-Die Immobilienpreise zeigen ${CURRENT_MARKET_DATA.marketGrowth.q1_2024}% Wachstum. Während Top-Lagen weiterhin Rekorde brechen, zeichnet sich eine Normalisierung ab.
-
-**Ausblick 2025:** +4-6% Gesamtwachstum erwartet.
-    `,
-    author: "Prof. Anna Schmidt, Immobilienökonomin",
-    date: dateString,
-    readTime: "15 min",
-    category: "Marktanalyse",
-    tags: ["Preise", "Marktentwicklung", "Top-Lagen", "Rekorde", "2024", "Analyse"],
-    featured: true
-  }
+async function generateZinsArticle() {
+  return await generateArticleWithAI(
+    "Zinsentwicklung 2024: Wohin steuern die Immobilienzinsen?",
+    "Finanzierung",
+    "Dr. Markus Weber, Zinsstratege & Immobilienökonom",
+    ["Zinsen", "EZB", "Immobilienkredit", "2024", "Prognose", "Finanzierung", "Zinspolitik", "Kreditmarkt"]
+  )
 }
 
-function generatePoliticsArticle() {
-  const date = new Date()
-  const dateString = date.toISOString().split('T')[0]
+async function generatePriceArticle() {
+  return await generateArticleWithAI(
+    "Immobilienpreise 2024: Neue Höchststände in Top-Lagen und detaillierte Marktanalyse",
+    "Marktanalyse",
+    "Prof. Dr. Anna Schmidt, Immobilienökonomin & Marktforscherin",
+    ["Preise", "Marktentwicklung", "Top-Lagen", "Rekorde", "2024", "Analyse", "Städtevergleich", "Preisprognose", "Marktdaten"]
+  )
+}
 
-  return {
-    id: `wohnungspolitik-${dateString}`,
-    title: "Wohnungspolitik 2024: Neue Gesetze und Förderungen",
-    excerpt: "Wohnungspolitische Entwicklungen ${date.toLocaleDateString('de-DE')}: Von der Grundsteuerreform bis zu neuen Förderprogrammen. Alle wichtigen Gesetzesänderungen.",
-    content: `
-# Wohnungspolitik 2024: Neue Gesetze und Förderungen
-
-## Gesetzesänderungen ${date.toLocaleDateString('de-DE')}: Umfassende Reformagenda
-
-### Grundsteuerreform 2024
-**Neue Bewertungsmethoden:**
-- Flächenmodell: 8 Bundesländer
-- Ertragswertmodell: 6 Bundesländer
-- Sachwertmodell: 4 Bundesländer
-
-**Auswirkungen:** Ø +15% Steuerlast für Einfamilienhäuser
-
-### Wohngemeinnützigkeitsgesetz (WohnGemeinnG)
-- 400.000 neue Wohnungen bis 2028
-- Preisbremse für Sozialwohnungen
-- Gemeinnützige Wohnungsunternehmen stärken
-
-## Förderprogramme 2024
-
-### Bundesprogramme
-**Klimafreundlicher Neubau:**
-- KfW 55: Effizienzhaus 55 Standard
-- Tilgungszuschuss: 27.500€
-- Zinsverbilligung: 0,75% für 10 Jahre
-
-**Sozialer Wohnungsbau:**
-- Bundesförderung: 25.000€ pro Wohnung
-- Länderförderung: Zusätzlich 10.000-30.000€
-
-## Fazit: Chancen für vorausschauende Investoren
-
-Die Wohnungspolitik 2024 bietet Chancen durch Förderprogramme. Regulierungen erfordern jedoch strategische Planung.
-    `,
-    author: "Dr. Thomas Müller, Politikwissenschaftler",
-    date: dateString,
-    readTime: "18 min",
-    category: "Politik",
-    tags: ["Politik", "Gesetze", "Förderungen", "Wohnen", "Regierung", "2024"],
-    featured: false
-  }
+async function generatePoliticsArticle() {
+  return await generateArticleWithAI(
+    "Wohnungspolitik 2024: Neue Gesetze, Förderungen und politische Entwicklungen im Detail",
+    "Politik",
+    "Dr. Thomas Müller, Politikwissenschaftler & Wohnungspolitik-Experte",
+    ["Politik", "Gesetze", "Förderungen", "Wohnen", "Regierung", "2024", "Wohnungspolitik", "Reformen", "Gesetzgebung"]
+  )
 }
 
 async function generateArticles() {
-  console.log('🚀 Starting daily article generation...')
+  console.log('🚀 Starting daily AI article generation...')
 
   try {
     const date = new Date()
@@ -241,16 +200,16 @@ async function generateArticles() {
 
     if (dayOfMonth % 3 === 1) {
       // Days ending with 1: Zinsentwicklung
-      console.log('📈 Generating Zinsentwicklung article...')
-      articles = [generateZinsArticle()]
+      console.log('📈 Generating Zinsentwicklung article with AI...')
+      articles = [await generateZinsArticle()]
     } else if (dayOfMonth % 3 === 2) {
       // Days ending with 2: Preisentwicklung
-      console.log('💰 Generating Preisentwicklung article...')
-      articles = [generatePriceArticle()]
+      console.log('💰 Generating Preisentwicklung article with AI...')
+      articles = [await generatePriceArticle()]
     } else {
       // Days ending with 0 or 3: Wohnungspolitik
-      console.log('🏛️ Generating Wohnungspolitik article...')
-      articles = [generatePoliticsArticle()]
+      console.log('🏛️ Generating Wohnungspolitik article with AI...')
+      articles = [await generatePoliticsArticle()]
     }
 
     // Call the API to generate articles
