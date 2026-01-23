@@ -107,7 +107,10 @@ export async function getBewertungen(): Promise<{ data: Bewertung[] | null; erro
     query = query.eq('user_id', userId)
   }
   
-  const { data, error } = await query.order('created_at', { ascending: false })
+  // Limit results for better performance - only load recent 50 items
+  const { data, error } = await query
+    .order('created_at', { ascending: false })
+    .limit(50)
 
   return { data, error: error ? new Error(error.message) : null }
 }

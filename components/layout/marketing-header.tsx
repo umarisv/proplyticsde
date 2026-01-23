@@ -52,10 +52,10 @@ export function MarketingHeader() {
           <Link href="/blog" className="text-sm text-black/60 hover:text-black transition-colors">
             Blog
           </Link>
-          <Link href="/academy" className="text-sm text-black/60 hover:text-black transition-colors">
+          <Link href="/portal/academy" className="text-sm text-black/60 hover:text-black transition-colors">
             Academy
           </Link>
-          <Link href="/marktplatz" className="text-sm text-black/60 hover:text-black transition-colors">
+          <Link href="/portal/marktplatz" className="text-sm text-black/60 hover:text-black transition-colors">
             Marktplatz
           </Link>
           <Link href="/community" className="text-sm text-black/60 hover:text-black transition-colors">
