@@ -13,6 +13,8 @@ import { isSupabaseConfigured } from "@/lib/supabase"
 import type { Bewertung } from "@/lib/database.types"
 import type { Case } from "@/lib/types"
 import { Plus, Search, Building2, RefreshCw, ChevronLeft, ChevronRight, Loader2, FileText } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { VollmachtManager } from "@/components/vollmacht-manager"
 
 export default function DashboardPage() {
   const [bewertungen, setBewertungen] = useState<Bewertung[]>([])
@@ -23,6 +25,7 @@ export default function DashboardPage() {
   const [isConfigured, setIsConfigured] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 5 // Further reduced for optimal performance
+  const [activeTab, setActiveTab] = useState("bewertungen")
 
   // Drag-and-drop für KI-Agent
   const [activeChatCase, setActiveChatCase] = useState<Case | null>(null)
@@ -174,12 +177,6 @@ export default function DashboardPage() {
               Neue Analyse
             </Button>
           </Link>
-          <Link href="/finanzierung">
-            <Button size="sm" variant="outline">
-              <FileText className="w-4 h-4 mr-2" />
-              Finanzierung
-            </Button>
-          </Link>
           <UserMenu />
           </div>
         </header>
@@ -219,79 +216,95 @@ export default function DashboardPage() {
           <span className="ml-2 text-sm text-muted-foreground">Dashboard</span>
         </div>
         <div className="flex items-center gap-4">
-          <div className="relative w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Bewertungen suchen..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-          <Button variant="outline" size="icon" onClick={loadBewertungen} disabled={isLoading}>
-            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-          </Button>
-          <Link href="/analyse">
-            <Button size="sm" variant="default">
-              <Plus className="w-4 h-4 mr-2" />
-              Neue Analyse
-            </Button>
-          </Link>
-          <a href="https://dashboard.proplytics.de/finanzierung" target="_blank" rel="noopener noreferrer">
-            <Button size="sm" variant="outline">
-              <FileText className="w-4 h-4 mr-2" />
-              Finanzierung (extern)
-            </Button>
-          </a>
+          {activeTab === "bewertungen" && (
+            <>
+              <div className="relative w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Bewertungen suchen..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              <Button variant="outline" size="icon" onClick={loadBewertungen} disabled={isLoading}>
+                <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+              </Button>
+              <Link href="/analyse">
+                <Button size="sm" variant="default">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Neue Analyse
+                </Button>
+              </Link>
+            </>
+          )}
           <UserMenu />
         </div>
       </header>
       <div className="flex flex-1 overflow-hidden min-h-0">
-        <div className="flex-1 overflow-auto p-6 min-h-0 flex flex-col">
-          {error && (
-            <div className="mb-4 p-4 bg-destructive/10 text-destructive rounded-lg flex-shrink-0">
-              {error}
-            </div>
-          )}
-          <BewertungenTable
-            bewertungen={paginatedBewertungen}
-            selectedIds={selectedIds}
-            onSelectionChange={setSelectedIds}
-            onDelete={handleDelete}
-            onDuplicate={handleDuplicate}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-            isLoading={isLoading}
-          />
+        <div className="flex-1 overflow-auto min-h-0">
+          <div className="p-6 pb-4">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="bewertungen">Bewertungen</TabsTrigger>
+                <TabsTrigger value="finanzierung">Finanzierung</TabsTrigger>
+              </TabsList>
 
-          {/* Desktop Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-4 p-4 border-t">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-              >
-                <ChevronLeft className="h-4 w-4 mr-1" />
-                Zurück
-              </Button>
+              <TabsContent value="bewertungen" className="mt-6 space-y-6">
+                {error && (
+                  <div className="p-4 bg-destructive/10 text-destructive rounded-lg">
+                    {error}
+                  </div>
+                )}
 
-              <span className="text-sm text-muted-foreground">
-                Seite {currentPage} von {totalPages} ({filteredBewertungen.length} Bewertungen)
-              </span>
+                <BewertungenTable
+                  bewertungen={paginatedBewertungen}
+                  selectedIds={selectedIds}
+                  onSelectionChange={setSelectedIds}
+                  onDelete={handleDelete}
+                  onDuplicate={handleDuplicate}
+                  onDragStart={handleDragStart}
+                  onDragEnd={handleDragEnd}
+                  isLoading={isLoading}
+                />
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                disabled={currentPage === totalPages}
-              >
-                Weiter
-                <ChevronRight className="h-4 w-4 ml-1" />
-              </Button>
-            </div>
-          )}
+                {/* Desktop Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-4 p-4 border-t">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                    >
+                      <ChevronLeft className="h-4 w-4 mr-1" />
+                      Zurück
+                    </Button>
+
+                    <span className="text-sm text-muted-foreground">
+                      Seite {currentPage} von {totalPages} ({filteredBewertungen.length} Bewertungen)
+                    </span>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage === totalPages}
+                    >
+                      Weiter
+                      <ChevronRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="finanzierung" className="mt-6">
+                <VollmachtManager
+                  selectedBewertungId={selectedIds.length === 1 ? selectedIds[0] : undefined}
+                />
+              </TabsContent>
+            </Tabs>
+          </div>
         </div>
         <div className="w-96 shrink-0 border-l flex flex-col overflow-hidden">
           <ChatPanel
