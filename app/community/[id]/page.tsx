@@ -5,7 +5,7 @@ import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ArrowLeft, MessageCircle, ThumbsUp, Share2, Flag, MoreHorizontal, User, Calendar, Eye } from "lucide-react"
 import {
