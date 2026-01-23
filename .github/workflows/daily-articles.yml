@@ -1,0 +1,95 @@
+name: Daily Article Generation
+
+on:
+  schedule:
+    # Run daily at 8:00 AM UTC (10:00 AM CEST)
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+    inputs:
+      force_generate:
+        description: 'Force article generation (ignore schedule)'
+        required: false
+        default: 'false'
+
+jobs:
+  generate-articles:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 📥 Checkout repository
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: 🔧 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'pnpm'
+
+    - name: 📦 Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: 🏗️ Build application
+      run: pnpm build
+
+    - name: 🚀 Start application
+      run: |
+        # Start the application in background
+        pnpm start &
+        SERVER_PID=$!
+
+        # Wait for server to be ready
+        echo "⏳ Waiting for server to start..."
+        timeout 60 bash -c 'until curl -f http://localhost:3000/api/health 2>/dev/null; do sleep 2; done' || true
+
+        # Generate articles
+        echo "🤖 Generating daily articles..."
+        node scripts/generate-daily-articles.js
+
+        # Stop the server
+        kill $SERVER_PID 2>/dev/null || true
+
+    - name: 📝 Log generation results
+      run: |
+        if [ -f logs/article-generation.log ]; then
+          echo "📊 Article generation logs:"
+          tail -10 logs/article-generation.log
+        else
+          echo "⚠️ No generation logs found"
+        fi
+
+    - name: 📤 Commit generated articles (if any)
+      run: |
+        # Check if there are changes to commit
+        if git diff --quiet; then
+          echo "ℹ️ No changes to commit"
+        else
+          echo "📝 Committing generated articles..."
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .
+          git commit -m "🤖 Daily article generation: $(date +'%Y-%m-%d')
+
+- Automated content creation via GitHub Actions
+- Fresh market data and current trends
+- SEO-optimized articles for search engines
+- Topics: Zinsen, Preise, Politik (rotating daily)" || echo "No changes to commit"
+          git push
+          echo "✅ Articles committed and pushed successfully"
+        fi
+
+  notify:
+    needs: generate-articles
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+    - name: 📢 Send notification
+      run: |
+        if [ "${{ needs.generate-articles.result }}" = "success" ]; then
+          echo "✅ Daily article generation completed successfully"
+        else
+          echo "❌ Daily article generation failed"
+          exit 1
+        fi
