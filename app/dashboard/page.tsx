@@ -237,12 +237,12 @@ export default function DashboardPage() {
               Neue Analyse
             </Button>
           </Link>
-          <Link href="/finanzierung">
+          <a href="https://dashboard.proplytics.de/finanzierung" target="_blank" rel="noopener noreferrer">
             <Button size="sm" variant="outline">
               <FileText className="w-4 h-4 mr-2" />
-              Finanzierung
+              Finanzierung (extern)
             </Button>
-          </Link>
+          </a>
           <UserMenu />
         </div>
       </header>
