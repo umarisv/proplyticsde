@@ -79,6 +79,66 @@ const blogPosts = [
     image: "/blog/stadt-trends.jpg",
     featured: false,
     tags: ["Städte", "Lebensqualität", "Trends", "Investitionen"]
+  },
+  {
+    id: "immobilien-kaufen-2024-guide",
+    title: "Immobilien kaufen 2024: Der ultimative Leitfaden für Erstkäufer",
+    excerpt: "Alles was Sie über den Immobilienkauf 2024 wissen müssen. Von Finanzierung bis Notar - Ihr kompletter Ratgeber.",
+    author: "Michael Bauer",
+    date: "2024-01-10",
+    readTime: "12 min",
+    category: "Ratgeber",
+    image: "/blog/erstkaeufer-guide.jpg",
+    featured: true,
+    tags: ["Erstkäufer", "Immobilienkauf", "Finanzierung", "Ratgeber", "2024"]
+  },
+  {
+    id: "rental-yields-deutschland-vergleich",
+    title: "Mietrenditen in Deutschland: Städtevergleich 2024",
+    excerpt: "Welche Städte bieten die besten Mietrenditen für Immobilieninvestoren? Datenbasierte Analyse der Top-Standorte.",
+    author: "Dr. Anna Weber",
+    date: "2024-01-12",
+    readTime: "10 min",
+    category: "Investitionen",
+    image: "/blog/mietrenditen-vergleich.jpg",
+    featured: true,
+    tags: ["Mietrendite", "Investitionen", "Städtevergleich", "Rendite", "Deutschland"]
+  },
+  {
+    id: "energetische-sanierung-foerderung",
+    title: "Energetische Sanierung: Alle Förderungen 2024 im Überblick",
+    excerpt: "Maximale Förderungen für Ihre energetische Sanierung sichern. Alle Programme und Anträge erklärt.",
+    author: "Thomas Richter",
+    date: "2024-01-15",
+    readTime: "9 min",
+    category: "Sanierung",
+    image: "/blog/energetische-sanierung.jpg",
+    featured: false,
+    tags: ["Sanierung", "Förderungen", "Energieeffizienz", "Kosten", "2024"]
+  },
+  {
+    id: "immobilienbewertung-kosten-vermeiden",
+    title: "Immobilienbewertung Kosten sparen: Diese Fehler vermeiden",
+    excerpt: "Typische Fehler bei der Immobilienbewertung und wie Sie teure Korrekturen vermeiden können.",
+    author: "Sarah Müller",
+    date: "2024-01-18",
+    readTime: "6 min",
+    category: "Bewertung",
+    image: "/blog/bewertung-fehler.jpg",
+    featured: false,
+    tags: ["Bewertung", "Kosten", "Fehler", "Gutachten", "Tipps"]
+  },
+  {
+    id: "wohnung-verkaufen-tipps-2024",
+    title: "Wohnung verkaufen 2024: Höchstpreis erzielen mit diesen Strategien",
+    excerpt: "Professionelle Tipps für den optimalen Wohnungverkauf. Von Preisstrategie bis Vertragsabschluss.",
+    author: "Markus Schneider",
+    date: "2024-01-20",
+    readTime: "11 min",
+    category: "Verkauf",
+    image: "/blog/wohnung-verkaufen.jpg",
+    featured: false,
+    tags: ["Wohnung verkaufen", "Preisstrategie", "Verkaufstipps", "Marktanalyse", "2024"]
   }
 ]
 
@@ -86,9 +146,12 @@ const categories = [
   { name: "Alle", count: blogPosts.length, icon: Search },
   { name: "Marktanalyse", count: blogPosts.filter(p => p.category === "Marktanalyse").length, icon: TrendingUp },
   { name: "Technologie", count: blogPosts.filter(p => p.category === "Technologie").length, icon: Building2 },
-  { name: "Finanzierung", count: blogPosts.filter(p => p.category === "Finanzierung").length, icon: Euro },
+  { name: "Investitionen", count: blogPosts.filter(p => p.category === "Investitionen").length, icon: Euro },
+  { name: "Ratgeber", count: blogPosts.filter(p => p.category === "Ratgeber").length, icon: Building2 },
+  { name: "Bewertung", count: blogPosts.filter(p => p.category === "Bewertung").length, icon: Building2 },
+  { name: "Verkauf", count: blogPosts.filter(p => p.category === "Verkauf").length, icon: Building2 },
+  { name: "Sanierung", count: blogPosts.filter(p => p.category === "Sanierung").length, icon: Building2 },
   { name: "Nachhaltigkeit", count: blogPosts.filter(p => p.category === "Nachhaltigkeit").length, icon: Building2 },
-  { name: "Politik", count: blogPosts.filter(p => p.category === "Politik").length, icon: Building2 },
 ]
 
 interface NewsArticle {
