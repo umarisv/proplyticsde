@@ -1,6 +1,6 @@
 "use client"
 
-import { use } from "react"
+import { use, useEffect, useState } from "react"
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -1008,7 +1008,21 @@ interface BlogPostPageProps {
 
 export default function BlogPostPage({ params }: BlogPostPageProps) {
   const { slug } = use(params)
-  const post = blogPosts[slug as keyof typeof blogPosts]
+  const [generatedArticles, setGeneratedArticles] = useState<any[]>([])
+
+  // Load generated articles from localStorage
+  useEffect(() => {
+    const savedArticles = localStorage.getItem('generated-blog-articles')
+    if (savedArticles) {
+      setGeneratedArticles(JSON.parse(savedArticles))
+    }
+  }, [])
+
+  // Combine static and generated articles
+  const allPosts = { ...blogPosts, ...Object.fromEntries(generatedArticles.map(article => [article.id, article])) }
+
+  // Find the blog post
+  const post = allPosts[slug]
 
   if (!post) {
     return (

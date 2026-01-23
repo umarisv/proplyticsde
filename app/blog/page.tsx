@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Calendar, Clock, User, ArrowRight, TrendingUp, Building2, Euro, Search, ExternalLink, Newspaper, LayoutDashboard, Home, BookOpen, Filter, Star, Eye, ThumbsUp } from "lucide-react"
+import { Calendar, Clock, User, ArrowRight, TrendingUp, Building2, Euro, Search, ExternalLink, Newspaper, LayoutDashboard, Home, BookOpen, Filter, Star, Eye, ThumbsUp, RefreshCw, AlertCircle } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 
 // Mock blog data - in production, this would come from a CMS or database
@@ -172,16 +172,22 @@ export default function BlogPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("Alle")
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [generatedArticles, setGeneratedArticles] = useState<any[]>([])
+  const [generatingArticles, setGeneratingArticles] = useState(false)
+  const [lastGeneration, setLastGeneration] = useState<string | null>(null)
 
-  const featuredPosts = blogPosts.filter(post => post.featured)
-  const filteredPosts = blogPosts.filter(post => {
+  // Combine static blog posts with generated articles
+  const allBlogPosts = [...blogPosts, ...generatedArticles]
+
+  const featuredPosts = allBlogPosts.filter(post => post.featured)
+  const filteredPosts = allBlogPosts.filter(post => {
     const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          post.excerpt.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         post.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+                         post.tags?.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
     const matchesCategory = selectedCategory === "Alle" || post.category === selectedCategory
     return matchesSearch && matchesCategory
   })
-  const recentPosts = filteredPosts.filter(post => !post.featured).slice(0, 6)
+  const recentPosts = filteredPosts.filter(post => !post.featured).slice(0, 9)
 
   useEffect(() => {
     const supabase = createClient()
@@ -215,7 +221,54 @@ export default function BlogPage() {
     }
 
     fetchNews()
+
+    // Load previously generated articles from localStorage
+    const savedArticles = localStorage.getItem('generated-blog-articles')
+    const savedTimestamp = localStorage.getItem('generated-articles-timestamp')
+
+    if (savedArticles) {
+      const articles = JSON.parse(savedArticles)
+      setGeneratedArticles(articles)
+      setLastGeneration(savedTimestamp)
+    }
   }, [])
+
+  // Function to generate new articles
+  const generateNewArticles = async () => {
+    setGeneratingArticles(true)
+    try {
+      const response = await fetch('/api/generate-articles', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to generate articles')
+      }
+
+      const data = await response.json()
+
+      if (data.status === 'success') {
+        setGeneratedArticles(prev => [...prev, ...data.articles])
+        setLastGeneration(new Date().toISOString())
+
+        // Save to localStorage for persistence
+        localStorage.setItem('generated-blog-articles', JSON.stringify([...generatedArticles, ...data.articles]))
+        localStorage.setItem('generated-articles-timestamp', new Date().toISOString())
+
+        console.log(`${data.count} neue Artikel generiert`)
+      } else {
+        throw new Error(data.message || 'Unknown error')
+      }
+    } catch (error) {
+      console.error('Error generating articles:', error)
+      alert('Fehler beim Generieren neuer Artikel. Bitte versuchen Sie es später erneut.')
+    } finally {
+      setGeneratingArticles(false)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50/30">
@@ -343,10 +396,37 @@ export default function BlogPage() {
               >
                 {categories.map((category) => (
                   <option key={category.name} value={category.name}>
-                    {category.name} ({category.count})
+                    {category.name} ({allBlogPosts.filter(p => category.name === "Alle" || p.category === category.name).length})
                   </option>
                 ))}
               </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={generateNewArticles}
+                disabled={generatingArticles}
+                size="sm"
+                variant="outline"
+                className="border-emerald-300 text-emerald-600 hover:bg-emerald-50"
+              >
+                {generatingArticles ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin mr-2" />
+                    Generiere...
+                  </>
+                ) : (
+                  <>
+                    <Star className="w-4 h-4 mr-2" />
+                    Neue Artikel
+                  </>
+                )}
+              </Button>
+              {lastGeneration && (
+                <div className="text-xs text-slate-500 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  Letzte Generierung: {new Date(lastGeneration).toLocaleDateString('de-DE')}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -360,9 +440,17 @@ export default function BlogPage() {
               <TrendingUp className="w-8 h-8 text-emerald-600" />
               Featured Artikel
             </h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+            <p className="text-lg text-slate-600 max-w-2xl mx-auto mb-4">
               Unsere beliebtesten und meistgelesenen Artikel zu aktuellen Immobilienthemen
             </p>
+            {generatedArticles.length > 0 && (
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 border border-emerald-200 rounded-full">
+                <Star className="w-4 h-4 text-emerald-600" />
+                <span className="text-sm font-medium text-emerald-700">
+                  {generatedArticles.length} KI-generierte Artikel verfügbar
+                </span>
+              </div>
+            )}
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {featuredPosts.map((post, index) => (
