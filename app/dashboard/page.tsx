@@ -2,19 +2,17 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react"
 import Link from "next/link"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { BewertungenTable } from "@/components/bewertungen-table"
 import { ChatPanel } from "@/components/dashboard/chat-panel"
-import { VollmachtManager } from "@/components/vollmacht-manager"
 import { UserMenu } from "@/components/user-menu"
 import { RateLimitBanner } from "@/components/rate-limit-banner"
 import { getBewertungen, deleteBewertung, duplicateBewertung } from "@/lib/api/bewertungen"
 import { isSupabaseConfigured } from "@/lib/supabase"
 import type { Bewertung } from "@/lib/database.types"
 import type { Case } from "@/lib/types"
-import { Plus, Search, Building2, RefreshCw, ChevronLeft, ChevronRight, Loader2, FileText } from "lucide-react"
+import { Plus, Search, Building2, RefreshCw, ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
 
 export default function DashboardPage() {
   const [bewertungen, setBewertungen] = useState<Bewertung[]>([])
@@ -29,21 +27,6 @@ export default function DashboardPage() {
   // Drag-and-drop für KI-Agent
   const [activeChatCase, setActiveChatCase] = useState<Case | null>(null)
   const [draggingBewertung, setDraggingBewertung] = useState<Bewertung | null>(null)
-
-  // Tab state management (persistent)
-  const [activeTab, setActiveTab] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('dashboard-active-tab') || 'bewertungen'
-    }
-    return 'bewertungen'
-  })
-
-  const handleTabChange = (value: string) => {
-    setActiveTab(value)
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('dashboard-active-tab', value)
-    }
-  }
 
   // Memoized Bewertung zu Case Konvertierung
   const bewertungToCase = useCallback((b: Bewertung): Case => {
@@ -248,17 +231,17 @@ export default function DashboardPage() {
               Neue Analyse
             </Button>
           </Link>
+          <Link href="/finanzierung">
+            <Button size="sm" variant="outline">
+              <FileText className="w-4 h-4 mr-2" />
+              Finanzierung
+            </Button>
+          </Link>
           <UserMenu />
         </div>
       </header>
-      <Tabs value={activeTab} onValueChange={handleTabChange} className="flex flex-1 flex-col overflow-hidden">
-        <TabsList className="mx-6 mt-4 grid w-auto grid-cols-3">
-          <TabsTrigger value="bewertungen">Bewertungen</TabsTrigger>
-          <TabsTrigger value="finanzierung">Finanzierung</TabsTrigger>
-          <TabsTrigger value="chat">KI-Agent</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="bewertungen" className="flex-1 overflow-auto p-6">
+      <div className="flex flex-1 overflow-hidden min-h-0">
+        <div className="flex-1 overflow-auto p-6 min-h-0 flex flex-col">
           {error && (
             <div className="mb-4 p-4 bg-destructive/10 text-destructive rounded-lg flex-shrink-0">
               {error}
@@ -303,23 +286,16 @@ export default function DashboardPage() {
               </Button>
             </div>
           )}
-        </TabsContent>
-
-        <TabsContent value="finanzierung" className="flex-1 overflow-auto p-6">
-          <VollmachtManager
-            selectedBewertungId={selectedIds.length > 0 ? selectedIds[0] : undefined}
-          />
-        </TabsContent>
-
-        <TabsContent value="chat" className="flex-1 overflow-hidden">
+        </div>
+        <div className="w-96 shrink-0 border-l flex flex-col overflow-hidden">
           <ChatPanel
             activeChatCase={activeChatCase}
             isDragging={!!draggingBewertung}
             onDrop={handleDropOnChat}
             onRemoveCase={() => setActiveChatCase(null)}
           />
-        </TabsContent>
-      </Tabs>
+        </div>
+      </div>
     </div>
   )
 }
