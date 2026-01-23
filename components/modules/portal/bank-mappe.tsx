@@ -49,17 +49,15 @@ import {
   Cell,
   Legend,
 } from "recharts"
+import dynamic from "next/dynamic"
 
-// Dynamic import for PDF to avoid SSR issues
-const PDFDownloadLink = dynamic(
-  () => import("@react-pdf/renderer").then((mod) => mod.PDFDownloadLink),
-  { ssr: false, loading: () => <Loader2 className="w-4 h-4 animate-spin" /> }
-)
-
-// Dynamic import for PDF document
-const FinanzierungsmappePDF = dynamic(
-  () => import("@/lib/pdf-generator").then((mod) => mod.FinanzierungsmappePDF),
-  { ssr: false }
+// Dynamic import for PDF components - completely client-side only
+const PDFComponents = dynamic(
+  () => import("@/lib/pdf-components").then((mod) => mod.PDFComponents),
+  {
+    ssr: false,
+    loading: () => <Loader2 className="w-4 h-4 animate-spin" />
+  }
 )
 
 interface BankMappeProps {
@@ -272,26 +270,9 @@ export function BankMappe({ data, formData, address, onExportPDF }: BankMappePro
                 </div>
                 <span className={`text-2xl font-bold ${bankStatus.color}`}>{bankReadinessScore}%</span>
               </div>
-              
-              <PDFDownloadLink
-                document={<FinanzierungsmappePDF data={data} formData={formData} address={address} />}
-                fileName={`Finanzierungsmappe_${formData.plz}_${formData.stadt}_${new Date().toISOString().split('T')[0]}.pdf`}
-              >
-                {({ loading }) => (
-                  <Button 
-                    size="lg" 
-                    className="gap-2 bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/30 w-full"
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <FileDown className="w-4 h-4" />
-                    )}
-                    PDF Herunterladen
-                  </Button>
-                )}
-              </PDFDownloadLink>
+
+              {/* PDF Download Button - Client-side only */}
+              <PDFComponents data={data} formData={formData} address={address} />
             </div>
           </div>
 
