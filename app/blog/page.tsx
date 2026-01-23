@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Calendar, Clock, User, ArrowRight, TrendingUp, Building2, Euro, Search, ExternalLink, Newspaper, LayoutDashboard, Home, BookOpen, Filter, Star, Eye, ThumbsUp, AlertCircle } from "lucide-react"
+import { Calendar, Clock, User, ArrowRight, TrendingUp, Building2, Euro, Search, ExternalLink, Newspaper, LayoutDashboard, Home, BookOpen, Filter, Star, Eye, ThumbsUp, AlertCircle, BarChart3 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 
 // Mock blog data - in production, this would come from a CMS or database
@@ -301,11 +301,47 @@ export default function BlogPage() {
       {/* Hero Section */}
       <div className="relative overflow-hidden bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-600">
         <div className="absolute inset-0 bg-black/10"></div>
-        <div className="absolute inset-0 opacity-20" style={{
-          backgroundImage: `radial-gradient(circle at 25% 25%, rgba(255,255,255,0.1) 0%, transparent 50%),
-                           radial-gradient(circle at 75% 75%, rgba(255,255,255,0.1) 0%, transparent 50%)`,
-          backgroundSize: '60px 60px'
-        }}></div>
+
+        {/* Decorative Elements */}
+        <div className="absolute inset-0 opacity-10">
+          {/* Chart-like background pattern */}
+          <svg width="100%" height="100%" className="absolute inset-0">
+            <defs>
+              <pattern id="chartPattern" x="0" y="0" width="200" height="200" patternUnits="userSpaceOnUse">
+                {/* Bar chart elements */}
+                <rect x="20" y="140" width="8" height="40" fill="rgba(255,255,255,0.3)" rx="2"/>
+                <rect x="40" y="100" width="8" height="80" fill="rgba(255,255,255,0.4)" rx="2"/>
+                <rect x="60" y="120" width="8" height="60" fill="rgba(255,255,255,0.3)" rx="2"/>
+                <rect x="80" y="80" width="8" height="100" fill="rgba(255,255,255,0.5)" rx="2"/>
+                <rect x="100" y="110" width="8" height="70" fill="rgba(255,255,255,0.3)" rx="2"/>
+                <rect x="120" y="90" width="8" height="90" fill="rgba(255,255,255,0.4)" rx="2"/>
+                <rect x="140" y="130" width="8" height="50" fill="rgba(255,255,255,0.3)" rx="2"/>
+                <rect x="160" y="70" width="8" height="110" fill="rgba(255,255,255,0.5)" rx="2"/>
+
+                {/* Line chart elements */}
+                <polyline points="20,160 40,120 60,140 80,80 100,100 120,90 140,110 160,60"
+                         stroke="rgba(255,255,255,0.2)" strokeWidth="2" fill="none"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#chartPattern)" />
+          </svg>
+        </div>
+
+        {/* Floating data points */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-20 left-20 w-16 h-16 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-sm">
+            <span className="text-white text-xs font-bold">+8.7%</span>
+          </div>
+          <div className="absolute top-32 right-32 w-20 h-12 bg-white/10 rounded-lg flex items-center justify-center backdrop-blur-sm">
+            <span className="text-white text-xs">2024</span>
+          </div>
+          <div className="absolute bottom-32 left-32 w-24 h-16 bg-white/10 rounded-lg flex items-center justify-center backdrop-blur-sm">
+            <span className="text-white text-xs font-bold">€12.450/m²</span>
+          </div>
+          <div className="absolute bottom-20 right-20 w-18 h-14 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-sm">
+            <span className="text-white text-xs">München</span>
+          </div>
+        </div>
         <div className="relative max-w-6xl mx-auto px-4 py-20">
           <div className="text-center text-white">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-6">
@@ -398,10 +434,56 @@ export default function BlogPage() {
             {featuredPosts.map((post, index) => (
               <Card key={post.id} className={`group overflow-hidden hover:shadow-2xl transition-all duration-300 border-0 shadow-lg bg-white ${index === 0 ? 'lg:row-span-2' : ''}`}>
                 <div className="relative overflow-hidden">
-                  <div className={`aspect-video ${index === 0 ? 'lg:aspect-square' : ''} bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-500 flex items-center justify-center group-hover:scale-105 transition-transform duration-300`}>
-                    <div className="text-white text-center">
-                      <Building2 className={`mx-auto mb-2 ${index === 0 ? 'w-20 h-20' : 'w-16 h-16'}`} />
-                      <div className="text-xs opacity-90">Immobilien</div>
+                  <div className={`aspect-video ${index === 0 ? 'lg:aspect-square' : ''} bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-500 flex items-center justify-center group-hover:scale-105 transition-transform duration-300 relative overflow-hidden`}>
+                    {/* Decorative background pattern */}
+                    <div className="absolute inset-0 opacity-20">
+                      <svg width="100%" height="100%" viewBox="0 0 100 100">
+                        <circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.6)"/>
+                        <circle cx="80" cy="30" r="1.5" fill="rgba(255,255,255,0.4)"/>
+                        <circle cx="40" cy="70" r="1" fill="rgba(255,255,255,0.5)"/>
+                        <circle cx="70" cy="80" r="1.5" fill="rgba(255,255,255,0.3)"/>
+                        <rect x="50" y="20" width="3" height="8" fill="rgba(255,255,255,0.4)" rx="1"/>
+                        <rect x="15" y="60" width="2" height="6" fill="rgba(255,255,255,0.5)" rx="1"/>
+                      </svg>
+                    </div>
+
+                    <div className="text-white text-center relative z-10">
+                      {/* Dynamic icons based on article category */}
+                      {post.category === "Finanzierung" && (
+                        <>
+                          <Euro className={`mx-auto mb-2 ${index === 0 ? 'w-20 h-20' : 'w-16 h-16'}`} />
+                          <div className="text-xs opacity-90">Finanzen</div>
+                        </>
+                      )}
+                      {post.category === "Marktanalyse" && (
+                        <>
+                          <TrendingUp className={`mx-auto mb-2 ${index === 0 ? 'w-20 h-20' : 'w-16 h-16'}`} />
+                          <div className="text-xs opacity-90">Analyse</div>
+                        </>
+                      )}
+                      {post.category === "Politik" && (
+                        <>
+                          <Building className={`mx-auto mb-2 ${index === 0 ? 'w-20 h-20' : 'w-16 h-16'}`} />
+                          <div className="text-xs opacity-90">Politik</div>
+                        </>
+                      )}
+                      {post.category === "Technologie" && (
+                        <>
+                          <TrendingUp className={`mx-auto mb-2 ${index === 0 ? 'w-20 h-20' : 'w-16 h-16'}`} />
+                          <div className="text-xs opacity-90">KI & Tech</div>
+                        </>
+                      )}
+                      {!["Finanzierung", "Marktanalyse", "Politik", "Technologie"].includes(post.category) && (
+                        <>
+                          <Building2 className={`mx-auto mb-2 ${index === 0 ? 'w-20 h-20' : 'w-16 h-16'}`} />
+                          <div className="text-xs opacity-90">Immobilien</div>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Floating data elements */}
+                    <div className="absolute bottom-2 right-2 bg-white/20 backdrop-blur-sm rounded px-2 py-1">
+                      <span className="text-white text-xs font-bold">{post.readTime}</span>
                     </div>
                   </div>
                   <div className="absolute top-4 left-4">
@@ -609,12 +691,36 @@ export default function BlogPage() {
         {/* Newsletter Signup */}
         <div className="relative overflow-hidden bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 rounded-3xl p-12 text-white text-center">
           <div className="absolute inset-0 bg-black/10"></div>
-          <div className="absolute inset-0 opacity-20" style={{
-            backgroundImage: `radial-gradient(circle at 20% 80%, rgba(255,255,255,0.1) 0%, transparent 50%),
-                             radial-gradient(circle at 80% 20%, rgba(255,255,255,0.1) 0%, transparent 50%),
-                             radial-gradient(circle at 40% 40%, rgba(255,255,255,0.1) 0%, transparent 50%)`,
-            backgroundSize: '80px 80px'
-          }}></div>
+
+          {/* Decorative elements */}
+          <div className="absolute inset-0 opacity-20">
+            <svg width="100%" height="100%" viewBox="0 0 400 200" className="absolute inset-0">
+              {/* Trend lines */}
+              <polyline points="50,150 100,120 150,140 200,100 250,110 300,80 350,90"
+                       stroke="rgba(255,255,255,0.3)" strokeWidth="2" fill="none"/>
+              <polyline points="50,170 100,140 150,160 200,130 250,140 300,110 350,120"
+                       stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" fill="none"/>
+              <polyline points="50,180 100,160 150,175 200,150 250,165 300,140 350,150"
+                       stroke="rgba(255,255,255,0.15)" strokeWidth="1" fill="none"/>
+
+              {/* Data points */}
+              <circle cx="100" cy="120" r="3" fill="rgba(255,255,255,0.4)"/>
+              <circle cx="200" cy="100" r="3" fill="rgba(255,255,255,0.4)"/>
+              <circle cx="300" cy="80" r="3" fill="rgba(255,255,255,0.4)"/>
+              <circle cx="150" cy="140" r="2" fill="rgba(255,255,255,0.3)"/>
+              <circle cx="250" cy="110" r="2" fill="rgba(255,255,255,0.3)"/>
+            </svg>
+          </div>
+
+          {/* Floating stats */}
+          <div className="absolute top-6 right-6 bg-white/10 backdrop-blur-sm rounded-lg px-3 py-2">
+            <div className="text-xs text-emerald-200">📈</div>
+            <div className="text-xs font-bold">+8.7%</div>
+          </div>
+          <div className="absolute bottom-6 left-6 bg-white/10 backdrop-blur-sm rounded-lg px-3 py-2">
+            <div className="text-xs text-blue-200">📊</div>
+            <div className="text-xs font-bold">2024</div>
+          </div>
           <div className="relative z-10">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 mb-6">
               <Star className="w-4 h-4 fill-current" />

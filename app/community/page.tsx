@@ -146,20 +146,79 @@ export default function CommunityPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50/30">
-      {/* Header */}
-      <div className="bg-white border-b border-slate-200/60 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-12">
-          <div className="text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-200 mb-6">
-              <Users className="w-5 h-5 text-emerald-600" />
-              <span className="text-sm font-medium text-emerald-700">Community</span>
+      {/* Hero Section */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        {/* Background pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <svg width="100%" height="100%" className="absolute inset-0">
+            <defs>
+              <pattern id="communityPattern" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
+                {/* Speech bubbles pattern */}
+                <circle cx="20" cy="20" r="8" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1"/>
+                <circle cx="20" cy="15" r="2" fill="rgba(255,255,255,0.3)"/>
+                <circle cx="25" cy="25" r="2" fill="rgba(255,255,255,0.2)"/>
+                <circle cx="15" cy="25" r="1.5" fill="rgba(255,255,255,0.25)"/>
+
+                <rect x="45" y="15" width="12" height="8" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1" rx="2"/>
+                <circle cx="48" cy="19" r="1" fill="rgba(255,255,255,0.3)"/>
+                <circle cx="52" cy="21" r="1" fill="rgba(255,255,255,0.2)"/>
+
+                <circle cx="75" cy="25" r="6" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1"/>
+                <circle cx="78" cy="22" r="1.5" fill="rgba(255,255,255,0.3)"/>
+                <circle cx="73" cy="27" r="1" fill="rgba(255,255,255,0.25)"/>
+                <circle cx="77" cy="27" r="1" fill="rgba(255,255,255,0.2)"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#communityPattern)" />
+          </svg>
+        </div>
+
+        {/* Floating discussion elements */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-16 left-16 w-20 h-12 bg-white/10 rounded-lg flex items-center justify-center backdrop-blur-sm animate-pulse">
+            <span className="text-white text-xs">💬 Diskussion</span>
+          </div>
+          <div className="absolute top-24 right-20 w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+            <span className="text-emerald-200 text-xs font-bold">24</span>
+          </div>
+          <div className="absolute bottom-20 left-20 w-24 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
+            <span className="text-blue-200 text-xs">👥 Community</span>
+          </div>
+          <div className="absolute bottom-16 right-16 w-18 h-14 bg-purple-500/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+            <span className="text-purple-200 text-xs font-bold">156</span>
+          </div>
+        </div>
+
+        <div className="relative max-w-7xl mx-auto px-4 py-20">
+          <div className="text-center text-white">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-6">
+              <Users className="w-5 h-5" />
+              <span className="text-sm font-medium">Immobilien-Community</span>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">
-              Immobilien-Community
+            <h1 className="text-5xl md:text-6xl font-bold mb-6">
+              Wissen teilen.<br />
+              <span className="bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent">
+                Gemeinsam wachsen.
+              </span>
             </h1>
-            <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-              Diskutiere mit Experten und Enthusiasten über alle Themen rund um Immobilien. Teile dein Wissen und lerne von anderen.
+            <p className="text-xl text-slate-300 max-w-3xl mx-auto mb-8 leading-relaxed">
+              Tausche dich mit Immobilienexperten aus, diskutiere aktuelle Trends und finde Antworten auf deine Fragen.
+              Eine Community für Käufer, Verkäufer und Investoren.
             </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <div className="flex items-center gap-2 text-emerald-300">
+                <MessageCircle className="w-5 h-5" />
+                <span className="text-sm">24/7 Diskussionen</span>
+              </div>
+              <div className="flex items-center gap-2 text-blue-300">
+                <Users className="w-5 h-5" />
+                <span className="text-sm">Experten & Enthusiasten</span>
+              </div>
+              <div className="flex items-center gap-2 text-purple-300">
+                <Eye className="w-5 h-5" />
+                <span className="text-sm">Tägliche Updates</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
