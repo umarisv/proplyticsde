@@ -145,16 +145,19 @@ const blogPosts = [
   }
 ]
 
-const categories = [
-  { name: "Alle", count: blogPosts.length, icon: Search },
-  { name: "Marktanalyse", count: blogPosts.filter(p => p.category === "Marktanalyse").length, icon: TrendingUp },
-  { name: "Technologie", count: blogPosts.filter(p => p.category === "Technologie").length, icon: Building2 },
-  { name: "Investitionen", count: blogPosts.filter(p => p.category === "Investitionen").length, icon: Euro },
-  { name: "Ratgeber", count: blogPosts.filter(p => p.category === "Ratgeber").length, icon: Building2 },
-  { name: "Bewertung", count: blogPosts.filter(p => p.category === "Bewertung").length, icon: Building2 },
-  { name: "Verkauf", count: blogPosts.filter(p => p.category === "Verkauf").length, icon: Building2 },
-  { name: "Sanierung", count: blogPosts.filter(p => p.category === "Sanierung").length, icon: Building2 },
-  { name: "Nachhaltigkeit", count: blogPosts.filter(p => p.category === "Nachhaltigkeit").length, icon: Building2 },
+// Dynamic categories based on all available posts
+const getCategories = (posts: any[]) => [
+  { name: "Alle", count: posts.length, icon: Search, color: "bg-slate-100 text-slate-700 hover:bg-slate-200" },
+  { name: "Marktanalyse", count: posts.filter(p => p.category === "Marktanalyse").length, icon: BarChart3, color: "bg-emerald-100 text-emerald-700 hover:bg-emerald-200" },
+  { name: "Technologie", count: posts.filter(p => p.category === "Technologie").length, icon: TrendingUp, color: "bg-blue-100 text-blue-700 hover:bg-blue-200" },
+  { name: "Investitionen", count: posts.filter(p => p.category === "Investitionen").length, icon: Euro, color: "bg-purple-100 text-purple-700 hover:bg-purple-200" },
+  { name: "Finanzierung", count: posts.filter(p => p.category === "Finanzierung").length, icon: Euro, color: "bg-yellow-100 text-yellow-700 hover:bg-yellow-200" },
+  { name: "Ratgeber", count: posts.filter(p => p.category === "Ratgeber").length, icon: BookOpen, color: "bg-orange-100 text-orange-700 hover:bg-orange-200" },
+  { name: "Bewertung", count: posts.filter(p => p.category === "Bewertung").length, icon: Eye, color: "bg-red-100 text-red-700 hover:bg-red-200" },
+  { name: "Verkauf", count: posts.filter(p => p.category === "Verkauf").length, icon: Building2, color: "bg-pink-100 text-pink-700 hover:bg-pink-200" },
+  { name: "Sanierung", count: posts.filter(p => p.category === "Sanierung").length, icon: Building2, color: "bg-indigo-100 text-indigo-700 hover:bg-indigo-200" },
+  { name: "Politik", count: posts.filter(p => p.category === "Politik").length, icon: Building2, color: "bg-cyan-100 text-cyan-700 hover:bg-cyan-200" },
+  { name: "Nachhaltigkeit", count: posts.filter(p => p.category === "Nachhaltigkeit").length, icon: Eye, color: "bg-green-100 text-green-700 hover:bg-green-200" },
 ]
 
 interface NewsArticle {
@@ -220,15 +223,24 @@ export default function BlogPage() {
     }
 
     fetchNews()
+  }, [])
 
-    // Load previously generated articles from localStorage
-    const savedArticles = localStorage.getItem('generated-blog-articles')
-    const savedTimestamp = localStorage.getItem('generated-articles-timestamp')
+  // Load previously generated articles from localStorage
+  useEffect(() => {
+    try {
+      const savedArticles = localStorage.getItem('generated-blog-articles')
+      const savedTimestamp = localStorage.getItem('generated-articles-timestamp')
 
-    if (savedArticles) {
-      const articles = JSON.parse(savedArticles)
-      setGeneratedArticles(articles)
-      setLastGeneration(savedTimestamp)
+      if (savedArticles) {
+        const articles = JSON.parse(savedArticles)
+        setGeneratedArticles(articles)
+        setLastGeneration(savedTimestamp)
+      }
+    } catch (error) {
+      console.error('Error loading saved articles:', error)
+      // Reset to empty state if there's an error
+      setGeneratedArticles([])
+      setLastGeneration(null)
     }
   }, [])
 
@@ -303,29 +315,14 @@ export default function BlogPage() {
         <div className="absolute inset-0 bg-black/10"></div>
 
         {/* Decorative Elements */}
-        <div className="absolute inset-0 opacity-10">
-          {/* Chart-like background pattern */}
-          <svg width="100%" height="100%" className="absolute inset-0">
-            <defs>
-              <pattern id="chartPattern" x="0" y="0" width="200" height="200" patternUnits="userSpaceOnUse">
-                {/* Bar chart elements */}
-                <rect x="20" y="140" width="8" height="40" fill="rgba(255,255,255,0.3)" rx="2"/>
-                <rect x="40" y="100" width="8" height="80" fill="rgba(255,255,255,0.4)" rx="2"/>
-                <rect x="60" y="120" width="8" height="60" fill="rgba(255,255,255,0.3)" rx="2"/>
-                <rect x="80" y="80" width="8" height="100" fill="rgba(255,255,255,0.5)" rx="2"/>
-                <rect x="100" y="110" width="8" height="70" fill="rgba(255,255,255,0.3)" rx="2"/>
-                <rect x="120" y="90" width="8" height="90" fill="rgba(255,255,255,0.4)" rx="2"/>
-                <rect x="140" y="130" width="8" height="50" fill="rgba(255,255,255,0.3)" rx="2"/>
-                <rect x="160" y="70" width="8" height="110" fill="rgba(255,255,255,0.5)" rx="2"/>
-
-                {/* Line chart elements */}
-                <polyline points="20,160 40,120 60,140 80,80 100,100 120,90 140,110 160,60"
-                         stroke="rgba(255,255,255,0.2)" strokeWidth="2" fill="none"/>
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#chartPattern)" />
-          </svg>
-        </div>
+        <div className="absolute inset-0 opacity-20" style={{
+          backgroundImage: `
+            radial-gradient(circle at 25% 25%, rgba(255,255,255,0.1) 0%, transparent 50%),
+            radial-gradient(circle at 75% 75%, rgba(255,255,255,0.1) 0%, transparent 50%),
+            linear-gradient(45deg, transparent 49%, rgba(255,255,255,0.05) 50%, transparent 51%)
+          `,
+          backgroundSize: '60px 60px, 40px 40px, 20px 20px'
+        }}></div>
 
         {/* Floating data points */}
         <div className="absolute inset-0 pointer-events-none">
@@ -393,7 +390,7 @@ export default function BlogPage() {
                 onChange={(e) => setSelectedCategory(e.target.value)}
                 className="px-4 py-2 rounded-full border border-slate-200 bg-white text-sm focus:border-emerald-300 focus:ring-emerald-300"
               >
-                {categories.map((category) => (
+                {getCategories(allBlogPosts).map((category) => (
                   <option key={category.name} value={category.name}>
                     {category.name} ({allBlogPosts.filter(p => category.name === "Alle" || p.category === category.name).length})
                   </option>
@@ -693,24 +690,13 @@ export default function BlogPage() {
           <div className="absolute inset-0 bg-black/10"></div>
 
           {/* Decorative elements */}
-          <div className="absolute inset-0 opacity-20">
-            <svg width="100%" height="100%" viewBox="0 0 400 200" className="absolute inset-0">
-              {/* Trend lines */}
-              <polyline points="50,150 100,120 150,140 200,100 250,110 300,80 350,90"
-                       stroke="rgba(255,255,255,0.3)" strokeWidth="2" fill="none"/>
-              <polyline points="50,170 100,140 150,160 200,130 250,140 300,110 350,120"
-                       stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" fill="none"/>
-              <polyline points="50,180 100,160 150,175 200,150 250,165 300,140 350,150"
-                       stroke="rgba(255,255,255,0.15)" strokeWidth="1" fill="none"/>
-
-              {/* Data points */}
-              <circle cx="100" cy="120" r="3" fill="rgba(255,255,255,0.4)"/>
-              <circle cx="200" cy="100" r="3" fill="rgba(255,255,255,0.4)"/>
-              <circle cx="300" cy="80" r="3" fill="rgba(255,255,255,0.4)"/>
-              <circle cx="150" cy="140" r="2" fill="rgba(255,255,255,0.3)"/>
-              <circle cx="250" cy="110" r="2" fill="rgba(255,255,255,0.3)"/>
-            </svg>
-          </div>
+          <div className="absolute inset-0 opacity-10" style={{
+            backgroundImage: `
+              linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.1) 75%),
+              linear-gradient(-45deg, rgba(255,255,255,0.1) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.1) 75%)
+            `,
+            backgroundSize: '20px 20px, 20px 20px'
+          }}></div>
 
           {/* Floating stats */}
           <div className="absolute top-6 right-6 bg-white/10 backdrop-blur-sm rounded-lg px-3 py-2">

@@ -149,29 +149,14 @@ export default function CommunityPage() {
       {/* Hero Section */}
       <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         {/* Background pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <svg width="100%" height="100%" className="absolute inset-0">
-            <defs>
-              <pattern id="communityPattern" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
-                {/* Speech bubbles pattern */}
-                <circle cx="20" cy="20" r="8" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1"/>
-                <circle cx="20" cy="15" r="2" fill="rgba(255,255,255,0.3)"/>
-                <circle cx="25" cy="25" r="2" fill="rgba(255,255,255,0.2)"/>
-                <circle cx="15" cy="25" r="1.5" fill="rgba(255,255,255,0.25)"/>
-
-                <rect x="45" y="15" width="12" height="8" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1" rx="2"/>
-                <circle cx="48" cy="19" r="1" fill="rgba(255,255,255,0.3)"/>
-                <circle cx="52" cy="21" r="1" fill="rgba(255,255,255,0.2)"/>
-
-                <circle cx="75" cy="25" r="6" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1"/>
-                <circle cx="78" cy="22" r="1.5" fill="rgba(255,255,255,0.3)"/>
-                <circle cx="73" cy="27" r="1" fill="rgba(255,255,255,0.25)"/>
-                <circle cx="77" cy="27" r="1" fill="rgba(255,255,255,0.2)"/>
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#communityPattern)" />
-          </svg>
-        </div>
+        <div className="absolute inset-0 opacity-10" style={{
+          backgroundImage: `
+            radial-gradient(circle at 20% 30%, rgba(255,255,255,0.1) 0%, transparent 40%),
+            radial-gradient(circle at 80% 70%, rgba(255,255,255,0.1) 0%, transparent 40%),
+            radial-gradient(circle at 50% 50%, rgba(255,255,255,0.05) 0%, transparent 50%)
+          `,
+          backgroundSize: '100px 100px'
+        }}></div>
 
         {/* Floating discussion elements */}
         <div className="absolute inset-0 pointer-events-none">
