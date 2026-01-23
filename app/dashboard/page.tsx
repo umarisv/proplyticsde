@@ -211,7 +211,16 @@ export default function DashboardPage() {
                 </TabsContent>
 
                 <TabsContent value="finanzierung" className="mt-6">
-                  <VollmachtManager />
+                  <div className="text-center p-8 bg-green-50 border-2 border-green-200 rounded-lg">
+                    <h2 className="text-2xl font-bold text-green-800 mb-4">🎉 FINANZIERUNG TAB FUNKTIONIERT!</h2>
+                    <p className="text-green-700 mb-4">
+                      Die Tabs sind jetzt endlich sichtbar! Das Finanzierungs-Feature kommt bald.
+                    </p>
+                    <div className="text-sm text-green-600">
+                      <p>Zeit: {new Date().toLocaleString('de-DE')}</p>
+                      <p>Status: ✅ Tabs aktiv</p>
+                    </div>
+                  </div>
                 </TabsContent>
               </Tabs>
             </div>
