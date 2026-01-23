@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react"
 import Link from "next/link"
-import { useIsMobile } from "@/hooks/use-mobile"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -18,7 +17,6 @@ import type { Case } from "@/lib/types"
 import { Plus, Search, Building2, RefreshCw, ChevronLeft, ChevronRight, Loader2, FileText } from "lucide-react"
 
 export default function DashboardPage() {
-  const isMobile = useIsMobile()
   const [bewertungen, setBewertungen] = useState<Bewertung[]>([])
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [searchQuery, setSearchQuery] = useState("")
@@ -31,6 +29,21 @@ export default function DashboardPage() {
   // Drag-and-drop für KI-Agent
   const [activeChatCase, setActiveChatCase] = useState<Case | null>(null)
   const [draggingBewertung, setDraggingBewertung] = useState<Bewertung | null>(null)
+
+  // Tab state management (persistent)
+  const [activeTab, setActiveTab] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('dashboard-active-tab') || 'bewertungen'
+    }
+    return 'bewertungen'
+  })
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('dashboard-active-tab', value)
+    }
+  }
 
   // Persist tab state in localStorage
   const [activeTab, setActiveTab] = useState(() => {
@@ -221,111 +234,7 @@ export default function DashboardPage() {
     )
   }
 
-  if (isMobile) {
-    return (
-      <div className="flex h-screen flex-col bg-background">
-        <RateLimitBanner />
-        <header className="flex h-14 shrink-0 items-center justify-between border-b px-4">
-          <div className="flex items-center">
-            <svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="mr-2">
-              <defs>
-                <linearGradient id="logoGradientDashboard" x1="0%" y1="100%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#10B981" />
-                  <stop offset="100%" stopColor="#34D399" />
-                </linearGradient>
-              </defs>
-              <path d="M16 2C10.477 2 6 6.477 6 12c0 7.5 10 18 10 18s10-10.5 10-18c0-5.523-4.477-10-10-10z" stroke="url(#logoGradientDashboard)" strokeWidth="2.5" fill="none"/>
-              <rect x="11" y="10" width="3" height="8" rx="1" fill="url(#logoGradientDashboard)"/>
-              <rect x="15.5" y="8" width="3" height="10" rx="1" fill="url(#logoGradientDashboard)"/>
-              <rect x="20" y="12" width="3" height="6" rx="1" fill="url(#logoGradientDashboard)" opacity="0.7"/>
-            </svg>
-            <h1 className="text-lg font-semibold tracking-tight">proplytics.de</h1>
-          </div>
-          <div className="flex items-center gap-2">
-            <Link href="/analyse">
-              <Button size="sm" variant="default">
-                <Plus className="w-4 h-4 mr-1" />
-                Neu
-              </Button>
-            </Link>
-            <UserMenu />
-          </div>
-        </header>
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="flex flex-1 flex-col overflow-hidden">
-          <TabsList className="mx-4 mt-2 grid w-auto grid-cols-3">
-            <TabsTrigger value="bewertungen">Bewertungen</TabsTrigger>
-            <TabsTrigger value="finanzierung">Finanzierung</TabsTrigger>
-            <TabsTrigger value="chat">KI-Agent</TabsTrigger>
-          </TabsList>
-          <TabsContent value="bewertungen" className="flex-1 overflow-auto p-4">
-            <div className="mb-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Suchen..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
-            </div>
-            <BewertungenTable
-              bewertungen={paginatedBewertungen}
-              selectedIds={selectedIds}
-              onSelectionChange={setSelectedIds}
-              onDelete={handleDelete}
-              onDuplicate={handleDuplicate}
-              onDragStart={handleDragStart}
-              onDragEnd={handleDragEnd}
-              isLoading={isLoading}
-            />
-
-            {/* Simplified Pagination */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-4 px-2 py-4 border-t">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                  disabled={currentPage === 1}
-                >
-                  <ChevronLeft className="h-4 w-4 mr-1" />
-                  Zurück
-                </Button>
-
-                <span className="text-sm text-muted-foreground">
-                  Seite {currentPage} von {totalPages} ({filteredBewertungen.length} Bewertungen)
-                </span>
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                  disabled={currentPage === totalPages}
-                >
-                  Weiter
-                  <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
-              </div>
-            )}
-          </TabsContent>
-          <TabsContent value="finanzierung" className="flex-1 overflow-auto p-4">
-            <VollmachtManager
-              selectedBewertungId={selectedIds.length > 0 ? selectedIds[0] : undefined}
-            />
-          </TabsContent>
-          <TabsContent value="chat" className="flex-1 overflow-hidden">
-            <ChatPanel
-              activeChatCase={activeChatCase}
-              isDragging={!!draggingBewertung}
-              onDrop={handleDropOnChat}
-              onRemoveCase={() => setActiveChatCase(null)}
-            />
-          </TabsContent>
-        </Tabs>
-      </div>
-    )
-  }
+  // Remove mobile/desktop split - always use tabs layout
 
   return (
     <div className="flex h-screen flex-col bg-background">
