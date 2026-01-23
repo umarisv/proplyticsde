@@ -32,6 +32,22 @@ export default function DashboardPage() {
   const [activeChatCase, setActiveChatCase] = useState<Case | null>(null)
   const [draggingBewertung, setDraggingBewertung] = useState<Bewertung | null>(null)
 
+  // Persist tab state in localStorage
+  const [activeTab, setActiveTab] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('dashboard-active-tab') || 'bewertungen'
+    }
+    return 'bewertungen'
+  })
+
+  // Save tab state to localStorage
+  const handleTabChange = (value: string) => {
+    setActiveTab(value)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('dashboard-active-tab', value)
+    }
+  }
+
   // Memoized Bewertung zu Case Konvertierung
   const bewertungToCase = useCallback((b: Bewertung): Case => {
     const ergebnisse = b.ergebnisse as Record<string, number> | null
@@ -235,7 +251,7 @@ export default function DashboardPage() {
             <UserMenu />
           </div>
         </header>
-        <Tabs defaultValue="bewertungen" className="flex flex-1 flex-col overflow-hidden">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="flex flex-1 flex-col overflow-hidden">
           <TabsList className="mx-4 mt-2 grid w-auto grid-cols-3">
             <TabsTrigger value="bewertungen">Bewertungen</TabsTrigger>
             <TabsTrigger value="finanzierung">Finanzierung</TabsTrigger>
@@ -318,7 +334,7 @@ export default function DashboardPage() {
         <div className="flex items-center">
           <Building2 className="w-6 h-6 mr-2 text-primary" />
           <h1 className="text-lg font-semibold tracking-tight">proplytics.de</h1>
-          <span className="ml-2 text-sm text-muted-foreground">Bewertungsübersicht</span>
+          <span className="ml-2 text-sm text-muted-foreground">Dashboard</span>
         </div>
         <div className="flex items-center gap-4">
           <div className="relative w-64">
@@ -342,64 +358,75 @@ export default function DashboardPage() {
           <UserMenu />
         </div>
       </header>
-      <div className="flex flex-1 overflow-hidden min-h-0">
-        <div className="flex-1 overflow-auto p-6 min-h-0 flex flex-col">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="flex flex-1 flex-col overflow-hidden">
+        <TabsList className="mx-6 mt-4 grid w-auto grid-cols-3">
+          <TabsTrigger value="bewertungen">Bewertungen</TabsTrigger>
+          <TabsTrigger value="finanzierung">Finanzierung</TabsTrigger>
+          <TabsTrigger value="chat">KI-Agent</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="bewertungen" className="flex-1 overflow-auto p-6">
           {error && (
             <div className="mb-4 p-4 bg-destructive/10 text-destructive rounded-lg flex-shrink-0">
               {error}
             </div>
           )}
-          <div className="flex-1 min-h-0">
-            <BewertungenTable
-              bewertungen={paginatedBewertungen}
-              selectedIds={selectedIds}
-              onSelectionChange={setSelectedIds}
-              onDelete={handleDelete}
-              onDuplicate={handleDuplicate}
-              onDragStart={handleDragStart}
-              onDragEnd={handleDragEnd}
-              isLoading={isLoading}
-            />
+          <BewertungenTable
+            bewertungen={paginatedBewertungen}
+            selectedIds={selectedIds}
+            onSelectionChange={setSelectedIds}
+            onDelete={handleDelete}
+            onDuplicate={handleDuplicate}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            isLoading={isLoading}
+          />
 
-            {/* Mobile Pagination */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-4 p-4 border-t">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                  disabled={currentPage === 1}
-                >
-                  <ChevronLeft className="h-4 w-4 mr-1" />
-                  Zurück
-                </Button>
+          {/* Desktop Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-4 p-4 border-t">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Zurück
+              </Button>
 
-                <span className="text-sm text-muted-foreground">
-                  {currentPage} / {totalPages}
-                </span>
+              <span className="text-sm text-muted-foreground">
+                Seite {currentPage} von {totalPages} ({filteredBewertungen.length} Bewertungen)
+              </span>
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                  disabled={currentPage === totalPages}
-                >
-                  Weiter
-                  <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="w-96 shrink-0 border-l flex flex-col overflow-hidden">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+              >
+                Weiter
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="finanzierung" className="flex-1 overflow-auto p-6">
+          <VollmachtManager
+            selectedBewertungId={selectedIds.length > 0 ? selectedIds[0] : undefined}
+          />
+        </TabsContent>
+
+        <TabsContent value="chat" className="flex-1 overflow-hidden">
           <ChatPanel
             activeChatCase={activeChatCase}
             isDragging={!!draggingBewertung}
             onDrop={handleDropOnChat}
             onRemoveCase={() => setActiveChatCase(null)}
           />
-        </div>
-      </div>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
