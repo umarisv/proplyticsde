@@ -74,25 +74,31 @@ export const HeroBackground = memo(function HeroBackground() {
 
       {/* Elegant Geometric Pattern */}
       <div className="absolute inset-0 opacity-30">
-        {/* Large geometric shapes */}
-        <div className="absolute top-20 right-10 w-96 h-96 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 blur-3xl" />
-        <div className="absolute bottom-32 left-20 w-80 h-80 rounded-full bg-gradient-to-br from-blue-100 to-emerald-100 blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-gradient-to-br from-slate-200 to-emerald-50 blur-3xl" />
+        {/* Large geometric shapes with improved gradients */}
+        <div className="absolute top-20 right-10 w-96 h-96 rounded-full bg-gradient-to-br from-emerald-100 via-teal-50 to-blue-100 blur-3xl animate-pulse" style={{ animationDuration: '8s' }} />
+        <div className="absolute bottom-32 left-20 w-80 h-80 rounded-full bg-gradient-to-br from-blue-100 via-cyan-50 to-emerald-100 blur-3xl animate-pulse" style={{ animationDuration: '12s' }} />
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-gradient-to-br from-slate-200 via-emerald-50 to-teal-100 blur-3xl animate-pulse" style={{ animationDuration: '15s' }} />
 
-        {/* Architectural inspired elements */}
+        {/* Additional floating orbs */}
+        <div className="absolute top-10 left-10 w-64 h-64 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 blur-2xl animate-pulse" style={{ animationDuration: '10s' }} />
+        <div className="absolute bottom-10 right-20 w-72 h-72 rounded-full bg-gradient-to-br from-pink-100 to-rose-100 blur-2xl animate-pulse" style={{ animationDuration: '14s' }} />
+
+        {/* Architectural inspired elements with more variety */}
         <div className="absolute top-40 left-32 w-2 h-32 bg-gradient-to-b from-emerald-200 to-transparent rotate-12" />
         <div className="absolute top-60 right-40 w-2 h-24 bg-gradient-to-b from-teal-200 to-transparent -rotate-6" />
         <div className="absolute bottom-40 left-1/3 w-2 h-40 bg-gradient-to-b from-slate-300 to-transparent rotate-3" />
+        <div className="absolute top-32 right-1/3 w-1.5 h-20 bg-gradient-to-b from-blue-200 to-transparent rotate-45" />
+        <div className="absolute bottom-60 right-32 w-1.5 h-28 bg-gradient-to-b from-cyan-200 to-transparent -rotate-12" />
 
-        {/* Subtle grid pattern */}
+        {/* Enhanced grid pattern */}
         <div
-          className="absolute inset-0 opacity-20"
+          className="absolute inset-0 opacity-15"
           style={{
             backgroundImage: `
-              linear-gradient(rgba(16,185,129,0.1) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(16,185,129,0.1) 1px, transparent 1px)
+              linear-gradient(rgba(16,185,129,0.08) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(16,185,129,0.08) 1px, transparent 1px)
             `,
-            backgroundSize: '60px 60px'
+            backgroundSize: '50px 50px'
           }}
         />
       </div>
@@ -107,10 +113,14 @@ export const HeroBackground = memo(function HeroBackground() {
           { icon: "🏗️", x: 80, y: 65, scale: 1.4, delay: 0.5 },
           { icon: "🏡", x: 10, y: 45, scale: 1.1, delay: 1.5 },
           { icon: "🌆", x: 90, y: 50, scale: 1.6, delay: 2.5 },
+          { icon: "🏛️", x: 25, y: 15, scale: 1.3, delay: 3 },
+          { icon: "🏪", x: 75, y: 75, scale: 1.2, delay: 1.8 },
+          { icon: "🏬", x: 5, y: 60, scale: 1.1, delay: 4 },
+          { icon: "🏭", x: 95, y: 20, scale: 1.4, delay: 2.2 },
         ].map((item, i) => (
           <div
             key={i}
-            className="absolute animate-pulse-subtle opacity-60"
+            className="absolute animate-pulse-subtle opacity-50"
             style={{
               left: `${item.x}%`,
               top: `${item.y}%`,
@@ -118,7 +128,7 @@ export const HeroBackground = memo(function HeroBackground() {
               fontSize: `${item.scale}rem`,
             }}
           >
-            <div className="text-emerald-600/40 drop-shadow-sm">
+            <div className="text-emerald-600/35 drop-shadow-sm filter blur-[0.5px]">
               {item.icon}
             </div>
           </div>
@@ -130,17 +140,21 @@ export const HeroBackground = memo(function HeroBackground() {
           { label: "4.8%", x: 75, y: 40, color: "text-teal-600" },
           { label: "78%", x: 30, y: 60, color: "text-blue-600" },
           { label: "A+", x: 70, y: 70, color: "text-slate-600" },
+          { label: "15.2%", x: 12, y: 75, color: "text-cyan-600" },
+          { label: "€850k", x: 88, y: 25, color: "text-indigo-600" },
+          { label: "ROI", x: 40, y: 20, color: "text-green-600" },
+          { label: "2024", x: 60, y: 80, color: "text-purple-600" },
         ].map((point, i) => (
           <div
             key={i}
-            className="absolute animate-pulse-subtle opacity-50"
+            className="absolute animate-pulse-subtle opacity-60"
             style={{
               left: `${point.x}%`,
               top: `${point.y}%`,
               animationDelay: `${i * 0.8}s`,
             }}
           >
-            <div className={`text-xs font-semibold ${point.color} bg-white/80 px-2 py-1 rounded-full border border-white/50 shadow-sm`}>
+            <div className={`text-xs font-semibold ${point.color} bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full border border-white/60 shadow-sm`}>
               {point.label}
             </div>
           </div>

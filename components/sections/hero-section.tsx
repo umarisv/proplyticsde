@@ -54,9 +54,9 @@ export function HeroSection() {
           <h1
             className={`text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight text-slate-900 mb-6 transition-all duration-700 delay-100 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
           >
-            Immobilie bewerten.{" "}
+            Immobilie analysieren.{" "}
             <span className="bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">
-              Sofort.
+              Professionell.
             </span>
           </h1>
 
@@ -64,7 +64,7 @@ export function HeroSection() {
           <p
             className={`text-lg md:text-xl text-slate-600 mb-10 max-w-lg mx-auto leading-relaxed transition-all duration-700 delay-200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
           >
-            Marktwert, Rendite, Sanierungskosten & Risikoanalyse – alles in einem Report.
+            Detaillierte Marktanalyse, Wirtschaftlichkeitsberechnung & professionelle Bewertung.
           </p>
 
           {/* Search Bar */}
@@ -94,7 +94,7 @@ export function HeroSection() {
                 <Loader2 className="h-5 w-5 animate-spin" />
               ) : (
                 <>
-                  Jetzt bewerten
+                  Kostenlose Analyse starten
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </>
               )}
@@ -121,7 +121,7 @@ export function HeroSection() {
               <svg className="h-4 w-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
               </svg>
-              <span>100% kostenlos</span>
+              <span>Vollständige Analyse</span>
             </div>
           </div>
         </div>
