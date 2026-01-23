@@ -8,13 +8,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { BewertungenTable } from "@/components/bewertungen-table"
 import { ChatPanel } from "@/components/dashboard/chat-panel"
+import { VollmachtManager } from "@/components/vollmacht-manager"
 import { UserMenu } from "@/components/user-menu"
 import { RateLimitBanner } from "@/components/rate-limit-banner"
 import { getBewertungen, deleteBewertung, duplicateBewertung } from "@/lib/api/bewertungen"
 import { isSupabaseConfigured } from "@/lib/supabase"
 import type { Bewertung } from "@/lib/database.types"
 import type { Case } from "@/lib/types"
-import { Plus, Search, Building2, RefreshCw, ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
+import { Plus, Search, Building2, RefreshCw, ChevronLeft, ChevronRight, Loader2, FileText } from "lucide-react"
 
 export default function DashboardPage() {
   const isMobile = useIsMobile()
@@ -224,8 +225,9 @@ export default function DashboardPage() {
           </div>
         </header>
         <Tabs defaultValue="bewertungen" className="flex flex-1 flex-col overflow-hidden">
-          <TabsList className="mx-4 mt-2 grid w-auto grid-cols-2">
+          <TabsList className="mx-4 mt-2 grid w-auto grid-cols-3">
             <TabsTrigger value="bewertungen">Bewertungen</TabsTrigger>
+            <TabsTrigger value="finanzierung">Finanzierung</TabsTrigger>
             <TabsTrigger value="chat">KI-Agent</TabsTrigger>
           </TabsList>
           <TabsContent value="bewertungen" className="flex-1 overflow-auto p-4">
@@ -279,6 +281,11 @@ export default function DashboardPage() {
                 </Button>
               </div>
             )}
+          </TabsContent>
+          <TabsContent value="finanzierung" className="flex-1 overflow-auto p-4">
+            <VollmachtManager
+              selectedBewertungId={selectedIds.length > 0 ? selectedIds[0] : undefined}
+            />
           </TabsContent>
           <TabsContent value="chat" className="flex-1 overflow-hidden">
             <ChatPanel

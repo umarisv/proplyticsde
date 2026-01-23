@@ -9,6 +9,141 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      vollmachten: {
+        Row: {
+          id: string
+          created_at: string
+          updated_at: string
+          user_id: string
+          file_name: string
+          file_path: string
+          file_size: number
+          mime_type: string
+          status: 'aktiv' | 'inaktiv' | 'abgelaufen'
+          valid_from: string
+          valid_until: string | null
+          bank_connections: Json | null
+          permissions: string[]
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          updated_at?: string
+          user_id: string
+          file_name: string
+          file_path: string
+          file_size: number
+          mime_type: string
+          status?: 'aktiv' | 'inaktiv' | 'abgelaufen'
+          valid_from: string
+          valid_until?: string | null
+          bank_connections?: Json | null
+          permissions?: string[]
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          updated_at?: string
+          user_id?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          mime_type?: string
+          status?: 'aktiv' | 'inaktiv' | 'abgelaufen'
+          valid_from?: string
+          valid_until?: string | null
+          bank_connections?: Json | null
+          permissions?: string[]
+        }
+      }
+      finanzierungsantraege: {
+        Row: {
+          id: string
+          created_at: string
+          updated_at: string
+          user_id: string
+          bewertung_id: string
+          status: 'entwurf' | 'eingereicht' | 'in_pruefung' | 'genehmigt' | 'abgelehnt'
+          bank_name: string
+          dokumente_required: string[]
+          dokumente_submitted: Json | null
+          ki_agent_status: 'idle' | 'analysiere' | 'beantrage_dokumente' | 'warte_auf_dokumente' | 'fertig'
+          ki_agent_notes: string | null
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          updated_at?: string
+          user_id: string
+          bewertung_id: string
+          status?: 'entwurf' | 'eingereicht' | 'in_pruefung' | 'genehmigt' | 'abgelehnt'
+          bank_name: string
+          dokumente_required?: string[]
+          dokumente_submitted?: Json | null
+          ki_agent_status?: 'idle' | 'analysiere' | 'beantrage_dokumente' | 'warte_auf_dokumente' | 'fertig'
+          ki_agent_notes?: string | null
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          updated_at?: string
+          user_id?: string
+          bewertung_id?: string
+          status?: 'entwurf' | 'eingereicht' | 'in_pruefung' | 'genehmigt' | 'abgelehnt'
+          bank_name?: string
+          dokumente_required?: string[]
+          dokumente_submitted?: Json | null
+          ki_agent_status?: 'idle' | 'analysiere' | 'beantrage_dokumente' | 'warte_auf_dokumente' | 'fertig'
+          ki_agent_notes?: string | null
+        }
+      }
+      dokumente: {
+        Row: {
+          id: string
+          created_at: string
+          updated_at: string
+          user_id: string
+          finanzierungsantrag_id: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          mime_type: string
+          document_type: 'vollmacht' | 'einkommensnachweis' | 'schufa' | 'grundbuchauszug' | 'bankauszug' | 'steuerbescheid' | 'sonstiges'
+          status: 'hochgeladen' | 'in_pruefung' | 'freigegeben' | 'abgelehnt'
+          extracted_data: Json | null
+          ai_analysis: Json | null
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          updated_at?: string
+          user_id: string
+          finanzierungsantrag_id?: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          mime_type: string
+          document_type: 'vollmacht' | 'einkommensnachweis' | 'schufa' | 'grundbuchauszug' | 'bankauszug' | 'steuerbescheid' | 'sonstiges'
+          status?: 'hochgeladen' | 'in_pruefung' | 'freigegeben' | 'abgelehnt'
+          extracted_data?: Json | null
+          ai_analysis?: Json | null
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          updated_at?: string
+          user_id?: string
+          finanzierungsantrag_id?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          mime_type?: string
+          document_type?: 'vollmacht' | 'einkommensnachweis' | 'schufa' | 'grundbuchauszug' | 'bankauszug' | 'steuerbescheid' | 'sonstiges'
+          status?: 'hochgeladen' | 'in_pruefung' | 'freigegeben' | 'abgelehnt'
+          extracted_data?: Json | null
+          ai_analysis?: Json | null
+        }
+      }
       bewertungen: {
         Row: {
           id: string
