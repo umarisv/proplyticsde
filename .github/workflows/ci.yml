@@ -59,17 +59,20 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 🏗️ Build Docker image
+      - name: 🏗️ Build and Push Docker image
         if: github.ref == 'refs/heads/main'
         run: |
+          # Build Docker image
           docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest .
+
+          # Tag with commit SHA
           docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
-      - name: 📤 Push Docker image
-        if: github.ref == 'refs/heads/main'
-        run: |
+          # Push images
           docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
           docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+          echo "✅ Docker image pushed successfully!"
 
   # CD Job - Deploy to Server
   deploy:
@@ -82,15 +85,24 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: 🔐 Setup SSH
+      - name: 🔐 Setup SSH (Optional)
+        if: env.SERVER_HOST != ''
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SERVER_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+          if [ -n "${{ secrets.SERVER_SSH_PRIVATE_KEY }}" ] && [ -n "${{ secrets.SERVER_HOST }}" ]; then
+            mkdir -p ~/.ssh
+            echo "${{ secrets.SERVER_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+            chmod 600 ~/.ssh/id_rsa
+            ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+            echo "SSH_SETUP=true" >> $GITHUB_ENV
+          else
+            echo "SSH_SETUP=false" >> $GITHUB_ENV
+            echo "⚠️ SSH credentials not configured - skipping deployment"
+          fi
 
       - name: 🚀 Deploy to Server
+        if: env.SSH_SETUP == 'true'
         run: |
+          echo "🚀 Starting deployment to ${{ secrets.SERVER_HOST }}..."
           ssh -i ~/.ssh/id_rsa ubuntu@${{ secrets.SERVER_HOST }} << 'EOF'
             cd /opt/proplytics
 
@@ -131,18 +143,28 @@ jobs:
           EOF
 
       - name: 📢 Deployment Success
-        if: success()
+        if: success() && env.SSH_SETUP == 'true'
         run: |
           echo "🎉 Deployment successful!"
           echo "🌐 Application available at: https://proplytics.de"
           echo "📊 New features:"
-          echo "  - Enhanced Bankmappe with PDF export"
-          echo "  - Interactive LTV simulator"
-          echo "  - Energy efficiency visualization"
-          echo "  - Bank readiness scoring"
+          echo "  - New geometric landing page design"
+          echo "  - Removed time/accuracy claims"
+          echo "  - Enhanced Bankmappe features"
+
+      - name: 📋 Build Success (No Deployment)
+        if: env.SSH_SETUP != 'true'
+        run: |
+          echo "✅ Build successful!"
+          echo "📦 Docker image pushed to GitHub Container Registry"
+          echo "⚠️ Deployment skipped - SSH credentials not configured"
+          echo "🔧 To enable deployment:"
+          echo "   1. Go to Repository Settings → Secrets"
+          echo "   2. Add SERVER_HOST, SERVER_SSH_PRIVATE_KEY"
+          echo "   3. Next push will deploy automatically"
 
       - name: 🚨 Deployment Failed
-        if: failure()
+        if: failure() && env.SSH_SETUP == 'true'
         run: |
           echo "❌ Deployment failed!"
           echo "Please check the server logs and GitHub Actions logs for details."
