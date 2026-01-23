@@ -45,22 +45,6 @@ export default function DashboardPage() {
     }
   }
 
-  // Persist tab state in localStorage
-  const [activeTab, setActiveTab] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('dashboard-active-tab') || 'bewertungen'
-    }
-    return 'bewertungen'
-  })
-
-  // Save tab state to localStorage
-  const handleTabChange = (value: string) => {
-    setActiveTab(value)
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('dashboard-active-tab', value)
-    }
-  }
-
   // Memoized Bewertung zu Case Konvertierung
   const bewertungToCase = useCallback((b: Bewertung): Case => {
     const ergebnisse = b.ergebnisse as Record<string, number> | null
