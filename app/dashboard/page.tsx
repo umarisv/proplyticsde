@@ -168,7 +168,7 @@ export default function DashboardPage() {
           <div className="flex items-center">
             <Building2 className="w-6 h-6 mr-2 text-primary" />
             <h1 className="text-lg font-semibold tracking-tight">proplytics.de</h1>
-            <span className="ml-2 text-sm text-muted-foreground">Bewertungsübersicht</span>
+            <span className="ml-2 text-sm text-muted-foreground">Dashboard</span>
           </div>
           <div className="flex items-center gap-4">
           <Link href="/analyse">
@@ -180,24 +180,49 @@ export default function DashboardPage() {
           <UserMenu />
           </div>
         </header>
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center max-w-md px-4">
-            <Building2 className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold mb-2">Datenbank nicht konfiguriert</h2>
-            <p className="text-muted-foreground mb-6">
-              Um Bewertungen zu speichern und zu verwalten, konfigurieren Sie bitte Supabase in den Umgebungsvariablen.
-            </p>
-            <div className="space-y-2">
-              <Link href="/analyse">
-                <Button className="w-full">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Neue Analyse starten
-                </Button>
-              </Link>
-              <p className="text-xs text-muted-foreground">
-                Analysen können auch ohne Datenbank durchgeführt werden
-              </p>
+        <div className="flex flex-1 overflow-hidden min-h-0">
+          <div className="flex-1 overflow-auto min-h-0">
+            <div className="p-6 pb-4">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="bewertungen">Bewertungen</TabsTrigger>
+                  <TabsTrigger value="finanzierung">Finanzierung</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="bewertungen" className="mt-6">
+                  <div className="text-center max-w-md mx-auto">
+                    <Building2 className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
+                    <h2 className="text-xl font-semibold mb-2">Datenbank nicht konfiguriert</h2>
+                    <p className="text-muted-foreground mb-6">
+                      Um Bewertungen zu speichern und zu verwalten, konfigurieren Sie bitte Supabase in den Umgebungsvariablen.
+                    </p>
+                    <div className="space-y-2">
+                      <Link href="/analyse">
+                        <Button className="w-full">
+                          <Plus className="w-4 h-4 mr-2" />
+                          Neue Analyse starten
+                        </Button>
+                      </Link>
+                      <p className="text-xs text-muted-foreground">
+                        Analysen können auch ohne Datenbank durchgeführt werden
+                      </p>
+                    </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="finanzierung" className="mt-6">
+                  <VollmachtManager />
+                </TabsContent>
+              </Tabs>
             </div>
+          </div>
+          <div className="w-96 shrink-0 border-l flex flex-col overflow-hidden">
+            <ChatPanel
+              activeChatCase={null}
+              isDragging={false}
+              onDrop={() => {}}
+              onRemoveCase={() => {}}
+            />
           </div>
         </div>
       </div>
