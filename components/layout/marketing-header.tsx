@@ -52,6 +52,9 @@ export function MarketingHeader() {
           <Link href="#features" className="text-sm text-black/60 hover:text-black transition-colors">
             Features
           </Link>
+          <Link href="/blog" className="text-sm text-black/60 hover:text-black transition-colors">
+            Blog
+          </Link>
           <Link href="#how-it-works" className="text-sm text-black/60 hover:text-black transition-colors">
             So funktioniert's
           </Link>
