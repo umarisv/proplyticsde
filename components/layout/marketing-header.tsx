@@ -49,17 +49,17 @@ export function MarketingHeader() {
 
         {/* Navigation */}
         <nav className="hidden md:flex items-center gap-6">
-          <Link href="#features" className="text-sm text-black/60 hover:text-black transition-colors">
-            Features
-          </Link>
           <Link href="/blog" className="text-sm text-black/60 hover:text-black transition-colors">
             Blog
           </Link>
-          <Link href="#how-it-works" className="text-sm text-black/60 hover:text-black transition-colors">
-            So funktioniert's
+          <Link href="/academy" className="text-sm text-black/60 hover:text-black transition-colors">
+            Academy
           </Link>
-          <Link href="#security" className="text-sm text-black/60 hover:text-black transition-colors">
-            Sicherheit
+          <Link href="/marktplatz" className="text-sm text-black/60 hover:text-black transition-colors">
+            Marktplatz
+          </Link>
+          <Link href="/community" className="text-sm text-black/60 hover:text-black transition-colors">
+            Community
           </Link>
         </nav>
 
