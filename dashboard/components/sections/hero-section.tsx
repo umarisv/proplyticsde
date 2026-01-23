@@ -47,7 +47,7 @@ export function HeroSection() {
             className={`inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-100 mb-8 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
           >
             <Sparkles className="h-4 w-4 text-emerald-500" />
-            <span className="text-sm font-medium text-emerald-700">KI-gestützte Bewertung in 60 Sekunden</span>
+            <span className="text-sm font-medium text-emerald-700">KI-gestützte Immobilienbewertung</span>
           </div>
 
           {/* Headline */}

@@ -5,8 +5,8 @@ import { useEffect, useState, useRef } from "react"
 const stats = [
   { value: 15000, suffix: "+", label: "Bewertungen", prefix: "" },
   { value: 4.8, suffix: "/5", label: "Kundenzufriedenheit", prefix: "", decimals: 1 },
-  { value: 60, suffix: "s", label: "Durchschnittliche Analyse", prefix: "" },
-  { value: 98, suffix: "%", label: "Genauigkeit", prefix: "" },
+  { value: 60, suffix: "s", label: "Schnelle Analyse", prefix: "" },
+  { value: 5000, suffix: "+", label: "Zufriedene Kunden", prefix: "" },
 ]
 
 function AnimatedCounter({ 

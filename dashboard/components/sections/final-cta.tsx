@@ -38,7 +38,7 @@ export function FinalCTA() {
             Starte jetzt – Adresse reicht.
           </h2>
           <p className="text-black/60 text-lg mb-12">
-            Erhalten Sie in 60 Sekunden eine professionelle Werteinschätzung.
+            Erhalten Sie eine professionelle Werteinschätzung.
           </p>
 
           {/* Search Bar */}
