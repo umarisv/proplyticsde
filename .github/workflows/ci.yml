@@ -97,18 +97,20 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: 🔐 Setup SSH (Optional)
-        if: env.SERVER_HOST != ''
+      - name: 🔐 Setup SSH (Hetzner)
         run: |
+          echo "🔑 Setting up SSH for Hetzner deployment..."
           if [ -n "${{ secrets.SERVER_SSH_PRIVATE_KEY }}" ] && [ -n "${{ secrets.SERVER_HOST }}" ]; then
             mkdir -p ~/.ssh
-            echo "${{ secrets.SERVER_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+            echo "${{ secrets.SERVER_SSH_PRIVATE_KEY }}" | sed 's/\\n/\n/g' > ~/.ssh/id_rsa
             chmod 600 ~/.ssh/id_rsa
             ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
             echo "SSH_SETUP=true" >> $GITHUB_ENV
+            echo "✅ SSH configured for Hetzner server: ${{ secrets.SERVER_HOST }}"
           else
             echo "SSH_SETUP=false" >> $GITHUB_ENV
-            echo "⚠️ SSH credentials not configured - skipping deployment"
+            echo "⚠️ SSH credentials not configured - Hetzner deployment skipped"
+            echo "📝 Add SERVER_HOST and SERVER_SSH_PRIVATE_KEY to GitHub Secrets"
           fi
 
       - name: 🚀 Deploy to Server
