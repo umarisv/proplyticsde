@@ -58,16 +58,34 @@ export default function DashboardPage() {
   const loadBewertungen = useCallback(async () => {
     setIsLoading(true)
     setError(null)
-    
+
     try {
+      const configured = isSupabaseConfigured()
+      if (!configured) {
+        // Show empty state if Supabase is not configured
+        setBewertungen([])
+        setIsLoading(false)
+        return
+      }
+
       const { data, error: fetchError } = await getBewertungen()
       if (fetchError) {
+        // If it's a configuration error, show empty state
+        if (fetchError.message.includes('not configured')) {
+          setBewertungen([])
+          setIsLoading(false)
+          return
+        }
         throw fetchError
       }
       setBewertungen(data || [])
     } catch (err) {
       console.error('Fehler beim Laden:', err)
-      setError('Fehler beim Laden der Bewertungen')
+      // Show user-friendly error message
+      const errorMessage = err instanceof Error && err.message.includes('Datenbankfehler')
+        ? 'Verbindung zur Datenbank fehlgeschlagen. Lokale Daten werden verwendet.'
+        : 'Fehler beim Laden der Bewertungen. Bitte versuchen Sie es später erneut.'
+      setError(errorMessage)
     } finally {
       setIsLoading(false)
     }
@@ -76,12 +94,9 @@ export default function DashboardPage() {
   useEffect(() => {
     const configured = isSupabaseConfigured()
     setIsConfigured(configured)
-    
-    if (configured) {
-      loadBewertungen()
-    } else {
-      setIsLoading(false)
-    }
+
+    // Always try to load bewertungen, even if not configured (will show empty state)
+    loadBewertungen()
   }, [loadBewertungen])
 
   const handleDelete = async (id: string) => {
