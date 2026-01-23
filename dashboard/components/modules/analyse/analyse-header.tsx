@@ -96,9 +96,18 @@ export function AnalyseHeader({ address, onNewAnalysis, resultData, formData, be
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
-        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/20">
-          <Building2 className="w-5 h-5 text-primary" />
-        </div>
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="transition-transform hover:scale-105">
+          <defs>
+            <linearGradient id="logoGradientDashboardAnalyse" x1="0%" y1="100%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#10B981" />
+              <stop offset="100%" stopColor="#34D399" />
+            </linearGradient>
+          </defs>
+          <path d="M16 2C10.477 2 6 6.477 6 12c0 7.5 10 18 10 18s10-10.5 10-18c0-5.523-4.477-10-10-10z" stroke="url(#logoGradientDashboardAnalyse)" strokeWidth="2.5" fill="none"/>
+          <rect x="11" y="10" width="3" height="8" rx="1" fill="url(#logoGradientDashboardAnalyse)"/>
+          <rect x="15.5" y="8" width="3" height="10" rx="1" fill="url(#logoGradientDashboardAnalyse)"/>
+          <rect x="20" y="12" width="3" height="6" rx="1" fill="url(#logoGradientDashboardAnalyse)" opacity="0.7"/>
+        </svg>
         <div className="flex items-center gap-2">
           <span className="text-xl font-semibold tracking-tight">Proplytics</span>
           <Badge variant="secondary" className="hidden sm:inline-flex text-xs">

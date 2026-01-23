@@ -184,7 +184,18 @@ export default function DashboardPage() {
         <RateLimitBanner />
         <header className="flex h-14 shrink-0 items-center justify-between border-b px-4">
           <div className="flex items-center">
-            <Building2 className="w-5 h-5 mr-2 text-primary" />
+            <svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="mr-2">
+              <defs>
+                <linearGradient id="logoGradientDashboard" x1="0%" y1="100%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#10B981" />
+                  <stop offset="100%" stopColor="#34D399" />
+                </linearGradient>
+              </defs>
+              <path d="M16 2C10.477 2 6 6.477 6 12c0 7.5 10 18 10 18s10-10.5 10-18c0-5.523-4.477-10-10-10z" stroke="url(#logoGradientDashboard)" strokeWidth="2.5" fill="none"/>
+              <rect x="11" y="10" width="3" height="8" rx="1" fill="url(#logoGradientDashboard)"/>
+              <rect x="15.5" y="8" width="3" height="10" rx="1" fill="url(#logoGradientDashboard)"/>
+              <rect x="20" y="12" width="3" height="6" rx="1" fill="url(#logoGradientDashboard)" opacity="0.7"/>
+            </svg>
             <h1 className="text-lg font-semibold tracking-tight">proplytics.de</h1>
           </div>
           <div className="flex items-center gap-2">
