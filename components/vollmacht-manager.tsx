@@ -17,6 +17,38 @@ interface VollmachtManagerProps {
   selectedBewertungId?: string
 }
 
+// Einfache Test-Version zuerst
+export function VollmachtManager({ onVollmachtSelected, selectedBewertungId }: VollmachtManagerProps) {
+  console.log('🔧 VollmachtManager wird gerendert!')
+
+  return (
+    <div className="p-6 border rounded-lg bg-card">
+      <h2 className="text-2xl font-bold mb-4">🔑 Vollmacht-Management</h2>
+      <p className="text-muted-foreground mb-4">
+        Hier können Sie Vollmachten für automatische Finanzierungsprozesse hochladen.
+      </p>
+
+      <div className="space-y-4">
+        <div className="p-4 border-2 border-dashed border-muted-foreground/25 rounded-lg text-center">
+          <p className="text-sm text-muted-foreground">
+            Vollmacht-Upload kommt bald...
+          </p>
+        </div>
+
+        {selectedBewertungId && (
+          <div className="p-4 bg-primary/10 rounded-lg">
+            <p className="text-sm">
+              ✅ Ausgewählte Bewertung: <code>{selectedBewertungId}</code>
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// Vollständige Implementierung auskommentiert für Test
+/*
 export function VollmachtManager({ onVollmachtSelected, selectedBewertungId }: VollmachtManagerProps) {
   const [vollmachten, setVollmachten] = useState<Vollmacht[]>([])
   const [finanzierungsantraege, setFinanzierungsantraege] = useState<Finanzierungsantrag[]>([])
