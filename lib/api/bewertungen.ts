@@ -144,7 +144,7 @@ export async function saveBewertung(input: BewertungInput): Promise<{ data: Bewe
 // Get all bewertungen (filtered by user if authenticated)
 export async function getBewertungen(): Promise<{ data: Bewertung[] | null; error: Error | null }> {
   if (!isSupabaseConfigured()) {
-    // Fallback: Try localStorage first, then return empty array
+    // Fallback: Try localStorage first, then create sample data
     try {
       const localData = localStorage.getItem('proplytics_bewertungen')
       if (localData) {
@@ -155,8 +155,85 @@ export async function getBewertungen(): Promise<{ data: Bewertung[] | null; erro
       console.warn('Could not load from localStorage:', err)
     }
 
-    console.warn('Supabase is not configured and no local data found, returning empty list')
-    return { data: [], error: null }
+    // Create sample data for demo purposes
+    console.log('Creating sample bewertungen data for demo')
+    const sampleBewertungen: Bewertung[] = [
+      {
+        id: 'sample_1',
+        adresse: 'Musterstraße 123, 40239 Düsseldorf',
+        plz: '40239',
+        stadt: 'Düsseldorf',
+        objekttyp: 'mfh',
+        wohnflaeche: 850,
+        grundstueck: 1200,
+        baujahr: 1965,
+        zustand: 'gepflegt',
+        ausstattung: 'mittel',
+        lage: 'mittel',
+        energieeffizienz: 'D',
+        anzahl_wohnungen: 6,
+        stellplaetze: 4,
+        keller: true,
+        balkon: true,
+        aufzug: false,
+        ist_miete: 12500,
+        bodenrichtwert: 580,
+        kaufpreis: 3200000,
+        ergebnisse: {
+          marktwert: 3250000,
+          ertragswert: 3100000,
+          sachwert: 3200000,
+          faktor: 0.95,
+          bruttoRendite: 4.2
+        },
+        status: 'aktiv',
+        user_id: null,
+        created_at: new Date(Date.now() - 86400000).toISOString(),
+        updated_at: new Date(Date.now() - 86400000).toISOString(),
+      },
+      {
+        id: 'sample_2',
+        adresse: 'Beispielweg 45, 20095 Hamburg',
+        plz: '20095',
+        stadt: 'Hamburg',
+        objekttyp: 'efh',
+        wohnflaeche: 180,
+        grundstueck: 600,
+        baujahr: 1995,
+        zustand: 'gut',
+        ausstattung: 'gehoben',
+        lage: 'gut',
+        energieeffizienz: 'B',
+        anzahl_wohnungen: 1,
+        stellplaetze: 2,
+        keller: true,
+        balkon: false,
+        aufzug: false,
+        ist_miete: 0,
+        bodenrichtwert: 1200,
+        kaufpreis: 850000,
+        ergebnisse: {
+          marktwert: 875000,
+          ertragswert: 860000,
+          sachwert: 880000,
+          faktor: 0.92,
+          bruttoRendite: 0
+        },
+        status: 'aktiv',
+        user_id: null,
+        created_at: new Date(Date.now() - 172800000).toISOString(),
+        updated_at: new Date(Date.now() - 172800000).toISOString(),
+      }
+    ]
+
+    // Save sample data to localStorage
+    try {
+      localStorage.setItem('proplytics_bewertungen', JSON.stringify(sampleBewertungen))
+    } catch (err) {
+      console.warn('Could not save sample data to localStorage:', err)
+    }
+
+    return { data: sampleBewertungen, error: null }
   }
 
   try {
