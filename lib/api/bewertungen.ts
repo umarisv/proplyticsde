@@ -143,144 +143,49 @@ export async function saveBewertung(input: BewertungInput): Promise<{ data: Bewe
 
 // Get all bewertungen (filtered by user if authenticated)
 export async function getBewertungen(): Promise<{ data: Bewertung[] | null; error: Error | null }> {
+  console.log('🔍 getBewertungen called')
+
   if (!isSupabaseConfigured()) {
-    // Fallback: Try localStorage first, then create sample data
-    try {
-      const localData = localStorage.getItem('proplytics_bewertungen')
-      if (localData) {
-        const bewertungen = JSON.parse(localData)
-        return { data: bewertungen, error: null }
-      }
-    } catch (err) {
-      console.warn('Could not load from localStorage:', err)
-    }
-
-    // Create sample data for demo purposes
-    console.log('Creating sample bewertungen data for demo')
-    const sampleBewertungen: Bewertung[] = [
-      {
-        id: 'sample_1',
-        adresse: 'Musterstraße 123, 40239 Düsseldorf',
-        plz: '40239',
-        stadt: 'Düsseldorf',
-        objekttyp: 'mfh',
-        wohnflaeche: 850,
-        grundstueck: 1200,
-        baujahr: 1965,
-        zustand: 'gepflegt',
-        ausstattung: 'mittel',
-        lage: 'mittel',
-        energieeffizienz: 'D',
-        anzahl_wohnungen: 6,
-        stellplaetze: 4,
-        keller: true,
-        balkon: true,
-        aufzug: false,
-        ist_miete: 12500,
-        bodenrichtwert: 580,
-        kaufpreis: 3200000,
-        ergebnisse: {
-          marktwert: 3250000,
-          ertragswert: 3100000,
-          sachwert: 3200000,
-          faktor: 0.95,
-          bruttoRendite: 4.2
-        },
-        status: 'aktiv',
-        user_id: null,
-        created_at: new Date(Date.now() - 86400000).toISOString(),
-        updated_at: new Date(Date.now() - 86400000).toISOString(),
-      },
-      {
-        id: 'sample_2',
-        adresse: 'Beispielweg 45, 20095 Hamburg',
-        plz: '20095',
-        stadt: 'Hamburg',
-        objekttyp: 'efh',
-        wohnflaeche: 180,
-        grundstueck: 600,
-        baujahr: 1995,
-        zustand: 'gut',
-        ausstattung: 'gehoben',
-        lage: 'gut',
-        energieeffizienz: 'B',
-        anzahl_wohnungen: 1,
-        stellplaetze: 2,
-        keller: true,
-        balkon: false,
-        aufzug: false,
-        ist_miete: 0,
-        bodenrichtwert: 1200,
-        kaufpreis: 850000,
-        ergebnisse: {
-          marktwert: 875000,
-          ertragswert: 860000,
-          sachwert: 880000,
-          faktor: 0.92,
-          bruttoRendite: 0
-        },
-        status: 'aktiv',
-        user_id: null,
-        created_at: new Date(Date.now() - 172800000).toISOString(),
-        updated_at: new Date(Date.now() - 172800000).toISOString(),
-      }
-    ]
-
-    // Save sample data to localStorage
-    try {
-      localStorage.setItem('proplytics_bewertungen', JSON.stringify(sampleBewertungen))
-    } catch (err) {
-      console.warn('Could not save sample data to localStorage:', err)
-    }
-
-    return { data: sampleBewertungen, error: null }
+    console.log('⚠️ Supabase not configured, using sample data')
+    return { data: [], error: null }
   }
 
   try {
+    console.log('🔐 Getting user ID...')
     const userId = await getCurrentUserId()
+    console.log('👤 User ID:', userId)
 
+    console.log('📡 Making Supabase query...')
     let query = supabase
       .from('bewertungen')
       .select('*')
       .eq('status', 'aktiv')
 
     // If user is logged in, show only their bewertungen
-    // Otherwise, RLS will handle visibility
     if (userId) {
       query = query.eq('user_id', userId)
+      console.log('🔒 Filtering by user_id:', userId)
+    } else {
+      console.log('🔓 No user filter (RLS will handle)')
     }
 
-    // Limit results for better performance - only load recent 50 items
     const { data, error } = await query
       .order('created_at', { ascending: false })
-      .limit(50)
+      .limit(5) // Reduced for testing
 
-    const bewertungen = data || []
+    console.log('📊 Query result:', { data, error })
 
-    // Cache in localStorage for offline use
-    try {
-      localStorage.setItem('proplytics_bewertungen', JSON.stringify(bewertungen))
-    } catch (cacheErr) {
-      console.warn('Could not cache to localStorage:', cacheErr)
+    if (error) {
+      console.error('❌ Supabase error:', error)
+      return { data: [], error: new Error(error.message) }
     }
 
-    return { data: bewertungen, error: error ? new Error(error.message) : null }
+    console.log('✅ Success! Found', data?.length || 0, 'bewertungen')
+    return { data: data || [], error: null }
+
   } catch (err) {
-    console.error('Database error in getBewertungen:', err)
-
-    // Try localStorage fallback
-    try {
-      const localData = localStorage.getItem('proplytics_bewertungen')
-      if (localData) {
-        console.log('Using cached data from localStorage')
-        return { data: JSON.parse(localData), error: null }
-      }
-    } catch (cacheErr) {
-      console.warn('Could not load from localStorage fallback:', cacheErr)
-    }
-
-    // Return empty array on error to prevent app crashes
-    return { data: [], error: new Error('Datenbankfehler - verwende lokale Daten') }
+    console.error('💥 Exception in getBewertungen:', err)
+    return { data: [], error: new Error(`Exception: ${err.message}`) }
   }
 }
 
