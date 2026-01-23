@@ -164,7 +164,7 @@ export default function DashboardPage() {
     return (
       <div className="flex h-screen flex-col bg-background">
         <RateLimitBanner />
-        <header className="flex h-14 shrink-0 items-center justify-between border-b px-6">
+        <header className="flex h-14 shrink-0 items-center justify-between border-b px-6 bg-red-500">
           <div className="flex items-center">
             <Building2 className="w-6 h-6 mr-2 text-primary" />
             <h1 className="text-lg font-semibold tracking-tight">proplytics.de</h1>
