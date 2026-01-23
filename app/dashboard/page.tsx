@@ -57,20 +57,28 @@ export default function DashboardPage() {
   }, [])
 
   const loadBewertungen = useCallback(async () => {
+    console.log('🚀 Dashboard: loadBewertungen called')
     setIsLoading(true)
     setError(null)
 
     try {
+      console.log('🔧 Dashboard: Checking Supabase config...')
       const configured = isSupabaseConfigured()
+      console.log('📊 Dashboard: Supabase configured:', configured)
+
       if (!configured) {
-        // Show empty state if Supabase is not configured
+        console.log('⚠️ Dashboard: Supabase not configured, showing empty state')
         setBewertungen([])
         setIsLoading(false)
         return
       }
 
+      console.log('📡 Dashboard: Calling getBewertungen...')
       const { data, error: fetchError } = await getBewertungen()
+      console.log('📊 Dashboard: getBewertungen result:', { dataLength: data?.length, error: fetchError })
+
       if (fetchError) {
+        console.log('❌ Dashboard: Fetch error:', fetchError.message)
         // If it's a configuration error, show empty state
         if (fetchError.message.includes('not configured')) {
           setBewertungen([])
@@ -79,9 +87,11 @@ export default function DashboardPage() {
         }
         throw fetchError
       }
+
+      console.log('✅ Dashboard: Setting bewertungen data')
       setBewertungen(data || [])
     } catch (err) {
-      console.error('Fehler beim Laden:', err)
+      console.error('💥 Dashboard: Exception in loadBewertungen:', err)
       // Show user-friendly error message
       const errorMessage = err instanceof Error && err.message.includes('Datenbankfehler')
         ? 'Verbindung zur Datenbank fehlgeschlagen. Lokale Daten werden verwendet.'
@@ -89,6 +99,7 @@ export default function DashboardPage() {
       setError(errorMessage)
     } finally {
       setIsLoading(false)
+      console.log('🏁 Dashboard: loadBewertungen finished')
     }
   }, [])
 
