@@ -14,7 +14,7 @@ import { getBewertungen, deleteBewertung, duplicateBewertung } from "@/lib/api/b
 import { isSupabaseConfigured } from "@/lib/supabase"
 import type { Bewertung } from "@/lib/database.types"
 import type { Case } from "@/lib/types"
-import { Plus, Search, Building2, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react"
+import { Plus, Search, Building2, RefreshCw, ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
 
 export default function DashboardPage() {
   const isMobile = useIsMobile()
@@ -25,7 +25,7 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null)
   const [isConfigured, setIsConfigured] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 20
+  const itemsPerPage = 5 // Further reduced for optimal performance
 
   // Drag-and-drop für KI-Agent
   const [activeChatCase, setActiveChatCase] = useState<Case | null>(null)
@@ -236,53 +236,32 @@ export default function DashboardPage() {
               isLoading={isLoading}
             />
 
-            {/* Pagination */}
+            {/* Simplified Pagination */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between px-2 py-4">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <span>
-                    {filteredBewertungen.length > 0
-                      ? `${(currentPage - 1) * itemsPerPage + 1}-${Math.min(currentPage * itemsPerPage, filteredBewertungen.length)} von ${filteredBewertungen.length}`
-                      : 'Keine Ergebnisse'
-                    }
-                  </span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                    disabled={currentPage === 1}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
+              <div className="flex items-center justify-center gap-4 px-2 py-4 border-t">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Zurück
+                </Button>
 
-                  <div className="flex items-center gap-1">
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                      const pageNumber = i + 1
-                      return (
-                        <Button
-                          key={pageNumber}
-                          variant={currentPage === pageNumber ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => setCurrentPage(pageNumber)}
-                          className="w-8 h-8 p-0"
-                        >
-                          {pageNumber}
-                        </Button>
-                      )
-                    })}
-                  </div>
+                <span className="text-sm text-muted-foreground">
+                  Seite {currentPage} von {totalPages} ({filteredBewertungen.length} Bewertungen)
+                </span>
 
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                    disabled={currentPage === totalPages}
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Weiter
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
               </div>
             )}
           </TabsContent>
@@ -351,17 +330,18 @@ export default function DashboardPage() {
 
             {/* Mobile Pagination */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 p-4 border-t bg-background">
+              <div className="flex items-center justify-center gap-4 p-4 border-t">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
                 >
-                  <ChevronLeft className="h-4 w-4" />
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Zurück
                 </Button>
 
-                <span className="text-sm text-muted-foreground px-2">
+                <span className="text-sm text-muted-foreground">
                   {currentPage} / {totalPages}
                 </span>
 
@@ -371,7 +351,8 @@ export default function DashboardPage() {
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages}
                 >
-                  <ChevronRight className="h-4 w-4" />
+                  Weiter
+                  <ChevronRight className="h-4 w-4 ml-1" />
                 </Button>
               </div>
             )}

@@ -1,13 +1,12 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useState } from "react"
+import { useState, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Calendar, Clock, User, ArrowRight, TrendingUp, Building2, Euro, Search, ExternalLink, Newspaper, LayoutDashboard, Home, BookOpen, Filter, Star, Eye, ThumbsUp, AlertCircle, BarChart3 } from "lucide-react"
-import { createClient } from "@/lib/supabase/client"
 
 // Mock blog data - in production, this would come from a CMS or database
 const blogPosts = [
@@ -170,79 +169,32 @@ interface NewsArticle {
 }
 
 export default function BlogPage() {
-  const [newsArticles, setNewsArticles] = useState<NewsArticle[]>([])
-  const [newsLoading, setNewsLoading] = useState(true)
+  // Simplified state management
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("Alle")
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [generatedArticles, setGeneratedArticles] = useState<any[]>([])
-  const [lastGeneration, setLastGeneration] = useState<string | null>(null)
 
-  // Combine static blog posts with generated articles
-  const allBlogPosts = [...blogPosts, ...generatedArticles]
+  // Use only static blog posts for now (simplified)
+  const allBlogPosts = blogPosts
+  const categories = getCategories(allBlogPosts)
 
-  const featuredPosts = allBlogPosts.filter(post => post.featured)
-  const filteredPosts = allBlogPosts.filter(post => {
-    const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         post.excerpt.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         post.tags?.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
-    const matchesCategory = selectedCategory === "Alle" || post.category === selectedCategory
-    return matchesSearch && matchesCategory
-  })
-  const recentPosts = filteredPosts.filter(post => !post.featured).slice(0, 9)
+  // Memoized filtering for performance
+  const filteredPosts = useMemo(() => {
+    if (!searchTerm && selectedCategory === "Alle") return allBlogPosts
 
-  useEffect(() => {
-    const supabase = createClient()
-    if (!supabase) return
+    return allBlogPosts.filter(post => {
+      const matchesSearch = !searchTerm ||
+        post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        post.excerpt.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        post.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setIsLoggedIn(!!session)
+      const matchesCategory = selectedCategory === "Alle" || post.category === selectedCategory
+
+      return matchesSearch && matchesCategory
     })
+  }, [searchTerm, selectedCategory, allBlogPosts])
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsLoggedIn(!!session)
-    })
-
-    return () => subscription.unsubscribe()
-  }, [])
-
-  // Fetch latest news on component mount
-  useEffect(() => {
-    async function fetchNews() {
-      try {
-        const response = await fetch('/api/google-news?limit=3')
-        const data = await response.json()
-        if (data.status === 'success') {
-          setNewsArticles(data.articles)
-        }
-      } catch (error) {
-        console.error('Failed to fetch news:', error)
-      } finally {
-        setNewsLoading(false)
-      }
-    }
-
-    fetchNews()
-  }, [])
-
-  // Load previously generated articles from localStorage
-  useEffect(() => {
-    try {
-      const savedArticles = localStorage.getItem('generated-blog-articles')
-      const savedTimestamp = localStorage.getItem('generated-articles-timestamp')
-
-      if (savedArticles) {
-        const articles = JSON.parse(savedArticles)
-        setGeneratedArticles(articles)
-        setLastGeneration(savedTimestamp)
-      }
-    } catch (error) {
-      console.error('Error loading saved articles:', error)
-      // Reset to empty state if there's an error
-      setGeneratedArticles([])
-      setLastGeneration(null)
-    }
-  }, [])
+  const featuredPosts = filteredPosts.filter(post => post.featured)
+  const recentPosts = filteredPosts.filter(post => !post.featured).slice(0, 6)
 
 
   return (
@@ -397,12 +349,9 @@ export default function BlogPage() {
                 ))}
               </select>
             </div>
-            {lastGeneration && (
-              <div className="text-xs text-slate-500 flex items-center gap-1 bg-slate-50 px-3 py-2 rounded-full">
-                <AlertCircle className="w-3 h-3" />
-                Letzte Aktualisierung: {new Date(lastGeneration).toLocaleDateString('de-DE')}
-              </div>
-            )}
+            <div className="text-xs text-slate-500 bg-slate-50 px-3 py-2 rounded-full">
+              {filteredPosts.length} Artikel verfügbar
+            </div>
           </div>
         </div>
       </div>
@@ -418,14 +367,6 @@ export default function BlogPage() {
             <p className="text-lg text-slate-600 max-w-2xl mx-auto mb-4">
               Unsere beliebtesten und meistgelesenen Artikel zu aktuellen Immobilienthemen
             </p>
-            {generatedArticles.length > 0 && (
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 border border-emerald-200 rounded-full">
-                <Star className="w-4 h-4 text-emerald-600" />
-                <span className="text-sm font-medium text-emerald-700">
-                  {generatedArticles.length} KI-generierte Artikel verfügbar
-                </span>
-              </div>
-            )}
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {featuredPosts.map((post, index) => (
@@ -538,79 +479,16 @@ export default function BlogPage() {
           </div>
         </div>
 
-        {/* News Section */}
+        {/* Simple featured articles section */}
         <div className="mb-20">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4 flex items-center justify-center gap-3">
-              <Newspaper className="w-8 h-8 text-emerald-600" />
-              Aktuelle Immobilien-Nachrichten
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+              Alle Artikel
             </h2>
             <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-              Die neuesten Entwicklungen aus der Immobilienwelt - direkt aus zuverlässigen Quellen
+              Umfassende Analysen und praktische Tipps für Ihre Immobilienentscheidungen
             </p>
           </div>
-
-          {newsLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[...Array(3)].map((_, i) => (
-                <Card key={i} className="border-0 shadow-lg animate-pulse bg-white">
-                  <div className="aspect-video bg-slate-200 rounded-t-xl"></div>
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="w-16 h-4 bg-slate-200 rounded"></div>
-                      <div className="w-12 h-3 bg-slate-200 rounded"></div>
-                    </div>
-                    <div className="h-5 bg-slate-200 rounded mb-3"></div>
-                    <div className="h-4 bg-slate-200 rounded mb-2"></div>
-                    <div className="h-4 bg-slate-200 rounded w-3/4"></div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {newsArticles.map((article, index) => (
-                <Card key={index} className="group hover:shadow-2xl transition-all duration-300 border-0 shadow-lg bg-white overflow-hidden">
-                  <div className="relative overflow-hidden">
-                    <div className="aspect-video bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-500 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
-                      <Newspaper className="w-12 h-12 text-white" />
-                    </div>
-                    <div className="absolute top-4 left-4">
-                      <Badge className="bg-black/20 text-white border-0 backdrop-blur-sm">
-                        {article.source}
-                      </Badge>
-                    </div>
-                  </div>
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-2 mb-3 text-xs text-slate-500">
-                      <Calendar className="w-3 h-3" />
-                      {new Date(article.publishedAt).toLocaleDateString('de-DE')}
-                    </div>
-                    <h3 className="font-bold text-slate-900 mb-3 line-clamp-2 group-hover:text-emerald-600 transition-colors leading-tight">
-                      <a href={article.url} target="_blank" rel="noopener noreferrer" className="flex items-start gap-2">
-                        <span>{article.title}</span>
-                        <ExternalLink className="w-4 h-4 mt-1 flex-shrink-0 opacity-60 group-hover:opacity-100 transition-opacity" />
-                      </a>
-                    </h3>
-                    <p className="text-slate-600 text-sm line-clamp-3 leading-relaxed">
-                      {article.description}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-
-          <div className="text-center mt-12">
-            <Button asChild variant="outline" className="border-emerald-300 text-emerald-600 hover:bg-emerald-50">
-              <Link href="/api/google-news" className="flex items-center gap-2">
-                <Newspaper className="w-4 h-4" />
-                Mehr Nachrichten laden
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-            </Button>
-          </div>
-        </div>
 
         {/* Recent Posts */}
         <div className="mb-20">
