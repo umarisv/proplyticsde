@@ -1,80 +1,82 @@
-# CyberScraper 2077 — Proplytics Integration
+# Property Statistics API — Proplytics Integration
 
-This folder contains a local clone of [CyberScraper 2077](https://github.com/itsOwen/CyberScraper-2077) for fetching comparable listings.
+This folder provides regional property price statistics using official open data sources.
 
-## Prerequisites
+## Data Sources
 
-- Docker installed
-- Gemini API key (`GOOGLE_API_KEY`)
+- **Destatis** (Statistisches Bundesamt) — Official house price indices
+- **Regional market reports** — Price data by city and region
+- **OpenPLZ API** — PLZ to region mapping
 
-## Option 1: API Server (Recommended for Production)
-
-The API server provides a REST endpoint that the dashboard calls directly.
+## Quick Start (Recommended)
 
 ```bash
 cd tools/cyberscraper2077
 
-# Build API image
-docker build -f Dockerfile.api -t cyberscraper-api .
+# Build lightweight stats API
+docker build -f Dockerfile.stats -t property-stats-api .
 
-# Run API server (replace YOUR_GEMINI_KEY)
+# Run container
 docker run -d \
   -p 8502:8502 \
-  -e GOOGLE_API_KEY="YOUR_GEMINI_KEY" \
-  --name cyberscraper-api \
-  cyberscraper-api
+  --name property-stats-api \
+  --restart unless-stopped \
+  property-stats-api
 ```
 
-**API Endpoints:**
+**No API keys required!** The stats are built into the service.
+
+## API Endpoints
 
 - `GET /health` — Health check
-- `GET /comps?address=40239+Düsseldorf&rooms=3&size=80` — Fetch comparables
-- `POST /comps` — Same as GET but with JSON body
+- `GET /stats?address=Düsseldorf&size=80&rooms=3` — Get regional statistics
+- `GET /comps?address=...` — Legacy endpoint (same data)
 
 **Example:**
 ```bash
-curl "http://localhost:8502/comps?address=40239%20D%C3%BCsseldorf&rooms=3"
+curl "http://localhost:8502/stats?address=Berlin&size=75"
 ```
 
-## Option 2: Streamlit UI (Development/Manual Use)
-
-```bash
-cd tools/cyberscraper2077
-
-# Build image
-docker build -t cyberscraper2077 .
-
-# Run container (replace YOUR_GEMINI_KEY)
-docker run -d \
-  -p 8501:8501 \
-  -e GOOGLE_API_KEY="YOUR_GEMINI_KEY" \
-  --name cyberscraper \
-  cyberscraper2077
+**Response:**
+```json
+{
+  "success": true,
+  "stats": {
+    "region": "Berlin",
+    "bundesland": "Berlin",
+    "avg_price_sqm": 4850,
+    "price_range_min": 3638,
+    "price_range_max": 6548,
+    "trend_percent": 2.1,
+    "trend_direction": "steigend",
+    "estimated_price": 363750,
+    "national_comparison": "+56.5% über Bundesschnitt"
+  },
+  "comparable_regions": [...]
+}
 ```
-
-Access UI at **http://localhost:8501**
-
-## Environment Variables
-
-| Variable         | Description                       |
-|------------------|-----------------------------------|
-| GOOGLE_API_KEY   | Gemini API key (required)         |
-| SCRAPER_MODEL    | LLM model (default: gemini-2.0-flash) |
-| PORT             | API server port (default: 8502)   |
 
 ## Dashboard Integration
 
-Set these in `dashboard/.env`:
+The dashboard works **without any configuration** — it uses built-in static data as fallback.
 
+Optionally, set in `dashboard/.env` to use the API:
 ```env
 COMP_SCRAPER_BASE_URL=http://localhost:8502
-COMP_SCRAPER_TOKEN=optional-auth-token
 ```
 
-Then the "Vergleich" tab will fetch real listings from ImmoScout.
+## Covered Cities
 
-## Notes
+Major cities with specific data:
+- Berlin, Hamburg, München, Köln, Frankfurt
+- Düsseldorf, Stuttgart, Leipzig, Dortmund, Essen
+- Bremen, Dresden, Hannover, Nürnberg, Bonn
+- And 10+ more...
 
-- Ensure whitelisted access before scraping any external site.
-- This tool is for internal research/analysis only.
-- First request may be slow (~10-20s) as the browser starts up.
+All other locations fall back to Bundesland or national averages.
+
+## Data Updates
+
+The price data is based on Q4 2025 market reports. To update:
+1. Edit `api_server.py` → `REGIONAL_PRICES` dict
+2. Rebuild the Docker image
