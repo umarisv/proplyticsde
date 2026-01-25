@@ -17,6 +17,7 @@ import type { Case } from "@/lib/types"
 import { Plus, Search, RefreshCw, MapPin, ArrowRight } from "lucide-react"
 import { Logo } from "@/components/ui/logo"
 import { VollmachtManager } from "@/components/vollmacht-manager"
+import { CompsPanel } from "@/components/comps-panel"
 
 export default function DashboardPage() {
   const isMobile = useIsMobile()
@@ -191,8 +192,9 @@ export default function DashboardPage() {
           </div>
         </header>
         <Tabs defaultValue="bewertungen" className="flex flex-1 flex-col overflow-hidden">
-          <TabsList className="mx-4 mt-2 grid w-full grid-cols-3">
+          <TabsList className="mx-4 mt-2 grid w-full grid-cols-4">
             <TabsTrigger value="bewertungen">Bewertungen</TabsTrigger>
+            <TabsTrigger value="vergleich">Vergleich</TabsTrigger>
             <TabsTrigger value="finanzierung">Finanzierung</TabsTrigger>
             <TabsTrigger value="chat">KI-Agent</TabsTrigger>
           </TabsList>
@@ -218,6 +220,9 @@ export default function DashboardPage() {
               onDragEnd={handleDragEnd}
               isLoading={isLoading}
             />
+          </TabsContent>
+          <TabsContent value="vergleich" className="flex-1 overflow-auto p-4">
+            <CompsPanel />
           </TabsContent>
           <TabsContent value="finanzierung" className="flex-1 overflow-auto p-4">
             <VollmachtManager
@@ -287,8 +292,9 @@ export default function DashboardPage() {
       <div className="flex flex-1 overflow-hidden min-h-0">
         <div className="flex-1 overflow-auto p-6 min-h-0 flex flex-col">
           <Tabs defaultValue="bewertungen" className="flex flex-1 flex-col min-h-0">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="bewertungen">Bewertungen</TabsTrigger>
+              <TabsTrigger value="vergleich">Vergleich</TabsTrigger>
               <TabsTrigger value="finanzierung">Finanzierung</TabsTrigger>
             </TabsList>
             <TabsContent value="bewertungen" className="mt-4 flex-1 min-h-0">
@@ -309,6 +315,9 @@ export default function DashboardPage() {
                   isLoading={isLoading}
                 />
               </div>
+            </TabsContent>
+            <TabsContent value="vergleich" className="mt-4 flex-1 min-h-0 overflow-auto">
+              <CompsPanel />
             </TabsContent>
             <TabsContent value="finanzierung" className="mt-4">
               <VollmachtManager
