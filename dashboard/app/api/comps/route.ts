@@ -8,6 +8,8 @@ interface StatsRequest {
   zip?: string
   rooms?: number
   size?: number
+  asking_price?: number
+  baujahr?: number
 }
 
 interface RegionalStats {
@@ -26,9 +28,27 @@ interface RegionalStats {
   updated: string
 }
 
+interface RiskFactor {
+  name: string
+  score: number
+  weight: number
+  description: string
+  recommendation?: string
+}
+
+interface RiskAssessment {
+  overall_score: number
+  risk_level: string
+  factors: RiskFactor[]
+  summary: string
+  price_recommendation: string
+  negotiation_potential: number
+}
+
 interface StatsResponse {
   success: boolean
   stats?: RegionalStats
+  risk_assessment?: RiskAssessment
   comparable_regions: RegionalStats[]
   error?: string
 }
@@ -219,6 +239,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<StatsResp
       ...(body.zip && { plz: body.zip }),
       ...(body.rooms && { rooms: String(body.rooms) }),
       ...(body.size && { size: String(body.size) }),
+      ...(body.asking_price && { asking_price: String(body.asking_price) }),
+      ...(body.baujahr && { baujahr: String(body.baujahr) }),
     })
 
     const controller = new AbortController()

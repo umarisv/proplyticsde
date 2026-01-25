@@ -7,7 +7,11 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { Search, MapPin, Loader2, TrendingUp, TrendingDown, Minus, BarChart3, Building2, Info } from "lucide-react"
+import { 
+  Search, MapPin, Loader2, TrendingUp, TrendingDown, Minus, 
+  BarChart3, Building2, Info, AlertTriangle, Shield, ShieldAlert,
+  CheckCircle, Euro
+} from "lucide-react"
 
 interface RegionalStats {
   id: string
@@ -25,9 +29,27 @@ interface RegionalStats {
   updated: string
 }
 
+interface RiskFactor {
+  name: string
+  score: number
+  weight: number
+  description: string
+  recommendation?: string
+}
+
+interface RiskAssessment {
+  overall_score: number
+  risk_level: string
+  factors: RiskFactor[]
+  summary: string
+  price_recommendation: string
+  negotiation_potential: number
+}
+
 interface StatsResponse {
   success: boolean
   stats?: RegionalStats
+  risk_assessment?: RiskAssessment
   comparable_regions: RegionalStats[]
   error?: string
 }
@@ -40,8 +62,11 @@ export function CompsPanel({ initialAddress }: CompsPanelProps) {
   const [address, setAddress] = useState(initialAddress || "")
   const [rooms, setRooms] = useState("")
   const [size, setSize] = useState("")
+  const [askingPrice, setAskingPrice] = useState("")
+  const [baujahr, setBaujahr] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [stats, setStats] = useState<RegionalStats | null>(null)
+  const [risk, setRisk] = useState<RiskAssessment | null>(null)
   const [comparables, setComparables] = useState<RegionalStats[]>([])
   const [error, setError] = useState<string | null>(null)
 
@@ -64,6 +89,8 @@ export function CompsPanel({ initialAddress }: CompsPanelProps) {
           address: address.trim(),
           rooms: rooms ? Number(rooms) : undefined,
           size: size ? Number(size) : undefined,
+          asking_price: askingPrice ? Number(askingPrice) : undefined,
+          baujahr: baujahr ? Number(baujahr) : undefined,
         }),
       })
 
@@ -72,11 +99,13 @@ export function CompsPanel({ initialAddress }: CompsPanelProps) {
       if (!data.success) {
         setError(data.error || "Fehler beim Laden der Statistiken")
         setStats(null)
+        setRisk(null)
         setComparables([])
         return
       }
 
       setStats(data.stats || null)
+      setRisk(data.risk_assessment || null)
       setComparables(data.comparable_regions || [])
     } catch (err) {
       console.error("Stats fetch error:", err)
@@ -108,7 +137,30 @@ export function CompsPanel({ initialAddress }: CompsPanelProps) {
     )
   }
 
-  // Calculate position on price range for visualization
+  const RiskLevelBadge = ({ level, score }: { level: string; score: number }) => {
+    const config = {
+      niedrig: { variant: "default" as const, icon: Shield, color: "text-green-500" },
+      mittel: { variant: "secondary" as const, icon: AlertTriangle, color: "text-yellow-500" },
+      hoch: { variant: "destructive" as const, icon: ShieldAlert, color: "text-orange-500" },
+      "sehr hoch": { variant: "destructive" as const, icon: ShieldAlert, color: "text-red-500" },
+    }
+    const { variant, icon: Icon, color } = config[level as keyof typeof config] || config.mittel
+    
+    return (
+      <Badge variant={variant} className="gap-1 text-sm px-3 py-1">
+        <Icon className={`h-4 w-4 ${color}`} />
+        Risiko: {level} ({score}/100)
+      </Badge>
+    )
+  }
+
+  const getRiskColor = (score: number) => {
+    if (score <= 30) return "bg-green-500"
+    if (score <= 50) return "bg-yellow-500"
+    if (score <= 70) return "bg-orange-500"
+    return "bg-red-500"
+  }
+
   const getPricePosition = (price: number, min: number, max: number) => {
     return Math.min(100, Math.max(0, ((price - min) / (max - min)) * 100))
   }
@@ -119,17 +171,17 @@ export function CompsPanel({ initialAddress }: CompsPanelProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <BarChart3 className="h-5 w-5" />
-            Regionale Preisstatistiken
+            Marktanalyse & Risikobewertung
           </CardTitle>
           <CardDescription>
-            Offizielle Marktdaten basierend auf Destatis und regionalen Gutachterausschüssen
+            Preisstatistiken und Investitionsrisiko basierend auf offiziellen Marktdaten
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSearch} className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               <div className="space-y-2">
-                <Label htmlFor="address">Stadt / PLZ</Label>
+                <Label htmlFor="address">Stadt / PLZ *</Label>
                 <div className="relative">
                   <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
@@ -142,7 +194,34 @@ export function CompsPanel({ initialAddress }: CompsPanelProps) {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="rooms">Zimmer (optional)</Label>
+                <Label htmlFor="size">Wohnfläche m²</Label>
+                <Input
+                  id="size"
+                  type="number"
+                  min={10}
+                  max={1000}
+                  placeholder="z.B. 80"
+                  value={size}
+                  onChange={(e) => setSize(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="askingPrice">Kaufpreis (optional)</Label>
+                <div className="relative">
+                  <Euro className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="askingPrice"
+                    type="number"
+                    min={10000}
+                    placeholder="z.B. 350000"
+                    value={askingPrice}
+                    onChange={(e) => setAskingPrice(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="rooms">Zimmer</Label>
                 <Input
                   id="rooms"
                   type="number"
@@ -154,15 +233,15 @@ export function CompsPanel({ initialAddress }: CompsPanelProps) {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="size">Fläche m² (optional)</Label>
+                <Label htmlFor="baujahr">Baujahr</Label>
                 <Input
-                  id="size"
+                  id="baujahr"
                   type="number"
-                  min={10}
-                  max={1000}
-                  placeholder="z.B. 80"
-                  value={size}
-                  onChange={(e) => setSize(e.target.value)}
+                  min={1800}
+                  max={2030}
+                  placeholder="z.B. 1985"
+                  value={baujahr}
+                  onChange={(e) => setBaujahr(e.target.value)}
                 />
               </div>
             </div>
@@ -170,12 +249,12 @@ export function CompsPanel({ initialAddress }: CompsPanelProps) {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Lade Statistiken...
+                  Analysiere...
                 </>
               ) : (
                 <>
                   <Search className="mr-2 h-4 w-4" />
-                  Preisstatistik abrufen
+                  Analyse starten
                 </>
               )}
             </Button>
@@ -185,6 +264,74 @@ export function CompsPanel({ initialAddress }: CompsPanelProps) {
 
       {error && (
         <div className="rounded-lg bg-destructive/10 p-4 text-destructive">{error}</div>
+      )}
+
+      {/* Risk Assessment Card */}
+      {risk && (
+        <Card className="border-2" style={{ borderColor: risk.risk_level === "niedrig" ? "#22c55e" : risk.risk_level === "mittel" ? "#eab308" : risk.risk_level === "hoch" ? "#f97316" : "#ef4444" }}>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                Risikobewertung
+              </CardTitle>
+              <RiskLevelBadge level={risk.risk_level} score={risk.overall_score} />
+            </div>
+            <CardDescription>{risk.summary}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Overall Risk Score */}
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Gesamt-Risikoscore</span>
+                <span className="font-medium">{risk.overall_score}/100</span>
+              </div>
+              <div className="relative h-4 bg-muted rounded-full overflow-hidden">
+                <div 
+                  className={`h-full transition-all ${getRiskColor(risk.overall_score)}`}
+                  style={{ width: `${risk.overall_score}%` }}
+                />
+              </div>
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Sicher</span>
+                <span>Riskant</span>
+              </div>
+            </div>
+
+            {/* Risk Factors */}
+            <div className="space-y-3">
+              <p className="font-medium text-sm">Risikofaktoren</p>
+              {risk.factors.map((factor, i) => (
+                <div key={i} className="rounded-lg border p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-sm">{factor.name}</span>
+                    <Badge variant={factor.score <= 35 ? "default" : factor.score <= 55 ? "secondary" : "destructive"}>
+                      {factor.score}/100
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{factor.description}</p>
+                  {factor.recommendation && (
+                    <div className="flex items-start gap-2 text-sm text-primary bg-primary/5 p-2 rounded">
+                      <CheckCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                      {factor.recommendation}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Price Recommendation */}
+            <div className="rounded-lg bg-muted/50 p-4 space-y-3">
+              <p className="font-medium">Preisempfehlung</p>
+              <p className="text-sm">{risk.price_recommendation}</p>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline">
+                  Verhandlungspotenzial: {risk.negotiation_potential}%
+                </Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {stats && (
@@ -216,7 +363,7 @@ export function CompsPanel({ initialAddress }: CompsPanelProps) {
                 
                 {stats.estimated_price && (
                   <div className="space-y-2">
-                    <p className="text-sm text-muted-foreground">Geschätzter Objektpreis</p>
+                    <p className="text-sm text-muted-foreground">Geschätzter Marktwert</p>
                     <p className="text-3xl font-bold text-primary">{formatPrice(stats.estimated_price)}</p>
                     <p className="text-sm text-muted-foreground">für {size || 75} m² Wohnfläche</p>
                   </div>
@@ -280,8 +427,8 @@ export function CompsPanel({ initialAddress }: CompsPanelProps) {
       {!isLoading && !stats && !error && (
         <div className="rounded-lg border border-dashed p-8 text-center text-muted-foreground">
           <BarChart3 className="mx-auto mb-4 h-12 w-12 opacity-50" />
-          <p className="mb-2">Geben Sie eine Stadt oder PLZ ein, um Preisstatistiken abzurufen.</p>
-          <p className="text-sm">Basierend auf offiziellen Marktdaten des Statistischen Bundesamtes.</p>
+          <p className="mb-2">Geben Sie eine Stadt oder PLZ ein, um die Marktanalyse zu starten.</p>
+          <p className="text-sm">Optional: Kaufpreis und Baujahr für detaillierte Risikobewertung angeben.</p>
         </div>
       )}
     </div>
