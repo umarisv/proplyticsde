@@ -16,6 +16,7 @@ import type { Bewertung } from "@/lib/database.types"
 import type { Case } from "@/lib/types"
 import { Plus, Search, RefreshCw, MapPin, ArrowRight } from "lucide-react"
 import { Logo } from "@/components/ui/logo"
+import { VollmachtManager } from "@/components/vollmacht-manager"
 
 export default function DashboardPage() {
   const isMobile = useIsMobile()
@@ -190,8 +191,9 @@ export default function DashboardPage() {
           </div>
         </header>
         <Tabs defaultValue="bewertungen" className="flex flex-1 flex-col overflow-hidden">
-          <TabsList className="mx-4 mt-2 grid w-auto grid-cols-2">
+          <TabsList className="mx-4 mt-2 grid w-full grid-cols-3">
             <TabsTrigger value="bewertungen">Bewertungen</TabsTrigger>
+            <TabsTrigger value="finanzierung">Finanzierung</TabsTrigger>
             <TabsTrigger value="chat">KI-Agent</TabsTrigger>
           </TabsList>
           <TabsContent value="bewertungen" className="flex-1 overflow-auto p-4">
@@ -215,6 +217,11 @@ export default function DashboardPage() {
               onDragStart={handleDragStart}
               onDragEnd={handleDragEnd}
               isLoading={isLoading}
+            />
+          </TabsContent>
+          <TabsContent value="finanzierung" className="flex-1 overflow-auto p-4">
+            <VollmachtManager
+              selectedBewertungId={selectedIds.length === 1 ? selectedIds[0] : undefined}
             />
           </TabsContent>
           <TabsContent value="chat" className="flex-1 overflow-hidden">
@@ -279,23 +286,36 @@ export default function DashboardPage() {
       </header>
       <div className="flex flex-1 overflow-hidden min-h-0">
         <div className="flex-1 overflow-auto p-6 min-h-0 flex flex-col">
-          {error && (
-            <div className="mb-4 p-4 bg-destructive/10 text-destructive rounded-lg flex-shrink-0">
-              {error}
-            </div>
-          )}
-          <div className="flex-1 min-h-0">
-            <BewertungenTable
-              bewertungen={filteredBewertungen}
-              selectedIds={selectedIds}
-              onSelectionChange={setSelectedIds}
-              onDelete={handleDelete}
-              onDuplicate={handleDuplicate}
-              onDragStart={handleDragStart}
-              onDragEnd={handleDragEnd}
-              isLoading={isLoading}
-            />
-          </div>
+          <Tabs defaultValue="bewertungen" className="flex flex-1 flex-col min-h-0">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="bewertungen">Bewertungen</TabsTrigger>
+              <TabsTrigger value="finanzierung">Finanzierung</TabsTrigger>
+            </TabsList>
+            <TabsContent value="bewertungen" className="mt-4 flex-1 min-h-0">
+              {error && (
+                <div className="mb-4 p-4 bg-destructive/10 text-destructive rounded-lg flex-shrink-0">
+                  {error}
+                </div>
+              )}
+              <div className="flex-1 min-h-0">
+                <BewertungenTable
+                  bewertungen={filteredBewertungen}
+                  selectedIds={selectedIds}
+                  onSelectionChange={setSelectedIds}
+                  onDelete={handleDelete}
+                  onDuplicate={handleDuplicate}
+                  onDragStart={handleDragStart}
+                  onDragEnd={handleDragEnd}
+                  isLoading={isLoading}
+                />
+              </div>
+            </TabsContent>
+            <TabsContent value="finanzierung" className="mt-4">
+              <VollmachtManager
+                selectedBewertungId={selectedIds.length === 1 ? selectedIds[0] : undefined}
+              />
+            </TabsContent>
+          </Tabs>
         </div>
         <div className="w-96 shrink-0 border-l flex flex-col overflow-hidden">
           <ChatPanel

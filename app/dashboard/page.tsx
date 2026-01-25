@@ -164,7 +164,7 @@ export default function DashboardPage() {
     return (
       <div className="flex h-screen flex-col bg-background">
         <RateLimitBanner />
-        <header className="flex h-14 shrink-0 items-center justify-between border-b px-6 bg-red-500">
+        <header className="flex h-14 shrink-0 items-center justify-between border-b px-6">
           <div className="flex items-center">
             <Building2 className="w-6 h-6 mr-2 text-primary" />
             <h1 className="text-lg font-semibold tracking-tight">proplytics.de</h1>
@@ -211,16 +211,7 @@ export default function DashboardPage() {
                 </TabsContent>
 
                 <TabsContent value="finanzierung" className="mt-6">
-                  <div className="text-center p-8 bg-green-50 border-2 border-green-200 rounded-lg">
-                    <h2 className="text-2xl font-bold text-green-800 mb-4">🎉 FINANZIERUNG TAB FUNKTIONIERT!</h2>
-                    <p className="text-green-700 mb-4">
-                      Die Tabs sind jetzt endlich sichtbar! Das Finanzierungs-Feature kommt bald.
-                    </p>
-                    <div className="text-sm text-green-600">
-                      <p>Zeit: {new Date().toLocaleString('de-DE')}</p>
-                      <p>Status: ✅ Tabs aktiv</p>
-                    </div>
-                  </div>
+                  <VollmachtManager />
                 </TabsContent>
               </Tabs>
             </div>
