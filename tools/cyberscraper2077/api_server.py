@@ -85,23 +85,33 @@ class CompsResponse(BaseModel):
     source_url: Optional[str] = None
 
 
-def build_immoscout_url(req: CompsRequest) -> str:
-    """Build ImmoScout24 search URL from request parameters."""
-    base = "https://www.immobilienscout24.de/Suche/de"
+def build_immowelt_url(req: CompsRequest) -> str:
+    """Build Immowelt search URL from request parameters."""
+    # Immowelt URL structure: /suche/wohnungen/kaufen?locations=berlin
+    base = "https://www.immowelt.de/suche/wohnungen/kaufen"
     
     # Build location part
     location = req.zip or req.city or req.address.split(",")[0].strip()
-    
-    # Build search path
-    path_parts = [base]
-    
-    # Add location (simplified - real implementation would geocode)
-    path_parts.append(f"/{location.replace(' ', '-').lower()}")
-    
-    # Property type (default: Wohnung)
-    path_parts.append("/wohnung-kaufen")
+    location_slug = location.replace(" ", "-").lower()
     
     # Build query params
+    params = [f"locations={location_slug}"]
+    
+    if req.rooms:
+        params.append(f"rooms={max(1, req.rooms - 1)}-{req.rooms + 1}")
+    if req.size:
+        params.append(f"livingspace={max(10, req.size - 20)}-{req.size + 30}")
+    if req.radius:
+        params.append(f"sr={req.radius}")
+    
+    return f"{base}?{'&'.join(params)}"
+
+
+def build_immoscout_url(req: CompsRequest) -> str:
+    """Build ImmoScout24 search URL from request parameters (backup)."""
+    base = "https://www.immobilienscout24.de/Suche/de"
+    location = req.zip or req.city or req.address.split(",")[0].strip()
+    path_parts = [base, f"/{location.replace(' ', '-').lower()}", "/wohnung-kaufen"]
     params = []
     if req.rooms:
         params.append(f"zimmeranzahlmin={req.rooms - 1}")
@@ -111,26 +121,28 @@ def build_immoscout_url(req: CompsRequest) -> str:
         params.append(f"wohnflaechemax={req.size + 20}")
     if req.radius:
         params.append(f"umkreis={req.radius}")
-    
     url = "".join(path_parts)
     if params:
         url += "?" + "&".join(params)
-    
     return url
 
 
-EXTRACTION_PROMPT = """Extract all property listings from this page as JSON array.
-For each listing, extract:
-- id: unique identifier or listing number
-- address: full address or location description
-- price: purchase price as number (no currency symbols)
-- size: living area in sqm as number
-- rooms: number of rooms as number
-- listingDate: when the listing was posted (format: YYYY-MM-DD, use today if not found)
-- url: link to the listing detail page (full URL)
+EXTRACTION_PROMPT = """Extract all property listings from this Immowelt page as a JSON array.
 
-Return ONLY a valid JSON array, no other text. Example:
-[{"id": "123", "address": "Musterstr. 1, 40239 Düsseldorf", "price": 250000, "size": 75, "rooms": 3, "listingDate": "2026-01-20", "url": "https://..."}]
+For each listing/property found, extract these fields:
+- id: unique identifier, listing number, or generate one like "listing-1"
+- address: full address, street name, or location/district name
+- price: purchase price as a NUMBER only (remove € symbols, dots as thousand separators)
+- size: living area in sqm as a NUMBER only (remove m² or qm)
+- rooms: number of rooms as a NUMBER
+- listingDate: date if shown, otherwise use "2026-01-25"
+- url: the link to the listing detail page (starts with https://www.immowelt.de/)
+
+IMPORTANT: Return ONLY a valid JSON array. No explanation, no markdown, just the JSON.
+If you find listings, return them. If the page has no listings or is blocked, return an empty array: []
+
+Example output:
+[{"id": "listing-1", "address": "Kreuzberg, Berlin", "price": 299000, "size": 65, "rooms": 2, "listingDate": "2026-01-25", "url": "https://www.immowelt.de/expose/abc123"}]
 """
 
 
@@ -164,8 +176,8 @@ async def get_comps(
             radius=radius
         )
         
-        # Build search URL
-        search_url = build_immoscout_url(req)
+        # Build search URL (use Immowelt - less strict bot detection)
+        search_url = build_immowelt_url(req)
         logger.info(f"Scraping URL: {search_url}")
         
         extractor = get_extractor()
