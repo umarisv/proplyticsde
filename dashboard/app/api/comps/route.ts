@@ -64,14 +64,19 @@ export async function POST(request: NextRequest): Promise<NextResponse<CompsResp
     })
 
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 30000)
+    // Scraper can take up to 60s on first request (browser startup)
+    const timeoutId = setTimeout(() => controller.abort(), 60000)
+
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    }
+    if (scraperToken) {
+      headers["Authorization"] = `Bearer ${scraperToken}`
+    }
 
     const response = await fetch(`${scraperBaseUrl}/comps?${queryParams}`, {
       method: "GET",
-      headers: {
-        Authorization: `Bearer ${scraperToken}`,
-        "Content-Type": "application/json",
-      },
+      headers,
       signal: controller.signal,
     })
 
@@ -81,12 +86,20 @@ export async function POST(request: NextRequest): Promise<NextResponse<CompsResp
       const errorText = await response.text()
       console.error("Scraper error:", errorText)
       return NextResponse.json(
-        { success: false, comps: [], error: "Failed to fetch comparables" },
+        { success: false, comps: [], error: `Scraper returned ${response.status}: ${errorText.slice(0, 200)}` },
         { status: 502 }
       )
     }
 
-    const data = (await response.json()) as { comps: Comparable[] }
+    const data = (await response.json()) as { success: boolean; comps: Comparable[]; error?: string }
+
+    if (!data.success) {
+      return NextResponse.json({
+        success: false,
+        comps: [],
+        error: data.error || "Scraper returned unsuccessful response",
+      })
+    }
 
     return NextResponse.json({
       success: true,
