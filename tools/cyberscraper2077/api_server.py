@@ -45,8 +45,14 @@ def get_extractor() -> WebExtractor:
         model_name = os.getenv("SCRAPER_MODEL", "gemini-2.0-flash")
         config = ScraperConfig(
             headless=True,
-            timeout=30000,
-            delay_after_load=3,  # Wait 3s after page load for dynamic content
+            timeout=45000,
+            delay_after_load=5,  # Wait 5s after page load for dynamic content
+            use_stealth=True,
+            simulate_human=True,  # Simulate human behavior
+            bypass_cloudflare=True,
+            use_persistent_context=True,  # Use persistent browser context
+            locale="de-DE",
+            timezone_id="Europe/Berlin",
         )
         _extractor = WebExtractor(model_name=model_name, scraper_config=config)
     return _extractor
