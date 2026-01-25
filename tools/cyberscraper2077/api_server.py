@@ -46,7 +46,7 @@ def get_extractor() -> WebExtractor:
         config = ScraperConfig(
             headless=True,
             timeout=30000,
-            wait_for_network_idle=True
+            delay_after_load=3,  # Wait 3s after page load for dynamic content
         )
         _extractor = WebExtractor(model_name=model_name, scraper_config=config)
     return _extractor
