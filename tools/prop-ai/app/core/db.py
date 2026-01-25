@@ -156,7 +156,7 @@ def init_db():
         source_name TEXT NOT NULL,
         source_url TEXT,
         occurred_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-        meta JSONB DEFAULT '{}'::jsonb
+        meta JSONB DEFAULT '{{}}'::jsonb
     );
     
     CREATE INDEX IF NOT EXISTS idx_{prefix_slug}_source_event_type 
@@ -206,7 +206,7 @@ def init_db():
         microzone_id TEXT,
         distance_to_center_km DOUBLE PRECISION,
         transit_score INTEGER,
-        poi_counts_json JSONB DEFAULT '{}'::jsonb,
+        poi_counts_json JSONB DEFAULT '{{}}'::jsonb,
         noise_proxy_score INTEGER,
         flood_risk_flag BOOLEAN,
         green_space_score INTEGER,
@@ -226,7 +226,7 @@ def init_db():
         predicted_rent_eur_m2 DOUBLE PRECISION,
         deal_score INTEGER,
         risk_score INTEGER,
-        explanation_json JSONB DEFAULT '{}'::jsonb,
+        explanation_json JSONB DEFAULT '{{}}'::jsonb,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
     );
     
