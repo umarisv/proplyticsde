@@ -234,7 +234,7 @@ async def get_stats():
     )[0]["count"]
     
     avg_price = execute_query(
-        """
+        f"""
         SELECT AVG(asking_price_eur) as avg_price
         FROM {table('property_snapshot')}
         WHERE asking_price_eur IS NOT NULL

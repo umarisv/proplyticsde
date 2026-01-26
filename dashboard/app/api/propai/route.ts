@@ -3,6 +3,19 @@ import { NextRequest, NextResponse } from "next/server"
 export const runtime = "nodejs"
 
 const allowedGetEndpoints = new Set(["health", "properties", "snapshots", "features", "stats"])
+const snapshotFeaturesPattern = /^snapshots\/\d+\/features$/
+const allowedGetEndpointHint = [
+  "health",
+  "properties",
+  "snapshots",
+  "features",
+  "stats",
+  "snapshots/{id}/features",
+]
+
+function isAllowedGetEndpoint(endpoint: string) {
+  return allowedGetEndpoints.has(endpoint) || snapshotFeaturesPattern.test(endpoint)
+}
 const allowedPostEndpoints = new Set(["scrape"])
 
 function getBaseUrl() {
@@ -26,9 +39,9 @@ function buildTargetUrl(baseUrl: string, endpoint: string, params: URLSearchPara
 export async function GET(request: NextRequest) {
   try {
     const endpoint = request.nextUrl.searchParams.get("endpoint")?.trim() ?? ""
-    if (!endpoint || !allowedGetEndpoints.has(endpoint)) {
+    if (!endpoint || !isAllowedGetEndpoint(endpoint)) {
       return NextResponse.json(
-        { error: "Invalid endpoint. Use one of: health, properties, snapshots, features, stats." },
+        { error: `Invalid endpoint. Use one of: ${allowedGetEndpointHint.join(", ")}.` },
         { status: 400 }
       )
     }

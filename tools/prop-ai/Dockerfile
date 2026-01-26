@@ -9,18 +9,22 @@ RUN apt-get update && apt-get install -y \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
+# Store Playwright browsers in a shared path for the runtime user
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+
 # Install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Install Playwright browser for scraping
+RUN mkdir -p /ms-playwright
 RUN playwright install chromium --with-deps
 
 # Copy application
 COPY . .
 
 # Create non-root user
-RUN useradd -m appuser && chown -R appuser:appuser /app
+RUN useradd -m appuser && chown -R appuser:appuser /app /ms-playwright
 USER appuser
 
 # Expose API port
