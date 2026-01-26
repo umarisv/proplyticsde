@@ -4,7 +4,7 @@ import { useState, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { TrendingUp, Home, Euro, Percent, RefreshCw, Calculator, ChevronDown, ChevronUp, AlertTriangle, Shield } from "lucide-react"
+import { TrendingUp, Home, Euro, Percent, RefreshCw, Calculator, ChevronDown, ChevronUp, AlertTriangle, Shield, Users } from "lucide-react"
 import { CashFlowChart, ModernizationChart } from "@/components/charts"
 import { RiskDistributionChart } from "@/components/charts/risk-distribution-chart"
 import { RiskGauge } from "@/components/charts/risk-gauge"
@@ -12,19 +12,23 @@ import { LoadingState } from "@/components/ui/loading-state"
 import { EmptyState } from "@/components/ui/empty-state"
 import { formatCurrency, formatPercent } from "@/lib/format"
 import { analyzeRisk, type RiskAnalysisResult } from "@/lib/risk-engine"
+import { InvestmentPanel } from "@/components/investment-ai"
+import type { PropertyEvaluationInput } from "@/lib/ai/investment-agents"
 import type { AnalyseResultData, AnalyseFormData } from "@/lib/types"
 
 interface ResultsPanelProps {
   data?: AnalyseResultData | null
   formData?: AnalyseFormData
+  bewertungId?: string | null
   onRecalculate: () => void
   isCalculating: boolean
 }
 
-export function ResultsPanel({ data, formData, onRecalculate, isCalculating }: ResultsPanelProps) {
+export function ResultsPanel({ data, formData, bewertungId, onRecalculate, isCalculating }: ResultsPanelProps) {
   const [showErtragswertDetails, setShowErtragswertDetails] = useState(false)
   const [showSachwertDetails, setShowSachwertDetails] = useState(false)
   const [showRiskAnalysis, setShowRiskAnalysis] = useState(false)
+  const [showInvestmentAI, setShowInvestmentAI] = useState(false)
 
   // Risikoanalyse berechnen
   const riskAnalysis = useMemo<RiskAnalysisResult | null>(() => {
@@ -33,6 +37,46 @@ export function ResultsPanel({ data, formData, onRecalculate, isCalculating }: R
       return analyzeRisk(formData, data)
     } catch {
       return null
+    }
+  }, [data, formData])
+
+  // Investment AI Property Data
+  const investmentPropertyData = useMemo<PropertyEvaluationInput | null>(() => {
+    if (!data || !formData) return null
+    
+    // Map objekttyp to AssetClass
+    const objekttypMap: Record<string, 'ETW' | 'MFH' | 'Gewerbe' | 'Wohnportfolio'> = {
+      'etw': 'ETW',
+      'eigentumswohnung': 'ETW',
+      'mfh': 'MFH',
+      'mehrfamilienhaus': 'MFH',
+      'wgh': 'MFH',
+      'gewerbe': 'Gewerbe',
+    }
+    
+    return {
+      objekttyp: objekttypMap[formData.objekttyp?.toLowerCase()] || 'ETW',
+      plz: formData.plz,
+      stadt: formData.stadt,
+      wohnflaeche: parseFloat(formData.wohnflaeche) || 0,
+      grundstueck: parseFloat(formData.grundstueck) || undefined,
+      baujahr: parseInt(formData.baujahr) || 1990,
+      zustand: formData.zustand as 'sanierungsbeduerftig' | 'gepflegt' | 'modernisiert' | 'neuwertig',
+      ausstattung: formData.ausstattung,
+      lage: formData.lage,
+      kaufpreis: parseFloat(formData.kaufpreis) || 0,
+      istMieteJahr: parseFloat(formData.istMiete) * 12 || 0,
+      bodenrichtwert: parseFloat(formData.bodenrichtwert) || undefined,
+      bruttoRendite: data.bruttoRendite,
+      nettoRendite: data.nettoRendite,
+      cashflowMonat: data.cashflowMonat,
+      marktwert: data.marktwert,
+      anzahlWohnungen: parseInt(formData.anzahlWohnungen) || 1,
+      energieeffizienz: formData.energieeffizienz,
+      stellplaetze: parseInt(formData.stellplaetze) || 0,
+      keller: formData.keller,
+      balkon: formData.balkon,
+      aufzug: formData.aufzug,
     }
   }, [data, formData])
 
@@ -167,6 +211,35 @@ export function ResultsPanel({ data, formData, onRecalculate, isCalculating }: R
               </div>
             )}
           </CardContent>
+        </Card>
+      )}
+
+      {/* Investment AI Multi-Agent Analysis */}
+      {investmentPropertyData && (
+        <Card className="bg-card border-border">
+          <CardHeader className="pb-2 cursor-pointer" onClick={() => setShowInvestmentAI(!showInvestmentAI)}>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Users className="w-4 h-4 text-primary" />
+                Multi-Investoren Analyse
+              </CardTitle>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-xs bg-blue-500/10 text-blue-600 border-blue-500/30">
+                  KI-Bewertung
+                </Badge>
+                {showInvestmentAI ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </div>
+            </div>
+          </CardHeader>
+          {showInvestmentAI && (
+            <CardContent className="pt-0">
+              <InvestmentPanel
+                propertyData={investmentPropertyData}
+                bewertungId={bewertungId ?? undefined}
+                className="border-0 shadow-none p-0"
+              />
+            </CardContent>
+          )}
         </Card>
       )}
 

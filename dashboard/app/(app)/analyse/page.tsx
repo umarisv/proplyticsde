@@ -100,7 +100,7 @@ export default function AnalysePage() {
             <MapPanel address={address} />
           </TabsContent>
           <TabsContent value="results" className="flex-1 m-0 overflow-hidden">
-            <ResultsPanel data={resultData} formData={formData} onRecalculate={handleRecalculate} isCalculating={isCalculating} />
+            <ResultsPanel data={resultData} formData={formData} bewertungId={bewertungId} onRecalculate={handleRecalculate} isCalculating={isCalculating} />
           </TabsContent>
         </Tabs>
       </div>
@@ -121,7 +121,7 @@ export default function AnalysePage() {
       <div className="flex-1 flex overflow-hidden">
         {/* Left Panel - Results */}
         <aside className="w-[28%] min-w-[320px] max-w-[400px] border-r border-border bg-card/50">
-          <ResultsPanel data={resultData} formData={formData} onRecalculate={handleRecalculate} isCalculating={isCalculating} />
+          <ResultsPanel data={resultData} formData={formData} bewertungId={bewertungId} onRecalculate={handleRecalculate} isCalculating={isCalculating} />
         </aside>
 
         {/* Center Panel - Chat */}
