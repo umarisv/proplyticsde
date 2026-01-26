@@ -25,23 +25,6 @@ services:
     environment:
       NODE_ENV: production
       OPENAI_API_KEY: ${OPENAI_API_KEY}
-      PROPAI_BASE_URL: ${PROPAI_BASE_URL:-http://prop-ai:8503}
-    restart: unless-stopped
-
-  prop-ai:
-    build:
-      context: ./tools/prop-ai
-      dockerfile: Dockerfile
-    environment:
-      DATABASE_URL: ${SUPABASE_DB_URL}
-      SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
-      SUPABASE_KEY: ${SUPABASE_SERVICE_KEY}
-      TABLE_PREFIX: propai_
-      API_PORT: 8503
-      LOG_LEVEL: INFO
-      LOG_FORMAT: json
-    ports:
-      - "8503:8503"
     restart: unless-stopped
 
   caddy:
