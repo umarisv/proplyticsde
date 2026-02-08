@@ -15,6 +15,7 @@ import {
   BarChart3,
 } from "lucide-react"
 import Link from "next/link"
+import { cn } from "@/lib/utils"
 import { createClient } from "@/lib/supabase/server"
 import { formatCurrency, formatDate } from "@/lib/format"
 import type { Bewertung } from "@/lib/database.types"
@@ -23,6 +24,12 @@ import type { AnalyseResultData } from "@/lib/types"
 function getMarktwert(bewertung: Bewertung): number {
   const ergebnisse = bewertung.ergebnisse as unknown as AnalyseResultData | null
   return ergebnisse?.marktwert ?? 0
+}
+
+function isRecent(dateStr: string | null): boolean {
+  if (!dateStr) return false
+  const diff = Date.now() - new Date(dateStr).getTime()
+  return diff < 5 * 60 * 1000 // 5 minutes
 }
 
 function getObjektLabel(typ: string | null): string {
@@ -66,10 +73,14 @@ export default async function PortalDashboardPage() {
         <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">
-              Willkommen im Portal
+              {user?.user_metadata?.name
+                ? `Hallo, ${user.user_metadata.name.split(" ")[0]}`
+                : "Willkommen im Portal"}
             </h1>
             <p className="text-muted-foreground">
-              Ihr zentraler Ort fuer alle Immobilien-Aktivitaeten.
+              {totalCount > 0
+                ? `Sie haben ${totalCount} ${totalCount === 1 ? "Bewertung" : "Bewertungen"} gespeichert.`
+                : "Starten Sie Ihre erste KI-gestuetzte Immobilienanalyse."}
             </p>
           </div>
           <div className="flex gap-3">
@@ -292,17 +303,28 @@ export default async function PortalDashboardPage() {
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               {recentBewertungen.map((b) => {
                 const marktwert = getMarktwert(b)
+                const fresh = isRecent(b.created_at)
                 return (
                   <Card
                     key={b.id}
-                    className="transition-colors hover:border-primary/20"
+                    className={cn(
+                      "transition-colors hover:border-primary/20",
+                      fresh && "border-primary/30 ring-1 ring-primary/10"
+                    )}
                   >
                     <CardContent className="p-4">
                       <div className="mb-3 flex items-start justify-between">
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-bold">
-                            {b.adresse ?? `${b.plz} ${b.stadt}`}
-                          </p>
+                          <div className="flex items-center gap-2">
+                            <p className="truncate text-sm font-bold">
+                              {b.adresse ?? `${b.plz} ${b.stadt}`}
+                            </p>
+                            {fresh && (
+                              <Badge className="shrink-0 bg-primary/10 text-primary text-[10px] px-1.5 py-0">
+                                Neu
+                              </Badge>
+                            )}
+                          </div>
                           <p className="text-xs uppercase tracking-wider text-muted-foreground">
                             {getObjektLabel(b.objekttyp)}
                           </p>

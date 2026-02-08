@@ -1,17 +1,23 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
-import { Send, ExternalLink, Loader2 } from "lucide-react"
+import { useState, useRef, useEffect, useCallback } from "react"
+import { Send, ExternalLink, Loader2, CheckCircle2, ArrowRight } from "lucide-react"
 import { ProplyticsLogo } from "@/components/proplytics-logo"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
 import { analyzeImageWithAI, fileToBase64 } from "@/lib/api/file-upload"
+import { saveBewertung } from "@/lib/api/bewertungen"
+import { useAuth } from "@/hooks/use-auth"
+import Link from "next/link"
 import type { AnalyseFormData, UploadedFile } from "@/lib/types"
 
 type MessageType = "bot" | "user"
 type StepType = "plz" | "objekttyp" | "flaechen" | "baujahr" | "ausstattung" | "lage" | "energie" | "details" | "upload" | "miete" | "bodenrichtwert" | "kaufpreis" | "complete"
+
+const STEP_ORDER: StepType[] = ["plz", "objekttyp", "flaechen", "baujahr", "ausstattung", "lage", "energie", "details", "upload", "miete", "bodenrichtwert", "kaufpreis", "complete"]
 
 interface Message {
   id: number
@@ -21,6 +27,7 @@ interface Message {
   inputType?: "text" | "number" | "form" | "upload"
   formFields?: { label: string; key: string; placeholder: string; suffix?: string; type?: "text" | "checkbox" }[]
   showExtras?: boolean
+  isComplete?: boolean
 }
 
 interface ChatWizardProps {
@@ -29,26 +36,12 @@ interface ChatWizardProps {
   initialQuery?: string
 }
 
-const initialMessages: Message[] = [
-  {
-    id: 1,
-    type: "bot",
-    content:
-      "Willkommen bei Proplytics! Ich erstelle eine professionelle Marktpreiseinschätzung nach ImmoWertV 2024. Bitte geben Sie die PLZ und Stadt des Objekts ein:",
-    inputType: "form",
-    formFields: [
-      { label: "PLZ", key: "plz", placeholder: "z.B. 40239" },
-      { label: "Stadt", key: "stadt", placeholder: "z.B. Düsseldorf" },
-    ],
-  },
-]
-
 const objektTypen = [
   { label: "MFH", value: "mfh", description: "Mehrfamilienhaus" },
   { label: "ZFH", value: "zfh", description: "Zweifamilienhaus" },
   { label: "EFH", value: "efh", description: "Einfamilienhaus" },
   { label: "ETW", value: "etw", description: "Eigentumswohnung" },
-  { label: "WGH", value: "wgh", description: "Wohn-/Geschäftshaus" },
+  { label: "WGH", value: "wgh", description: "Wohn-/Geschaeftshaus" },
 ]
 
 const zustandOptionen = [
@@ -73,478 +66,412 @@ const lageOptionen = [
 ]
 
 const energieOptionen = [
-  { label: "A+", value: "A+" },
-  { label: "A", value: "A" },
-  { label: "B", value: "B" },
-  { label: "C", value: "C" },
-  { label: "D", value: "D" },
-  { label: "E", value: "E" },
-  { label: "F", value: "F" },
-  { label: "G", value: "G" },
-  { label: "H", value: "H" },
+  { label: "A+", value: "A+" }, { label: "A", value: "A" }, { label: "B", value: "B" },
+  { label: "C", value: "C" }, { label: "D", value: "D" }, { label: "E", value: "E" },
+  { label: "F", value: "F" }, { label: "G", value: "G" }, { label: "H", value: "H" },
   { label: "Unbekannt", value: "unbekannt" },
 ]
 
 export function ChatWizard({ onDataChange, onCalculate, initialQuery }: ChatWizardProps) {
-  const [messages, setMessages] = useState<Message[]>(initialMessages)
+  const { user } = useAuth()
+  const [messages, setMessages] = useState<Message[]>([])
   const [currentStep, setCurrentStep] = useState<StepType>("plz")
   const [inputValue, setInputValue] = useState("")
+  const [isTyping, setIsTyping] = useState(false)
+  const [savedId, setSavedId] = useState<string | null>(null)
   const [formData, setFormData] = useState<AnalyseFormData>({
-    plz: "",
-    stadt: "",
-    objekttyp: "",
-    wohnflaeche: "",
-    grundstueck: "",
-    baujahr: "",
-    zustand: "",
-    ausstattung: "mittel",
-    lage: "mittel",
-    energieeffizienz: "unbekannt",
-    anzahlWohnungen: "",
-    stellplaetze: "",
-    keller: false,
-    balkon: false,
-    aufzug: false,
-    istMiete: "",
-    bodenrichtwert: "",
-    kaufpreis: "",
-    // ETW-spezifisch
-    mea: "",
-    etage: "",
-    hausgeld: "",
-    // WGH-spezifisch
-    gewerbeflaeche: "",
-    gewerbemiete: "",
-    // MFH-spezifisch
-    vermieteteEinheiten: "",
-    // Dokumente
-    uploadedFiles: [],
+    plz: "", stadt: "", objekttyp: "", wohnflaeche: "", grundstueck: "",
+    baujahr: "", zustand: "", ausstattung: "mittel", lage: "mittel",
+    energieeffizienz: "unbekannt", anzahlWohnungen: "", stellplaetze: "",
+    keller: false, balkon: false, aufzug: false, istMiete: "", bodenrichtwert: "",
+    kaufpreis: "", mea: "", etage: "", hausgeld: "", gewerbeflaeche: "",
+    gewerbemiete: "", vermieteteEinheiten: "", uploadedFiles: [],
   })
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  // Show initial query from landing page as context message
-  const [initialQueryShown, setInitialQueryShown] = useState(false)
+  const progress = Math.round((STEP_ORDER.indexOf(currentStep) / (STEP_ORDER.length - 1)) * 100)
+
+  // Simulated typing delay for natural feel
+  const addBotMessage = useCallback((message: Omit<Message, "id" | "type">, delay = 600) => {
+    setIsTyping(true)
+    setTimeout(() => {
+      setIsTyping(false)
+      setMessages((prev) => [...prev, { ...message, id: Date.now(), type: "bot" }])
+    }, delay)
+  }, [])
+
+  const addUserMessage = useCallback((content: string) => {
+    setMessages((prev) => [...prev, { id: Date.now(), type: "user", content }])
+  }, [])
+
+  // Initial greeting
   useEffect(() => {
-    if (initialQuery && !initialQueryShown) {
-      setInitialQueryShown(true)
-      setMessages((prev) => [
-        ...prev,
-        { id: Date.now(), type: "user", content: initialQuery },
-        {
-          id: Date.now() + 1,
-          type: "bot",
-          content: `Vielen Dank fuer Ihre Beschreibung! Lassen Sie uns die Details erfassen. Bitte geben Sie zuerst die PLZ und Stadt ein:`,
-          inputType: "form",
-          formFields: [
-            { label: "PLZ", key: "plz", placeholder: "z.B. 40239" },
-            { label: "Stadt", key: "stadt", placeholder: "z.B. Duesseldorf" },
-          ],
-        },
-      ])
+    if (initialQuery) {
+      setMessages([{ id: 1, type: "user", content: initialQuery }])
+      addBotMessage({
+        content: "Danke fuer die Beschreibung! Lassen Sie mich Ihnen helfen, eine praezise Marktpreiseinschaetzung zu erstellen. Wo befindet sich das Objekt?",
+        inputType: "form",
+        formFields: [
+          { label: "PLZ", key: "plz", placeholder: "z.B. 40239" },
+          { label: "Stadt", key: "stadt", placeholder: "z.B. Duesseldorf" },
+        ],
+      }, 800)
+    } else {
+      addBotMessage({
+        content: "Hallo! Ich bin Ihr Proplytics-Assistent und erstelle fuer Sie eine professionelle Marktpreiseinschaetzung nach ImmoWertV 2024. Wo befindet sich die Immobilie?",
+        inputType: "form",
+        formFields: [
+          { label: "PLZ", key: "plz", placeholder: "z.B. 40239" },
+          { label: "Stadt", key: "stadt", placeholder: "z.B. Duesseldorf" },
+        ],
+      }, 300)
     }
-  }, [initialQuery, initialQueryShown])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages])
-
-  const addMessage = (message: Omit<Message, "id">) => {
-    setMessages((prev) => [...prev, { ...message, id: Date.now() }])
-  }
+  }, [messages, isTyping])
 
   const handleOptionSelect = (value: string, label: string) => {
-    addMessage({ type: "user", content: label })
+    addUserMessage(label)
 
     switch (currentStep) {
-      case "objekttyp":
+      case "objekttyp": {
         const newData = { ...formData, objekttyp: value }
         setFormData(newData)
         onDataChange({ objekttyp: value })
-        setTimeout(() => {
-          // Objekttyp-spezifische Flächen-Fragen
-          let flaechenFields: { label: string; key: string; placeholder: string; suffix?: string }[] = []
-          let flaechenContent = `${label} ausgewählt. `
-          
-          if (value === "etw") {
-            flaechenContent += "Bitte geben Sie die Wohnungsdaten ein:"
-            flaechenFields = [
-              { label: "Wohnfläche", key: "wohnflaeche", placeholder: "z.B. 85", suffix: "m²" },
-              { label: "Miteigentumsanteil", key: "mea", placeholder: "z.B. 125", suffix: "‰" },
-              { label: "Etage", key: "etage", placeholder: "z.B. 3 (EG=0)" },
-            ]
-          } else if (value === "wgh") {
-            flaechenContent += "Bitte geben Sie die Flächen ein:"
-            flaechenFields = [
-              { label: "Wohnfläche", key: "wohnflaeche", placeholder: "z.B. 600", suffix: "m²" },
-              { label: "Gewerbefläche", key: "gewerbeflaeche", placeholder: "z.B. 200", suffix: "m²" },
-              { label: "Grundstück", key: "grundstueck", placeholder: "z.B. 800", suffix: "m²" },
-            ]
-          } else {
-            // EFH, ZFH, MFH
-            flaechenContent += "Bitte geben Sie die Flächen ein:"
-            flaechenFields = [
-              { label: "Wohnfläche", key: "wohnflaeche", placeholder: "z.B. 850", suffix: "m²" },
-              { label: "Grundstück", key: "grundstueck", placeholder: "z.B. 1200", suffix: "m²" },
-            ]
-          }
-          
-          addMessage({
-            type: "bot",
-            content: flaechenContent,
-            inputType: "form",
-            formFields: flaechenFields,
-          })
-          setCurrentStep("flaechen")
-        }, 400)
-        break
 
-      case "baujahr":
-        const dataWithZustand = { ...formData, zustand: value }
-        setFormData(dataWithZustand)
+        let flaechenFields: { label: string; key: string; placeholder: string; suffix?: string }[] = []
+        const typLabel = objektTypen.find(o => o.value === value)?.description || label
+
+        if (value === "etw") {
+          flaechenFields = [
+            { label: "Wohnflaeche", key: "wohnflaeche", placeholder: "z.B. 85", suffix: "m2" },
+            { label: "Miteigentumsanteil", key: "mea", placeholder: "z.B. 125", suffix: "Promille" },
+            { label: "Etage", key: "etage", placeholder: "z.B. 3 (EG=0)" },
+          ]
+        } else if (value === "wgh") {
+          flaechenFields = [
+            { label: "Wohnflaeche", key: "wohnflaeche", placeholder: "z.B. 600", suffix: "m2" },
+            { label: "Gewerbeflaeche", key: "gewerbeflaeche", placeholder: "z.B. 200", suffix: "m2" },
+            { label: "Grundstueck", key: "grundstueck", placeholder: "z.B. 800", suffix: "m2" },
+          ]
+        } else {
+          flaechenFields = [
+            { label: "Wohnflaeche", key: "wohnflaeche", placeholder: "z.B. 850", suffix: "m2" },
+            { label: "Grundstueck", key: "grundstueck", placeholder: "z.B. 1200", suffix: "m2" },
+          ]
+        }
+
+        addBotMessage({
+          content: `${typLabel} - gute Wahl. Wie gross ist das Objekt?`,
+          inputType: "form",
+          formFields: flaechenFields,
+        })
+        setCurrentStep("flaechen")
+        break
+      }
+
+      case "baujahr": {
+        setFormData(prev => ({ ...prev, zustand: value }))
         onDataChange({ zustand: value })
-        setTimeout(() => {
-          addMessage({
-            type: "bot",
-            content: "Wie würden Sie die Ausstattungsqualität beschreiben?",
-            options: ausstattungOptionen,
-          })
-          setCurrentStep("ausstattung")
-        }, 400)
+        addBotMessage({
+          content: "Verstanden. Wie wuerden Sie die Ausstattungsqualitaet beschreiben?",
+          options: ausstattungOptionen,
+        })
+        setCurrentStep("ausstattung")
         break
+      }
 
-      case "ausstattung":
-        const dataWithAusstattung = { ...formData, ausstattung: value as AnalyseFormData['ausstattung'] }
-        setFormData(dataWithAusstattung)
+      case "ausstattung": {
+        setFormData(prev => ({ ...prev, ausstattung: value as AnalyseFormData['ausstattung'] }))
         onDataChange({ ausstattung: value as AnalyseFormData['ausstattung'] })
-        setTimeout(() => {
-          addMessage({
-            type: "bot",
-            content: "Wie ist die Lagequalität des Standorts?",
-            options: lageOptionen,
-          })
-          setCurrentStep("lage")
-        }, 400)
+        addBotMessage({
+          content: "Und wie schaetzen Sie die Lagequalitaet des Standorts ein?",
+          options: lageOptionen,
+        })
+        setCurrentStep("lage")
         break
+      }
 
-      case "lage":
-        const dataWithLage = { ...formData, lage: value as AnalyseFormData['lage'] }
-        setFormData(dataWithLage)
+      case "lage": {
+        setFormData(prev => ({ ...prev, lage: value as AnalyseFormData['lage'] }))
         onDataChange({ lage: value as AnalyseFormData['lage'] })
-        setTimeout(() => {
-          addMessage({
-            type: "bot",
-            content: "Welche Energieeffizienzklasse hat das Gebäude?",
-            options: energieOptionen,
-          })
-          setCurrentStep("energie")
-        }, 400)
+        addBotMessage({
+          content: "Fast geschafft! Welche Energieeffizienzklasse hat das Gebaeude? Falls unbekannt, kein Problem.",
+          options: energieOptionen,
+        })
+        setCurrentStep("energie")
         break
+      }
 
-      case "energie":
-        const dataWithEnergie = { ...formData, energieeffizienz: value }
-        setFormData(dataWithEnergie)
+      case "energie": {
+        setFormData(prev => ({ ...prev, energieeffizienz: value }))
         onDataChange({ energieeffizienz: value })
-        setTimeout(() => {
-          // Objekttyp-spezifische Details-Fragen
-          let detailsFields: { label: string; key: string; placeholder: string; suffix?: string }[] = []
-          let detailsContent = "Bitte geben Sie weitere Details ein:"
-          let showExtrasCheckboxes = true
-          
-          if (formData.objekttyp === "etw") {
-            detailsContent = "Bitte geben Sie die Wohnungsdetails ein:"
-            detailsFields = [
-              { label: "Hausgeld", key: "hausgeld", placeholder: "z.B. 350", suffix: "€/Monat" },
-              { label: "Stellplätze", key: "stellplaetze", placeholder: "z.B. 1" },
-            ]
-          } else if (formData.objekttyp === "efh") {
-            detailsContent = "Bitte geben Sie die Hausdetails ein:"
-            detailsFields = [
-              { label: "Stellplätze/Garage", key: "stellplaetze", placeholder: "z.B. 2" },
-            ]
-          } else if (formData.objekttyp === "zfh") {
-            detailsContent = "Bitte geben Sie die Details zum Zweifamilienhaus ein:"
-            detailsFields = [
-              { label: "Vermietete Einheiten", key: "vermieteteEinheiten", placeholder: "0, 1 oder 2" },
-              { label: "Stellplätze", key: "stellplaetze", placeholder: "z.B. 2" },
-            ]
-          } else if (formData.objekttyp === "mfh") {
-            detailsContent = "Bitte geben Sie die Details zum Mehrfamilienhaus ein:"
-            detailsFields = [
-              { label: "Anzahl Wohnungen", key: "anzahlWohnungen", placeholder: "z.B. 6" },
-              { label: "Davon vermietet", key: "vermieteteEinheiten", placeholder: "z.B. 5" },
-              { label: "Stellplätze", key: "stellplaetze", placeholder: "z.B. 4" },
-            ]
-          } else if (formData.objekttyp === "wgh") {
-            detailsContent = "Bitte geben Sie die Details zum Wohn-/Geschäftshaus ein:"
-            detailsFields = [
-              { label: "Wohnungen", key: "anzahlWohnungen", placeholder: "z.B. 4" },
-              { label: "Davon vermietet", key: "vermieteteEinheiten", placeholder: "z.B. 4" },
-              { label: "Stellplätze", key: "stellplaetze", placeholder: "z.B. 3" },
-            ]
-          } else {
-            detailsFields = [
-              { label: "Wohnungen", key: "anzahlWohnungen", placeholder: "z.B. 6" },
-              { label: "Stellplätze", key: "stellplaetze", placeholder: "z.B. 4" },
-            ]
-          }
-          
-          addMessage({
-            type: "bot",
-            content: detailsContent,
-            inputType: "form",
-            formFields: detailsFields,
-            showExtras: showExtrasCheckboxes,
-          })
-          setCurrentStep("details")
-        }, 400)
+
+        let detailsFields: { label: string; key: string; placeholder: string; suffix?: string }[] = []
+
+        if (formData.objekttyp === "etw") {
+          detailsFields = [
+            { label: "Hausgeld", key: "hausgeld", placeholder: "z.B. 350", suffix: "EUR/Monat" },
+            { label: "Stellplaetze", key: "stellplaetze", placeholder: "z.B. 1" },
+          ]
+        } else if (formData.objekttyp === "efh") {
+          detailsFields = [
+            { label: "Stellplaetze/Garage", key: "stellplaetze", placeholder: "z.B. 2" },
+          ]
+        } else if (formData.objekttyp === "zfh") {
+          detailsFields = [
+            { label: "Vermietete Einheiten", key: "vermieteteEinheiten", placeholder: "0, 1 oder 2" },
+            { label: "Stellplaetze", key: "stellplaetze", placeholder: "z.B. 2" },
+          ]
+        } else if (formData.objekttyp === "mfh") {
+          detailsFields = [
+            { label: "Anzahl Wohnungen", key: "anzahlWohnungen", placeholder: "z.B. 6" },
+            { label: "Davon vermietet", key: "vermieteteEinheiten", placeholder: "z.B. 5" },
+            { label: "Stellplaetze", key: "stellplaetze", placeholder: "z.B. 4" },
+          ]
+        } else if (formData.objekttyp === "wgh") {
+          detailsFields = [
+            { label: "Wohnungen", key: "anzahlWohnungen", placeholder: "z.B. 4" },
+            { label: "Davon vermietet", key: "vermieteteEinheiten", placeholder: "z.B. 4" },
+            { label: "Stellplaetze", key: "stellplaetze", placeholder: "z.B. 3" },
+          ]
+        } else {
+          detailsFields = [
+            { label: "Wohnungen", key: "anzahlWohnungen", placeholder: "z.B. 6" },
+            { label: "Stellplaetze", key: "stellplaetze", placeholder: "z.B. 4" },
+          ]
+        }
+
+        addBotMessage({
+          content: "Noch ein paar Details zum Objekt:",
+          inputType: "form",
+          formFields: detailsFields,
+          showExtras: true,
+        })
+        setCurrentStep("details")
         break
+      }
     }
   }
 
   const handleInputSubmit = () => {
     if (!inputValue.trim()) return
-
-    addMessage({
-      type: "user",
-      content: inputValue + (currentStep === "miete" ? " €" : currentStep === "bodenrichtwert" ? " €/m²" : ""),
-    })
+    const val = inputValue.trim()
+    addUserMessage(val + (currentStep === "miete" ? " EUR" : currentStep === "bodenrichtwert" ? " EUR/m2" : ""))
 
     switch (currentStep) {
-      case "miete":
-        // Bei WGH: Prüfen ob Gewerbemiete noch fehlt
-        if (formData.objekttyp === "wgh" && !formData.gewerbemiete && inputValue) {
-          // Erste Eingabe = Wohnmiete, jetzt Gewerbemiete abfragen
-          const dataWithWohnmiete = { ...formData, istMiete: inputValue }
-          setFormData(dataWithWohnmiete)
-          onDataChange({ istMiete: inputValue })
-          setTimeout(() => {
-            addMessage({
-              type: "bot",
-              content: "Wie hoch ist die monatliche Gewerbemiete (Kaltmiete)?",
-              inputType: "number",
-            })
-            // Bleibe bei miete step, aber nächste Eingabe ist gewerbemiete
-          }, 400)
-        } else if (formData.objekttyp === "wgh" && formData.istMiete && inputValue) {
-          // Zweite Eingabe = Gewerbemiete
-          const dataWithGewerbemiete = { ...formData, gewerbemiete: inputValue }
-          setFormData(dataWithGewerbemiete)
-          onDataChange({ gewerbemiete: inputValue })
-          setTimeout(() => {
-            addMessage({
-              type: "bot",
-              content: `Bitte geben Sie den Bodenrichtwert ein. Sie finden diesen im BORIS-Portal Ihres Bundeslandes:`,
-              inputType: "number",
-              showBorisLink: true,
-            })
-            setCurrentStep("bodenrichtwert")
-          }, 400)
-        } else {
-          // Alle anderen Objekttypen
-          const dataWithMiete = { ...formData, istMiete: inputValue }
-          setFormData(dataWithMiete)
-          onDataChange({ istMiete: inputValue })
-          setTimeout(() => {
-            addMessage({
-              type: "bot",
-              content: `Bitte geben Sie den Bodenrichtwert ein. Sie finden diesen im BORIS-Portal Ihres Bundeslandes:`,
-              inputType: "number",
-              showBorisLink: true,
-            })
-            setCurrentStep("bodenrichtwert")
-          }, 400)
-        }
-        break
-
-      case "bodenrichtwert":
-        const dataWithBrw = { ...formData, bodenrichtwert: inputValue }
-        setFormData(dataWithBrw)
-        onDataChange({ bodenrichtwert: inputValue })
-        setTimeout(() => {
-          addMessage({
-            type: "bot",
-            content:
-              "Optional: Geben Sie einen Kaufpreis ein, um die Rendite zu berechnen. Oder '0' für nur die Bewertung:",
+      case "miete": {
+        if (formData.objekttyp === "wgh" && !formData.gewerbemiete && val) {
+          setFormData(prev => ({ ...prev, istMiete: val }))
+          onDataChange({ istMiete: val })
+          addBotMessage({ content: "Und wie hoch ist die monatliche Gewerbemiete (Kaltmiete)?", inputType: "number" })
+        } else if (formData.objekttyp === "wgh" && formData.istMiete && val) {
+          setFormData(prev => ({ ...prev, gewerbemiete: val }))
+          onDataChange({ gewerbemiete: val })
+          addBotMessage({
+            content: "Super, Mietdaten erfasst! Jetzt noch der Bodenrichtwert. Sie finden diesen kostenlos im BORIS-Portal Ihres Bundeslandes.",
             inputType: "number",
           })
-          setCurrentStep("kaufpreis")
-        }, 400)
-        break
-
-      case "kaufpreis":
-        const finalData = { ...formData, kaufpreis: inputValue }
-        setFormData(finalData)
-        onDataChange({ kaufpreis: inputValue })
-        setTimeout(() => {
-          addMessage({
-            type: "bot",
-            content: "Alle Daten erfasst! Die Marktpreiseinschätzung wird berechnet...",
+          setCurrentStep("bodenrichtwert")
+        } else {
+          setFormData(prev => ({ ...prev, istMiete: val }))
+          onDataChange({ istMiete: val })
+          addBotMessage({
+            content: "Gut notiert. Bitte geben Sie den Bodenrichtwert ein - diesen finden Sie im BORIS-Portal Ihres Bundeslandes.",
+            inputType: "number",
           })
-          setCurrentStep("complete")
-          onCalculate(finalData)
-        }, 400)
+          setCurrentStep("bodenrichtwert")
+        }
         break
+      }
+
+      case "bodenrichtwert": {
+        setFormData(prev => ({ ...prev, bodenrichtwert: val }))
+        onDataChange({ bodenrichtwert: val })
+        addBotMessage({
+          content: "Letzte Frage: Gibt es einen konkreten Kaufpreis? Das ermoeglicht mir, die Rendite zu berechnen. Geben Sie 0 ein, falls Sie nur die Bewertung moechten.",
+          inputType: "number",
+        })
+        setCurrentStep("kaufpreis")
+        break
+      }
+
+      case "kaufpreis": {
+        const finalData = { ...formData, kaufpreis: val }
+        setFormData(finalData)
+        onDataChange({ kaufpreis: val })
+        setCurrentStep("complete")
+        onCalculate(finalData)
+
+        // Auto-save if user is logged in
+        if (user) {
+          addBotMessage({
+            content: "Perfekt - alle Daten erfasst! Ihre Marktpreiseinschaetzung wird jetzt berechnet und automatisch gespeichert...",
+          }, 300)
+          setTimeout(async () => {
+            try {
+              const { calculateValuation } = await import("@/lib/calculate-valuation")
+              const resultData = calculateValuation(finalData)
+              const { data } = await saveBewertung({
+                formData: finalData,
+                resultData,
+                adresse: `${finalData.plz} ${finalData.stadt}`,
+                userId: user.id,
+              })
+              if (data) {
+                setSavedId(data.id)
+                setMessages(prev => [...prev, {
+                  id: Date.now(),
+                  type: "bot",
+                  content: "Die Bewertung wurde gespeichert! Sie finden die Ergebnisse links im Ergebnis-Panel und koennen diese jederzeit in Ihrem Portal abrufen.",
+                  isComplete: true,
+                }])
+              }
+            } catch {
+              setMessages(prev => [...prev, {
+                id: Date.now(),
+                type: "bot",
+                content: "Die Berechnung ist fertig! Schauen Sie sich die Ergebnisse im linken Panel an. Klicken Sie oben auf 'Speichern', um die Bewertung zu sichern.",
+                isComplete: true,
+              }])
+            }
+          }, 2000)
+        } else {
+          addBotMessage({
+            content: "Die Berechnung ist fertig! Schauen Sie sich die Ergebnisse im linken Panel an. Melden Sie sich an, um die Bewertung dauerhaft zu speichern.",
+            isComplete: true,
+          }, 1500)
+        }
+        break
+      }
     }
 
     setInputValue("")
   }
 
   const handleUploadComplete = (files: UploadedFile[]) => {
-    const dataWithFiles = { ...formData, uploadedFiles: files }
-    setFormData(dataWithFiles)
+    setFormData(prev => ({ ...prev, uploadedFiles: files }))
     onDataChange({ uploadedFiles: files })
-    
-    addMessage({ 
-      type: "user", 
-      content: files.length > 0 
-        ? `${files.length} Datei(en) hochgeladen` 
-        : "Keine Dateien hochgeladen" 
-    })
-    
+    addUserMessage(files.length > 0 ? `${files.length} Datei(en) hochgeladen` : "Keine Dateien")
     goToMieteStep()
   }
 
   const handleSkipUpload = () => {
-    addMessage({ type: "user", content: "Übersprungen" })
+    addUserMessage("Uebersprungen")
     goToMieteStep()
   }
 
   const goToMieteStep = () => {
-    setTimeout(() => {
-      // Objekttyp-spezifische Miete-Fragen
-      let mieteContent = "Wie hoch ist die aktuelle monatliche Kaltmiete (Ist-Miete)?"
-      
-      if (formData.objekttyp === "etw") {
-        mieteContent = "Wie hoch ist die monatliche Kaltmiete der Wohnung? (0 wenn selbstgenutzt)"
-      } else if (formData.objekttyp === "mfh") {
-        mieteContent = "Wie hoch ist die gesamte monatliche Kaltmiete aller Einheiten?"
-      } else if (formData.objekttyp === "wgh") {
-        mieteContent = "Wie hoch ist die monatliche Wohnmiete (Kaltmiete)?"
-      }
-      
-      addMessage({
-        type: "bot",
-        content: mieteContent,
-        inputType: "number",
-      })
-      setCurrentStep("miete")
-    }, 400)
+    let mieteContent = "Wie hoch ist die aktuelle monatliche Kaltmiete (Ist-Miete)?"
+    if (formData.objekttyp === "etw") {
+      mieteContent = "Was ist die monatliche Kaltmiete der Wohnung? Falls selbstgenutzt, geben Sie 0 ein."
+    } else if (formData.objekttyp === "mfh") {
+      mieteContent = "Wie hoch ist die gesamte monatliche Kaltmiete aller Einheiten zusammen?"
+    } else if (formData.objekttyp === "wgh") {
+      mieteContent = "Wie hoch ist die monatliche Wohnmiete (Kaltmiete)?"
+    }
+    addBotMessage({ content: mieteContent, inputType: "number" })
+    setCurrentStep("miete")
   }
 
   const handleFormSubmit = (data: Record<string, string>) => {
     const summary = Object.entries(data)
-      .filter(([_, v]) => v)
+      .filter(([, v]) => v)
       .map(([k, v]) => {
         const labels: Record<string, string> = {
-          plz: "PLZ",
-          stadt: "Stadt",
-          wohnflaeche: "Wohnfläche",
-          grundstueck: "Grundstück",
-          baujahr: "Baujahr",
+          plz: "PLZ", stadt: "Stadt", wohnflaeche: "Wohnflaeche",
+          grundstueck: "Grundstueck", baujahr: "Baujahr", mea: "MEA",
+          etage: "Etage", gewerbeflaeche: "Gewerbeflaeche",
+          anzahlWohnungen: "Wohnungen", stellplaetze: "Stellplaetze",
+          hausgeld: "Hausgeld", vermieteteEinheiten: "Vermietet",
         }
-        const suffix = k === "wohnflaeche" || k === "grundstueck" ? " m²" : ""
+        const suffix = k === "wohnflaeche" || k === "grundstueck" || k === "gewerbeflaeche" ? " m2" : ""
         return `${labels[k] || k}: ${v}${suffix}`
       })
       .join(", ")
 
-    addMessage({ type: "user", content: summary })
+    addUserMessage(summary)
 
     switch (currentStep) {
-      case "plz":
-        const plzData = { ...formData, plz: data.plz || "", stadt: data.stadt || "" }
-        setFormData(plzData)
+      case "plz": {
+        setFormData(prev => ({ ...prev, plz: data.plz || "", stadt: data.stadt || "" }))
         onDataChange({ plz: data.plz, stadt: data.stadt })
-        setTimeout(() => {
-          addMessage({
-            type: "bot",
-            content: `Standort: ${data.plz} ${data.stadt}. Welcher Objekttyp soll bewertet werden?`,
-            options: objektTypen,
-          })
-          setCurrentStep("objekttyp")
-        }, 400)
-        break
-
-      case "flaechen":
-        const flaechenData = {
-          ...formData,
-          wohnflaeche: data.wohnflaeche || "",
-          grundstueck: data.grundstueck || "",
-          // ETW-spezifisch
-          mea: data.mea || "",
-          etage: data.etage || "",
-          // WGH-spezifisch
-          gewerbeflaeche: data.gewerbeflaeche || "",
-        }
-        setFormData(flaechenData)
-        onDataChange({ 
-          wohnflaeche: data.wohnflaeche, 
-          grundstueck: data.grundstueck,
-          mea: data.mea,
-          etage: data.etage,
-          gewerbeflaeche: data.gewerbeflaeche,
+        addBotMessage({
+          content: `${data.plz} ${data.stadt} - alles klar! Um welchen Objekttyp handelt es sich?`,
+          options: objektTypen,
         })
-        setTimeout(() => {
-          addMessage({
-            type: "bot",
-            content: "Wann wurde das Gebäude gebaut?",
-            inputType: "form",
-            formFields: [{ label: "Baujahr", key: "baujahr", placeholder: "z.B. 1965" }],
-          })
-          setCurrentStep("baujahr")
-        }, 400)
+        setCurrentStep("objekttyp")
         break
+      }
 
-      case "baujahr":
-        const baujahrData = { ...formData, baujahr: data.baujahr || "" }
-        setFormData(baujahrData)
+      case "flaechen": {
+        setFormData(prev => ({
+          ...prev,
+          wohnflaeche: data.wohnflaeche || "", grundstueck: data.grundstueck || "",
+          mea: data.mea || "", etage: data.etage || "", gewerbeflaeche: data.gewerbeflaeche || "",
+        }))
+        onDataChange({
+          wohnflaeche: data.wohnflaeche, grundstueck: data.grundstueck,
+          mea: data.mea, etage: data.etage, gewerbeflaeche: data.gewerbeflaeche,
+        })
+        addBotMessage({
+          content: "Danke! Wann wurde das Gebaeude errichtet?",
+          inputType: "form",
+          formFields: [{ label: "Baujahr", key: "baujahr", placeholder: "z.B. 1965" }],
+        })
+        setCurrentStep("baujahr")
+        break
+      }
+
+      case "baujahr": {
+        setFormData(prev => ({ ...prev, baujahr: data.baujahr || "" }))
         onDataChange({ baujahr: data.baujahr })
-        setTimeout(() => {
-          addMessage({
-            type: "bot",
-            content: "Wie würden Sie den Gesamtzustand des Gebäudes einschätzen?",
-            options: zustandOptionen,
-          })
-        }, 400)
+        const bj = parseInt(data.baujahr)
+        const age = bj ? new Date().getFullYear() - bj : 0
+        const ageComment = age > 50 ? `Das Gebaeude ist ${age} Jahre alt - der Zustand ist hier besonders wichtig.` :
+                           age > 20 ? `${age} Jahre - in welchem Zustand ist das Gebaeude?` :
+                           `Baujahr ${data.baujahr}, relativ jung. Wie ist der aktuelle Zustand?`
+        addBotMessage({ content: ageComment, options: zustandOptionen })
         break
+      }
 
-      case "details":
-        const detailsData = { 
-          ...formData, 
-          anzahlWohnungen: data.anzahlWohnungen || "",
-          stellplaetze: data.stellplaetze || "",
-          keller: data.keller === "true",
-          balkon: data.balkon === "true",
-          aufzug: data.aufzug === "true",
-          // ETW-spezifisch
-          hausgeld: data.hausgeld || "",
-          // MFH/ZFH-spezifisch
-          vermieteteEinheiten: data.vermieteteEinheiten || "",
-        }
-        setFormData(detailsData)
-        onDataChange({ 
-          anzahlWohnungen: data.anzahlWohnungen,
-          stellplaetze: data.stellplaetze,
-          keller: data.keller === "true",
-          balkon: data.balkon === "true",
-          aufzug: data.aufzug === "true",
-          hausgeld: data.hausgeld,
+      case "details": {
+        setFormData(prev => ({
+          ...prev,
+          anzahlWohnungen: data.anzahlWohnungen || "", stellplaetze: data.stellplaetze || "",
+          keller: data.keller === "true", balkon: data.balkon === "true", aufzug: data.aufzug === "true",
+          hausgeld: data.hausgeld || "", vermieteteEinheiten: data.vermieteteEinheiten || "",
+        }))
+        onDataChange({
+          anzahlWohnungen: data.anzahlWohnungen, stellplaetze: data.stellplaetze,
+          keller: data.keller === "true", balkon: data.balkon === "true",
+          aufzug: data.aufzug === "true", hausgeld: data.hausgeld,
           vermieteteEinheiten: data.vermieteteEinheiten,
         })
-        setTimeout(() => {
-          // Nach Details kommt Upload-Step
-          addMessage({
-            type: "bot",
-            content: "Optional: Laden Sie Fotos, Grundrisse oder Dokumente hoch. Die KI analysiert diese automatisch und verbessert die Bewertung.",
-            inputType: "upload",
-          })
-          setCurrentStep("upload")
-        }, 400)
+        addBotMessage({
+          content: "Optional: Laden Sie Fotos, Grundrisse oder Dokumente hoch - die KI analysiert diese und verbessert die Bewertungsgenauigkeit.",
+          inputType: "upload",
+        })
+        setCurrentStep("upload")
         break
+      }
     }
   }
 
   return (
     <div className="flex flex-col h-full bg-background">
+      {/* Progress Bar */}
+      <div className="px-4 py-2 border-b border-border bg-card/50">
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-xs font-medium text-muted-foreground">Fortschritt</span>
+          <span className="text-xs font-bold text-primary">{progress}%</span>
+        </div>
+        <Progress value={progress} className="h-1.5" />
+      </div>
+
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
         {messages.map((message) => (
@@ -560,8 +487,27 @@ export function ChatWizard({ onDataChange, onCalculate, initialQuery }: ChatWiza
                 message.type === "user" ? "bg-primary text-primary-foreground" : "bg-card border border-border",
               )}
             >
-              <p className="text-sm">{message.content}</p>
+              <p className="text-sm leading-relaxed">{message.content}</p>
 
+              {/* Completion CTA */}
+              {message.isComplete && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {savedId && (
+                    <Button size="sm" variant="outline" className="gap-1.5 text-xs" asChild>
+                      <Link href="/portal">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
+                        Zum Portal
+                      </Link>
+                    </Button>
+                  )}
+                  <Button size="sm" variant="outline" className="gap-1.5 text-xs" asChild>
+                    <Link href={`/portal/bewertungen${savedId ? `/${savedId}` : ""}`}>
+                      <ArrowRight className="h-3.5 w-3.5" />
+                      Bewertung ansehen
+                    </Link>
+                  </Button>
+                </div>
+              )}
 
               {/* Option Buttons */}
               {message.options && (
@@ -583,9 +529,9 @@ export function ChatWizard({ onDataChange, onCalculate, initialQuery }: ChatWiza
 
               {/* Form Fields */}
               {message.inputType === "form" && message.formFields && (
-                <FormInputs 
-                  fields={message.formFields} 
-                  onSubmit={handleFormSubmit} 
+                <FormInputs
+                  fields={message.formFields}
+                  onSubmit={handleFormSubmit}
                   defaultValues={formData}
                   showExtras={message.showExtras}
                 />
@@ -593,10 +539,7 @@ export function ChatWizard({ onDataChange, onCalculate, initialQuery }: ChatWiza
 
               {/* Upload UI */}
               {message.inputType === "upload" && currentStep === "upload" && (
-                <UploadSection 
-                  onComplete={handleUploadComplete}
-                  onSkip={handleSkipUpload}
-                />
+                <UploadSection onComplete={handleUploadComplete} onSkip={handleSkipUpload} />
               )}
             </div>
             {message.type === "user" && (
@@ -606,6 +549,23 @@ export function ChatWizard({ onDataChange, onCalculate, initialQuery }: ChatWiza
             )}
           </div>
         ))}
+
+        {/* Typing Indicator */}
+        {isTyping && (
+          <div className="flex gap-3 justify-start">
+            <div className="flex-shrink-0">
+              <ProplyticsLogo size="sm" />
+            </div>
+            <div className="bg-card border border-border rounded-2xl px-4 py-3">
+              <div className="flex gap-1.5 items-center h-5">
+                <div className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce [animation-delay:0ms]" />
+                <div className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce [animation-delay:150ms]" />
+                <div className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce [animation-delay:300ms]" />
+              </div>
+            </div>
+          </div>
+        )}
+
         <div ref={messagesEndRef} />
       </div>
 
@@ -616,19 +576,18 @@ export function ChatWizard({ onDataChange, onCalculate, initialQuery }: ChatWiza
             <Input
               type="number"
               placeholder={
-                currentStep === "miete"
-                  ? "z.B. 12500"
-                  : currentStep === "bodenrichtwert"
-                    ? "z.B. 580"
-                    : "z.B. 3200000 (oder 0)"
+                currentStep === "miete" ? "z.B. 12500"
+                  : currentStep === "bodenrichtwert" ? "z.B. 580"
+                  : "z.B. 3200000 (oder 0)"
               }
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleInputSubmit()}
               className="bg-input"
+              autoFocus
             />
             <span className="flex items-center text-sm text-muted-foreground">
-              {currentStep === "bodenrichtwert" ? "€/m²" : "€"}
+              {currentStep === "bodenrichtwert" ? "EUR/m2" : "EUR"}
             </span>
             <Button onClick={handleInputSubmit} size="icon" className="bg-primary hover:bg-primary/90">
               <Send className="w-4 h-4" />
@@ -654,59 +613,37 @@ function UploadSection({
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
     setIsDragging(false)
-    const droppedFiles = Array.from(e.dataTransfer.files)
-    handleFiles(droppedFiles)
+    handleFiles(Array.from(e.dataTransfer.files))
   }
 
   const handleFiles = async (newFiles: File[]) => {
     const uploadedFiles: UploadedFile[] = []
-
     for (const [index, file] of newFiles.entries()) {
       const category = detectCategory(file.name, file.type)
-
-      // Basis-UploadedFile erstellen
       const uploadedFile: UploadedFile = {
-        id: `${Date.now()}-${index}`,
-        name: file.name,
-        type: file.type,
-        size: file.size,
-        category,
-        url: URL.createObjectURL(file),
+        id: `${Date.now()}-${index}`, name: file.name, type: file.type,
+        size: file.size, category, url: URL.createObjectURL(file),
       }
-
-      // KI-Analyse für Bilder
       if (file.type.startsWith('image/')) {
         try {
           const base64 = await fileToBase64(file)
           const aiAnalysis = await analyzeImageWithAI(base64, category)
-
-          if (aiAnalysis) {
-            uploadedFile.aiAnalysis = aiAnalysis
-          }
-        } catch (error) {
-          console.error('KI-Analyse fehlgeschlagen:', error)
-          // Fortfahren ohne AI-Analyse
-        }
+          if (aiAnalysis) uploadedFile.aiAnalysis = aiAnalysis
+        } catch { /* continue without AI */ }
       }
-
       uploadedFiles.push(uploadedFile)
     }
-
     setFiles(prev => [...prev, ...uploadedFiles])
   }
 
   const detectCategory = (name: string, type: string): UploadedFile['category'] => {
-    const lowerName = name.toLowerCase()
-    if (lowerName.includes('grundriss') || lowerName.includes('floor')) return 'grundriss'
-    if (lowerName.includes('energie') || lowerName.includes('ausweis')) return 'energie'
-    if (lowerName.includes('expose') || type === 'application/pdf') return 'expose'
-    if (lowerName.includes('aussen') || lowerName.includes('fassade')) return 'aussen'
+    const n = name.toLowerCase()
+    if (n.includes('grundriss') || n.includes('floor')) return 'grundriss'
+    if (n.includes('energie') || n.includes('ausweis')) return 'energie'
+    if (n.includes('expose') || type === 'application/pdf') return 'expose'
+    if (n.includes('aussen') || n.includes('fassade')) return 'aussen'
     if (type.startsWith('image/')) return 'innen'
     return 'sonstiges'
-  }
-
-  const removeFile = (id: string) => {
-    setFiles(prev => prev.filter(f => f.id !== id))
   }
 
   return (
@@ -721,57 +658,26 @@ function UploadSection({
           isDragging ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
         )}
       >
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
-          className="hidden"
-          onChange={(e) => e.target.files && handleFiles(Array.from(e.target.files))}
-        />
+        <input ref={fileInputRef} type="file" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" className="hidden"
+          onChange={(e) => e.target.files && handleFiles(Array.from(e.target.files))} />
         <div className="text-muted-foreground text-sm">
           <p className="font-medium">Dateien hier ablegen</p>
-          <p className="text-xs mt-1">oder klicken zum Auswählen</p>
-          <p className="text-xs mt-2 opacity-70">Bilder, PDFs, Word, Excel</p>
+          <p className="text-xs mt-1">oder klicken zum Auswaehlen</p>
         </div>
       </div>
-
       {files.length > 0 && (
-        <div className="space-y-2">
-          <p className="text-xs text-muted-foreground">{files.length} Datei(en):</p>
-          <div className="flex flex-wrap gap-2">
-            {files.map(file => (
-              <div 
-                key={file.id} 
-                className="flex items-center gap-2 bg-muted rounded-lg px-2 py-1 text-xs"
-              >
-                <span className="truncate max-w-[120px]">{file.name}</span>
-                <button 
-                  onClick={() => removeFile(file.id)}
-                  className="text-muted-foreground hover:text-destructive"
-                >
-                  ×
-                </button>
-              </div>
-            ))}
-          </div>
+        <div className="flex flex-wrap gap-2">
+          {files.map(file => (
+            <div key={file.id} className="flex items-center gap-2 bg-muted rounded-lg px-2 py-1 text-xs">
+              <span className="truncate max-w-[120px]">{file.name}</span>
+              <button onClick={() => setFiles(prev => prev.filter(f => f.id !== file.id))} className="text-muted-foreground hover:text-destructive">x</button>
+            </div>
+          ))}
         </div>
       )}
-
       <div className="flex gap-2">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="flex-1"
-          onClick={onSkip}
-        >
-          Überspringen
-        </Button>
-        <Button 
-          size="sm" 
-          className="flex-1"
-          onClick={() => onComplete(files)}
-        >
+        <Button variant="outline" size="sm" className="flex-1" onClick={onSkip}>Ueberspringen</Button>
+        <Button size="sm" className="flex-1" onClick={() => onComplete(files)}>
           {files.length > 0 ? "Weiter mit Analyse" : "Ohne Dateien fortfahren"}
         </Button>
       </div>
@@ -780,10 +686,7 @@ function UploadSection({
 }
 
 function FormInputs({
-  fields,
-  onSubmit,
-  defaultValues,
-  showExtras = false,
+  fields, onSubmit, defaultValues, showExtras = false,
 }: {
   fields: { label: string; key: string; placeholder: string; suffix?: string; type?: "text" | "checkbox" }[]
   onSubmit: (data: Record<string, string>) => void
@@ -798,20 +701,11 @@ function FormInputs({
     })
     return initial
   })
-  const [extras, setExtras] = useState({
-    keller: false,
-    balkon: false,
-    aufzug: false,
-  })
+  const [extras, setExtras] = useState({ keller: false, balkon: false, aufzug: false })
 
   const handleSubmit = () => {
     if (showExtras) {
-      onSubmit({
-        ...values,
-        keller: String(extras.keller),
-        balkon: String(extras.balkon),
-        aufzug: String(extras.aufzug),
-      })
+      onSubmit({ ...values, keller: String(extras.keller), balkon: String(extras.balkon), aufzug: String(extras.aufzug) })
     } else {
       onSubmit(values)
     }
@@ -823,13 +717,10 @@ function FormInputs({
         <div key={field.key} className="flex items-center gap-2">
           <label className="text-xs text-muted-foreground w-24 flex-shrink-0">{field.label}</label>
           <div className="flex-1 flex items-center gap-1">
-            <Input
-              type="text"
-              placeholder={field.placeholder}
-              value={values[field.key]}
-              onChange={(e) => setValues((prev) => ({ ...prev, [field.key]: e.target.value }))}
-              className="bg-input text-sm h-8"
-            />
+            <Input type="text" placeholder={field.placeholder} value={values[field.key]}
+              onChange={(e) => setValues(prev => ({ ...prev, [field.key]: e.target.value }))}
+              onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+              className="bg-input text-sm h-8" />
             {field.suffix && <span className="text-xs text-muted-foreground">{field.suffix}</span>}
           </div>
         </div>
@@ -837,31 +728,17 @@ function FormInputs({
       {showExtras && (
         <div className="flex flex-wrap gap-4 pt-2">
           <label className="flex items-center gap-2 text-xs cursor-pointer">
-            <Checkbox 
-              checked={extras.keller} 
-              onCheckedChange={(checked) => setExtras(prev => ({ ...prev, keller: !!checked }))}
-            />
-            Keller
+            <Checkbox checked={extras.keller} onCheckedChange={(c) => setExtras(p => ({ ...p, keller: !!c }))} /> Keller
           </label>
           <label className="flex items-center gap-2 text-xs cursor-pointer">
-            <Checkbox 
-              checked={extras.balkon} 
-              onCheckedChange={(checked) => setExtras(prev => ({ ...prev, balkon: !!checked }))}
-            />
-            Balkon/Terrasse
+            <Checkbox checked={extras.balkon} onCheckedChange={(c) => setExtras(p => ({ ...p, balkon: !!c }))} /> Balkon/Terrasse
           </label>
           <label className="flex items-center gap-2 text-xs cursor-pointer">
-            <Checkbox 
-              checked={extras.aufzug} 
-              onCheckedChange={(checked) => setExtras(prev => ({ ...prev, aufzug: !!checked }))}
-            />
-            Aufzug
+            <Checkbox checked={extras.aufzug} onCheckedChange={(c) => setExtras(p => ({ ...p, aufzug: !!c }))} /> Aufzug
           </label>
         </div>
       )}
-      <Button size="sm" className="w-full mt-2" onClick={handleSubmit}>
-        Weiter
-      </Button>
+      <Button size="sm" className="w-full mt-2" onClick={handleSubmit}>Weiter</Button>
     </div>
   )
 }
