@@ -75,10 +75,10 @@ export default function DiscussionPage({ params }: DiscussionPageProps) {
 
   if (!discussion) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="flex min-h-[50vh] items-center justify-center bg-background">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-slate-900 mb-4">Diskussion nicht gefunden</h1>
-          <p className="text-slate-600 mb-6">Die gesuchte Diskussion existiert nicht.</p>
+          <h1 className="mb-4 text-2xl font-bold">Diskussion nicht gefunden</h1>
+          <p className="mb-6 text-muted-foreground">Die gesuchte Diskussion existiert nicht.</p>
           <Link href="/community">
             <Button>Zurück zur Community</Button>
           </Link>
@@ -100,30 +100,24 @@ export default function DiscussionPage({ params }: DiscussionPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <div className="bg-white border-b border-slate-200">
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          <Link href="/community" className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors mb-4">
-            <ArrowLeft className="w-4 h-4" />
-            Zurück zur Community
-          </Link>
-        </div>
-      </div>
-
-      <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="bg-background text-foreground">
+      <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
+        <Link href="/community" className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground">
+          <ArrowLeft className="h-4 w-4" />
+          Zurueck zur Community
+        </Link>
         {/* Main Discussion */}
-        <Card className="mb-8 border-0 shadow-lg">
+        <Card className="mb-8 border-border shadow-md">
           <CardHeader>
             <div className="flex items-center gap-2 mb-3">
               <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
                 {discussion.category}
               </Badge>
             </div>
-            <CardTitle className="text-2xl font-bold text-slate-900 mb-4">
+            <CardTitle className="mb-4 text-2xl font-bold">
               {discussion.title}
             </CardTitle>
-            <div className="flex items-center gap-4 text-sm text-slate-500">
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <Avatar className="w-6 h-6">
                   <AvatarImage src={discussion.authorAvatar} />
@@ -142,7 +136,7 @@ export default function DiscussionPage({ params }: DiscussionPageProps) {
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-slate-700 leading-relaxed mb-6">
+            <p className="mb-6 leading-relaxed text-foreground">
               {discussion.content}
             </p>
             <div className="flex flex-wrap gap-2 mb-6">
@@ -182,12 +176,12 @@ export default function DiscussionPage({ params }: DiscussionPageProps) {
 
         {/* Replies */}
         <div className="space-y-6 mb-8">
-          <h3 className="text-lg font-semibold text-slate-900">
+          <h3 className="text-lg font-semibold">
             {discussion.replies.length} Antworten
           </h3>
 
           {discussion.replies.map((reply) => (
-            <Card key={reply.id} className="border-0 shadow-sm">
+            <Card key={reply.id} className="border-border">
               <CardContent className="p-6">
                 <div className="flex items-start gap-3">
                   <Avatar className="w-8 h-8">
@@ -196,20 +190,20 @@ export default function DiscussionPage({ params }: DiscussionPageProps) {
                   </Avatar>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="font-medium text-slate-900">{reply.author}</span>
-                      <span className="text-sm text-slate-500">
+                      <span className="font-medium">{reply.author}</span>
+                      <span className="text-sm text-muted-foreground">
                         {new Date(reply.date).toLocaleDateString('de-DE')}
                       </span>
                     </div>
-                    <p className="text-slate-700 leading-relaxed mb-4">
+                    <p className="mb-4 leading-relaxed text-foreground">
                       {reply.content}
                     </p>
                     <div className="flex items-center gap-4">
-                      <Button variant="ghost" size="sm" className="text-slate-500 hover:text-slate-700">
+                      <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
                         <ThumbsUp className="w-4 h-4 mr-1" />
                         {reply.likes}
                       </Button>
-                      <Button variant="ghost" size="sm" className="text-slate-500 hover:text-slate-700">
+                      <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
                         <MessageCircle className="w-4 h-4 mr-1" />
                         Antworten
                       </Button>
@@ -222,7 +216,7 @@ export default function DiscussionPage({ params }: DiscussionPageProps) {
         </div>
 
         {/* Reply Form */}
-        <Card className="border-0 shadow-lg">
+        <Card className="border-border shadow-md">
           <CardHeader>
             <CardTitle className="text-lg">Antwort schreiben</CardTitle>
           </CardHeader>
@@ -234,7 +228,7 @@ export default function DiscussionPage({ params }: DiscussionPageProps) {
               className="min-h-[120px] mb-4"
             />
             <div className="flex items-center justify-between">
-              <div className="text-sm text-slate-500">
+              <div className="text-sm text-muted-foreground">
                 Markdown wird unterstützt
               </div>
               <Button
@@ -250,29 +244,29 @@ export default function DiscussionPage({ params }: DiscussionPageProps) {
 
         {/* Related Discussions */}
         <div className="mt-8">
-          <h3 className="text-lg font-semibold text-slate-900 mb-4">
+          <h3 className="mb-4 text-lg font-semibold">
             Ähnliche Diskussionen
           </h3>
           <div className="space-y-3">
             <Link href="/community/preisentwicklung-fragen" className="block">
-              <Card className="hover:shadow-md transition-shadow border-0">
+              <Card className="border-border transition-shadow hover:shadow-md">
                 <CardContent className="p-4">
-                  <h4 className="font-medium text-slate-900 hover:text-emerald-600 transition-colors">
-                    Sind die Immobilienpreise in München noch gerechtfertigt?
+                  <h4 className="font-medium transition-colors hover:text-emerald-600">
+                    Sind die Immobilienpreise in Muenchen noch gerechtfertigt?
                   </h4>
-                  <p className="text-sm text-slate-600 mt-1">
-                    Diskussion über Preis-Nutzen-Relation in Top-Lagen...
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Diskussion ueber Preis-Nutzen-Relation in Top-Lagen...
                   </p>
                 </CardContent>
               </Card>
             </Link>
             <Link href="/community/steueroptimierung-tipps" className="block">
-              <Card className="hover:shadow-md transition-shadow border-0">
+              <Card className="border-border transition-shadow hover:shadow-md">
                 <CardContent className="p-4">
-                  <h4 className="font-medium text-slate-900 hover:text-emerald-600 transition-colors">
+                  <h4 className="font-medium transition-colors hover:text-emerald-600">
                     Steuervorteile bei Immobilien: Was nutzt ihr?
                   </h4>
-                  <p className="text-sm text-slate-600 mt-1">
+                  <p className="mt-1 text-sm text-muted-foreground">
                     Erfahrungen mit AfA, Werbungskosten und Optimierung...
                   </p>
                 </CardContent>

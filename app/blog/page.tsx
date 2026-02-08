@@ -1,142 +1,197 @@
+import type { Metadata } from "next"
 import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Calendar, Clock, User, ArrowRight, Building2 } from "lucide-react"
+import { ArrowRight, Clock, User, Sparkles } from "lucide-react"
 
-// Simple blog data
+export const metadata: Metadata = {
+  title: "Blog",
+  description:
+    "Aktuelle Marktanalysen, Expertenwissen und Strategien rund um Immobilienbewertung, Investment und Finanzierung. Datenbasiert und KI-optimiert.",
+}
+
 const blogPosts = [
   {
     id: "immobilienmarkt-2024-trends",
     title: "Immobilienmarkt 2024: Trends und Entwicklungen",
-    excerpt: "Entdecken Sie die wichtigsten Entwicklungen am Immobilienmarkt 2024.",
+    excerpt:
+      "Der Immobilienmarkt 2024 steht vor bedeutenden Veraenderungen durch KI-Technologie, steigende Nachhaltigkeitsanforderungen und demografischen Wandel. Wir analysieren die wichtigsten Trends fuer Kaufer, Verkaeufer und Investoren auf Basis aktueller Marktdaten. Erfahren Sie, welche Regionen besonders profitieren und wo Risiken lauern. Dieser Ueberblick hilft Ihnen, fundierte Entscheidungen in einem dynamischen Marktumfeld zu treffen.",
     author: "Proplytics Team",
     date: "2024-01-15",
     readTime: "5 min",
     category: "Marktanalyse",
-    tags: ["Trends", "2024", "Marktanalyse"]
+    tags: ["Trends", "2024", "Marktanalyse"],
   },
   {
     id: "ki-immobilienbewertung-zukunft",
-    title: "KI in der Immobilienbewertung",
-    excerpt: "Wie künstliche Intelligenz die Immobilienbewertung revolutioniert.",
+    title: "KI in der Immobilienbewertung: Die Zukunft ist da",
+    excerpt:
+      "Kuenstliche Intelligenz veraendert die Immobilienbranche grundlegend - von automatisierten Marktwertberechnungen bis hin zu praezisen Standortbewertungen. Moderne KI-Systeme analysieren historische Verkaufsdaten, Wirtschaftsindikatoren und soziodemografische Faktoren in Echtzeit. Das Ergebnis sind schnellere, transparentere und genauere Bewertungen fuer alle Beteiligten. In diesem Artikel zeigen wir, wie Kaufer, Verkaeufer und Makler von der Technologie profitieren.",
     author: "Dr. Sarah Weber",
     date: "2024-01-10",
     readTime: "7 min",
     category: "Technologie",
-    tags: ["KI", "Bewertung", "Innovation"]
+    tags: ["KI", "Bewertung", "Innovation"],
   },
   {
     id: "immobilien-kaufen-2024-guide",
-    title: "Immobilien kaufen 2024: Leitfaden für Erstkäufer",
-    excerpt: "Alles was Sie über den Immobilienkauf 2024 wissen müssen.",
-    author: "Michael Bauer",
+    title: "Immobilien kaufen 2024: Leitfaden fuer Erstkaeufer",
+    excerpt:
+      "Der Immobilienkauf zaehlt zu den komplexesten finanziellen Entscheidungen im Leben - von der Finanzierungsstrukturierung ueber die Standortanalyse bis zur rechtlichen Due Diligence. Dieser datenbasierte Leitfaden fuehrt Erstkaeufer Schritt fuer Schritt durch den gesamten Prozess mit aktuellen Marktdaten und Finanzierungskonditionen 2024. Lernen Sie die haeufigsten Fehler-Muster kennen und nutzen Sie KI-optimierte Entscheidungshilfen fuer Ihren erfolgreichen Immobilienkauf.",
+    author: "Dr. Michael Bauer",
     date: "2024-01-10",
-    readTime: "12 min",
+    readTime: "22 min",
     category: "Ratgeber",
-    tags: ["Erstkäufer", "Immobilienkauf", "Finanzierung"]
-  }
+    tags: ["Erstkaeufer", "Finanzierung", "Due Diligence"],
+  },
+  {
+    id: "rental-yields-deutschland-vergleich",
+    title: "Mietrenditen Deutschland 2024: Staedtevergleich",
+    excerpt:
+      "Die Wahl des richtigen Standorts entscheidet ueber Erfolg oder Misserfolg einer Immobilieninvestition. Basierend auf Daten des Statistischen Bundesamtes und empirischen Analysen von ueber 50.000 Transaktionen praesentieren wir den umfassendsten Staedtevergleich fuer Mietrenditen in Deutschland. Leipzig fuehrt mit 5,8% Cashflow-Rendite, gefolgt von Dresden und Dortmund. Erfahren Sie, welche Investmentstrategie zu Ihrem Risikoprofil passt.",
+    author: "Proplytics Research",
+    date: "2024-01-05",
+    readTime: "18 min",
+    category: "Analyse",
+    tags: ["Mietrenditen", "Staedtevergleich", "Investment"],
+  },
+  {
+    id: "energetische-sanierung-foerderung",
+    title: "Energetische Sanierung: Foerderungen & Wirtschaftlichkeit",
+    excerpt:
+      "Die energetische Sanierung von Bestandsimmobilien wird durch steigende Energiepreise und verschaerfte gesetzliche Vorgaben immer wichtiger. Mit den richtigen Foerderprogrammen - insbesondere der KfW und BAFA - lassen sich bis zu 45% der Sanierungskosten abdecken. Wir analysieren die Wirtschaftlichkeit verschiedener Sanierungsmassnahmen von der Daemmung bis zur Waermepumpe. Erfahren Sie, welche Investitionen sich am schnellsten amortisieren und den Immobilienwert nachhaltig steigern.",
+    author: "Proplytics Team",
+    date: "2024-01-02",
+    readTime: "10 min",
+    category: "Ratgeber",
+    tags: ["Sanierung", "Foerderung", "Energieeffizienz"],
+  },
 ]
 
 export default function BlogPage() {
-  const featuredPosts = blogPosts.slice(0, 1)
-  const recentPosts = blogPosts.slice(1, 4)
+  const featuredPost = blogPosts[0]
+  const recentPosts = blogPosts.slice(1)
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <div className="bg-white border-b border-slate-200">
-        <div className="max-w-6xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2">
-              <Building2 className="w-6 h-6 text-emerald-600" />
-              <span className="text-lg font-semibold">Proplytics</span>
-            </Link>
-            <Link href="/analyse">
-              <Button>Analyse starten</Button>
-            </Link>
-          </div>
-        </div>
-      </div>
-
+    <div className="bg-background text-foreground">
       {/* Hero */}
-      <div className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white">
-        <div className="max-w-6xl mx-auto px-4 py-16">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">Immobilien-Blog</h1>
-            <p className="text-xl opacity-90 max-w-2xl mx-auto">
-              Aktuelle Trends, Marktanalysen und Expertenwissen für Immobilieninvestoren.
-            </p>
+      <section className="border-b border-border bg-secondary/30 py-16 md:py-20">
+        <div className="mx-auto max-w-7xl px-4 text-center sm:px-6">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-1.5">
+            <Sparkles className="h-4 w-4 text-emerald-600" />
+            <span className="text-sm font-medium text-emerald-700">
+              Immobilien-Blog
+            </span>
           </div>
+          <h1 className="mb-4 text-balance text-4xl font-bold tracking-tight md:text-5xl">
+            Wissen & Marktanalysen
+          </h1>
+          <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
+            Aktuelle Trends, datenbasierte Analysen und Expertenwissen fuer
+            Immobilieninvestoren und Eigentuemer.
+          </p>
         </div>
-      </div>
+      </section>
 
-      <div className="max-w-6xl mx-auto px-4 py-12">
-        {/* Featured Posts */}
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold text-slate-900 mb-6">Featured Artikel</h2>
-          <div className="grid grid-cols-1 gap-6">
-            {featuredPosts.map((post) => (
-              <Card key={post.id} className="border-0 shadow-lg">
-                <CardHeader>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Badge>{post.category}</Badge>
-                  </div>
-                  <CardTitle className="text-2xl">
-                    <Link href={`/blog/${post.id}`} className="hover:text-emerald-600 transition-colors">
-                      {post.title}
-                    </Link>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-slate-600 mb-4">{post.excerpt}</p>
-                  <div className="flex items-center justify-between text-sm text-slate-500">
-                    <div className="flex items-center gap-4">
-                      <span>von {post.author}</span>
-                      <span>{post.date}</span>
-                      <span>{post.readTime}</span>
-                    </div>
-                    <Link href={`/blog/${post.id}`}>
-                      <Button variant="outline" size="sm">
-                        Lesen <ArrowRight className="w-4 h-4 ml-1" />
-                      </Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 md:py-16">
+        {/* Featured Post */}
+        <section className="mb-16">
+          <h2 className="mb-6 text-xl font-bold">Featured Artikel</h2>
+          <Card className="overflow-hidden border-border transition-shadow hover:shadow-lg">
+            <CardHeader className="pb-3">
+              <div className="mb-2 flex items-center gap-2">
+                <Badge className="border-none bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
+                  {featuredPost.category}
+                </Badge>
+                <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Clock className="h-3 w-3" />
+                  {featuredPost.readTime}
+                </span>
+              </div>
+              <CardTitle className="text-2xl md:text-3xl">
+                <Link
+                  href={`/blog/${featuredPost.id}`}
+                  className="transition-colors hover:text-emerald-600"
+                >
+                  {featuredPost.title}
+                </Link>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="mb-6 leading-relaxed text-muted-foreground">
+                {featuredPost.excerpt}
+              </p>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <User className="h-3.5 w-3.5" />
+                    {featuredPost.author}
+                  </span>
+                  <span>{featuredPost.date}</span>
+                </div>
+                <Button asChild variant="outline" size="sm">
+                  <Link href={`/blog/${featuredPost.id}`}>
+                    Lesen <ArrowRight className="ml-1 h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
 
         {/* Recent Posts */}
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900 mb-6">Aktuelle Artikel</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <section>
+          <h2 className="mb-6 text-xl font-bold">Aktuelle Artikel</h2>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2">
             {recentPosts.map((post) => (
-              <Card key={post.id} className="border-0 shadow-md hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <Badge className="w-fit mb-2">{post.category}</Badge>
+              <Card
+                key={post.id}
+                className="flex flex-col border-border transition-shadow hover:shadow-lg"
+              >
+                <CardHeader className="pb-3">
+                  <div className="mb-2 flex items-center gap-2">
+                    <Badge
+                      variant="secondary"
+                      className="border-none bg-secondary text-secondary-foreground"
+                    >
+                      {post.category}
+                    </Badge>
+                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Clock className="h-3 w-3" />
+                      {post.readTime}
+                    </span>
+                  </div>
                   <CardTitle className="text-lg">
-                    <Link href={`/blog/${post.id}`} className="hover:text-emerald-600 transition-colors">
+                    <Link
+                      href={`/blog/${post.id}`}
+                      className="transition-colors hover:text-emerald-600"
+                    >
                       {post.title}
                     </Link>
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-slate-600 text-sm mb-4 line-clamp-3">{post.excerpt}</p>
-                  <div className="flex items-center justify-between text-xs text-slate-500">
-                    <span>{post.author}</span>
-                    <Link href={`/blog/${post.id}`}>
-                      <Button variant="ghost" size="sm" className="p-0 h-auto">
-                        Lesen →
-                      </Button>
+                <CardContent className="flex flex-1 flex-col">
+                  <p className="mb-4 flex-1 text-sm leading-relaxed text-muted-foreground">
+                    {post.excerpt}
+                  </p>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <User className="h-3 w-3" />
+                      {post.author}
+                    </span>
+                    <Link
+                      href={`/blog/${post.id}`}
+                      className="font-medium text-emerald-600 hover:text-emerald-700"
+                    >
+                      {"Lesen ->"}
                     </Link>
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
-        </div>
+        </section>
       </div>
     </div>
   )

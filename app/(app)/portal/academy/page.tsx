@@ -3,100 +3,120 @@
 import { CourseList } from "@/components/modules/portal/academy/CourseList"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { GraduationCap, Users, Calendar, ArrowRight, PlayCircle } from "lucide-react"
-import Link from "next/link"
+import { GraduationCap, Users, Calendar, ArrowRight, PlayCircle, Sparkles } from "lucide-react"
 
 export default function AcademyPage() {
   return (
-    <div className="min-h-screen bg-muted/30 pb-20">
-      {/* Hero Section */}
-      <section className="bg-primary text-primary-foreground py-16 px-6">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-12">
-          <div className="flex-1 space-y-6 text-center md:text-left">
-            <Badge className="bg-primary-foreground/20 text-primary-foreground border-none px-4 py-1">
-              Proplytics Academy
-            </Badge>
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight leading-tight">
+    <div className="bg-background text-foreground">
+      {/* Hero */}
+      <section className="border-b border-border bg-emerald-500 py-16 text-white">
+        <div className="mx-auto flex max-w-7xl flex-col items-center gap-12 px-4 sm:px-6 md:flex-row">
+          <div className="flex-1 text-center md:text-left">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 backdrop-blur-sm">
+              <GraduationCap className="h-4 w-4" />
+              <span className="text-sm font-medium">Proplytics Academy</span>
+            </div>
+            <h1 className="text-balance text-4xl font-bold tracking-tight md:text-5xl">
               Meistern Sie den Immobilienmarkt mit Expertenwissen
             </h1>
-            <p className="text-xl opacity-90 max-w-2xl mx-auto md:mx-0">
+            <p className="mt-6 max-w-2xl text-xl opacity-90">
               Von der ersten Bewertung bis zur komplexen Steuerstrategie. Wir begleiten Sie auf Ihrem Weg zum erfolgreichen Investor.
             </p>
-            <div className="flex flex-wrap justify-center md:justify-start gap-4 pt-4">
-              <Button size="lg" variant="secondary" className="gap-2">
+            <div className="mt-8 flex flex-wrap justify-center gap-4 md:justify-start">
+              <Button size="lg" className="gap-2 bg-white font-semibold text-emerald-600 hover:bg-emerald-50">
                 Jetzt starten
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="h-4 w-4" />
               </Button>
-              <Button size="lg" variant="outline" className="bg-transparent border-primary-foreground/30 hover:bg-primary-foreground/10 gap-2">
-                <Calendar className="w-4 h-4" />
+              <Button
+                size="lg"
+                variant="outline"
+                className="gap-2 border-white/30 bg-transparent text-white hover:bg-white/10"
+              >
+                <Calendar className="h-4 w-4" />
                 Live-Calls ansehen
               </Button>
             </div>
-            <div className="flex items-center justify-center md:justify-start gap-8 pt-4 opacity-80 text-sm">
+            <div className="mt-8 flex items-center justify-center gap-8 text-sm opacity-80 md:justify-start">
               <div className="flex items-center gap-2">
-                <Users className="w-4 h-4" />
+                <Users className="h-4 w-4" />
                 <span>2.500+ Studenten</span>
               </div>
               <div className="flex items-center gap-2">
-                <PlayCircle className="w-4 h-4" />
+                <PlayCircle className="h-4 w-4" />
                 <span>45+ Stunden Video</span>
               </div>
               <div className="flex items-center gap-2">
-                <GraduationCap className="w-4 h-4" />
+                <GraduationCap className="h-4 w-4" />
                 <span>Zertifikate</span>
               </div>
             </div>
           </div>
-          <div className="w-full max-w-sm aspect-square bg-primary-foreground/10 rounded-3xl backdrop-blur-3xl border border-primary-foreground/20 hidden lg:block" />
+          <div className="hidden aspect-square w-full max-w-sm rounded-3xl border border-white/20 bg-white/10 backdrop-blur-xl lg:block" />
         </div>
       </section>
 
-      {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-6 -mt-8">
-        <div className="grid grid-cols-1 gap-12">
-          {/* Courses Section */}
-          <div className="space-y-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold">Aktuelle Kurse</h2>
-                <p className="text-muted-foreground">Wählen Sie das passende Thema für Ihren Fortschritt</p>
-              </div>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm">Alle Kurse</Button>
-                <Button variant="outline" size="sm">Investment</Button>
-                <Button variant="outline" size="sm">Steuern</Button>
-              </div>
-            </div>
-            <CourseList />
-          </div>
-
-          {/* Coaching Banner */}
-          <div className="bg-card border rounded-3xl p-8 flex flex-col md:flex-row items-center justify-between gap-8 shadow-sm">
-            <div className="space-y-4 text-center md:text-left">
-              <Badge className="bg-primary/10 text-primary border-none">1:1 Coaching</Badge>
-              <h2 className="text-3xl font-bold">Persönliche Beratung durch Experten</h2>
-              <p className="text-muted-foreground max-w-xl">
-                Buchen Sie eine private Session mit unseren Coaches, um Ihre konkreten Deals oder Strategien zu besprechen. 
-                Individuell, fokussiert und ergebnisorientiert.
+      {/* Courses */}
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold">Aktuelle Kurse</h2>
+              <p className="text-muted-foreground">
+                Waehlen Sie das passende Thema fuer Ihren Fortschritt
               </p>
-              <Button className="gap-2">
-                Termin vereinbaren
-                <Calendar className="w-4 h-4" />
-              </Button>
             </div>
-            <div className="flex -space-x-4">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="w-16 h-16 rounded-full border-4 border-card bg-muted overflow-hidden">
-                  <img src={`https://i.pravatar.cc/100?img=${i + 10}`} alt="Coach" />
-                </div>
-              ))}
-              <div className="w-16 h-16 rounded-full border-4 border-card bg-primary flex items-center justify-center text-primary-foreground font-bold">
-                +4
-              </div>
+            <div className="hidden gap-2 sm:flex">
+              <Button variant="outline" size="sm">
+                Alle Kurse
+              </Button>
+              <Button variant="outline" size="sm">
+                Investment
+              </Button>
+              <Button variant="outline" size="sm">
+                Steuern
+              </Button>
             </div>
           </div>
         </div>
-      </main>
+        <CourseList />
+
+        {/* Coaching Banner */}
+        <div className="mt-12 flex flex-col items-center justify-between gap-8 rounded-2xl border border-border bg-card p-8 shadow-sm md:flex-row">
+          <div className="text-center md:text-left">
+            <Badge className="mb-3 border-none bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
+              1:1 Coaching
+            </Badge>
+            <h2 className="text-3xl font-bold">
+              Persoenliche Beratung durch Experten
+            </h2>
+            <p className="mt-3 max-w-xl text-muted-foreground">
+              Buchen Sie eine private Session mit unseren Coaches, um Ihre
+              konkreten Deals oder Strategien zu besprechen.
+            </p>
+            <Button className="mt-6 gap-2 bg-emerald-500 text-white hover:bg-emerald-600">
+              Termin vereinbaren
+              <Calendar className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="flex -space-x-4">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="h-16 w-16 overflow-hidden rounded-full border-4 border-card bg-secondary"
+              >
+                <img
+                  src={`https://i.pravatar.cc/100?img=${i + 10}`}
+                  alt={`Coach ${i}`}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+            ))}
+            <div className="flex h-16 w-16 items-center justify-center rounded-full border-4 border-card bg-emerald-500 font-bold text-white">
+              +4
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
