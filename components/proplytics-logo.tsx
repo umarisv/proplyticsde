@@ -11,7 +11,7 @@ export function ProplyticsLogo({ size = "md", showText = true, className = "" }:
     lg: { icon: 36, text: "text-xl", gap: "gap-2.5" },
   }
 
-  const s = sizes[size]
+  const s = sizes[size] || sizes.md
 
   return (
     <span className={`inline-flex items-center ${s.gap} ${className}`}>
