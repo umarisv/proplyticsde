@@ -34,6 +34,7 @@ interface ChatWizardProps {
   onDataChange: (data: Partial<AnalyseFormData>) => void
   onCalculate: (data: AnalyseFormData) => void
   initialQuery?: string
+  initialData?: Record<string, string>
 }
 
 const objektTypen = [
@@ -72,26 +73,79 @@ const energieOptionen = [
   { label: "Unbekannt", value: "unbekannt" },
 ]
 
-export function ChatWizard({ onDataChange, onCalculate, initialQuery }: ChatWizardProps) {
+// --- Determine which step is the first one that's NOT covered by initialData ---
+function findFirstMissingStep(data: Record<string, string>): StepType {
+  if (!data.plz && !data.stadt) return "plz"
+  if (!data.objekttyp) return "objekttyp"
+  if (!data.wohnflaeche) return "flaechen"
+  if (!data.baujahr) return "baujahr"
+  // ausstattung, lage, energie are subjective - always ask if not provided
+  // But we can skip to miete if we have baujahr + zustand
+  // Let's skip the "nice to have" qualitative steps if we have the core quantitative data
+  if (!data.mieteinnahmen) return "miete"
+  if (!data.kaufpreis) return "kaufpreis"
+  return "kaufpreis" // All data present, go to final step
+}
+
+function mapInitialToFormData(data: Record<string, string>): Partial<AnalyseFormData> {
+  const m: Partial<AnalyseFormData> = {}
+  if (data.plz) m.plz = data.plz
+  if (data.stadt) m.stadt = data.stadt
+  if (data.objekttyp) m.objekttyp = data.objekttyp
+  if (data.wohnflaeche) m.wohnflaeche = data.wohnflaeche
+  if (data.grundstueck) m.grundstueck = data.grundstueck
+  if (data.baujahr) m.baujahr = data.baujahr
+  if (data.kaufpreis) m.kaufpreis = data.kaufpreis
+  if (data.mieteinnahmen) m.istMiete = data.mieteinnahmen
+  if (data.wohneinheiten) m.anzahlWohnungen = data.wohneinheiten
+  if (data.zustand) m.zustand = data.zustand
+  return m
+}
+
+function buildSummaryLines(data: Record<string, string>): string[] {
+  const lines: string[] = []
+  const typLabel = objektTypen.find(o => o.value === data.objekttyp)?.description || data.objekttyp
+  if (data.objekttyp) lines.push(typLabel)
+  if (data.stadt) lines.push(data.plz ? `${data.plz} ${data.stadt}` : data.stadt)
+  if (data.wohnflaeche) lines.push(`${data.wohnflaeche} m2 Wohnflaeche`)
+  if (data.grundstueck) lines.push(`${data.grundstueck} m2 Grundstueck`)
+  if (data.baujahr) lines.push(`Baujahr ${data.baujahr}`)
+  if (data.wohneinheiten) lines.push(`${data.wohneinheiten} Wohneinheiten`)
+  if (data.kaufpreis) lines.push(`Kaufpreis ${Number(data.kaufpreis).toLocaleString("de-DE")} EUR`)
+  if (data.mieteinnahmen) lines.push(`Miete ${Number(data.mieteinnahmen).toLocaleString("de-DE")} EUR/Monat`)
+  if (data.zustand) lines.push(`Zustand: ${data.zustand}`)
+  return lines
+}
+
+export function ChatWizard({ onDataChange, onCalculate, initialQuery, initialData }: ChatWizardProps) {
   const { user } = useAuth()
+  const hasPrefilledData = !!initialData && Object.keys(initialData).length > 0
+
   const [messages, setMessages] = useState<Message[]>([])
   const [currentStep, setCurrentStep] = useState<StepType>("plz")
   const [inputValue, setInputValue] = useState("")
   const [isTyping, setIsTyping] = useState(false)
   const [savedId, setSavedId] = useState<string | null>(null)
-  const [formData, setFormData] = useState<AnalyseFormData>({
-    plz: "", stadt: "", objekttyp: "", wohnflaeche: "", grundstueck: "",
-    baujahr: "", zustand: "", ausstattung: "mittel", lage: "mittel",
-    energieeffizienz: "unbekannt", anzahlWohnungen: "", stellplaetze: "",
-    keller: false, balkon: false, aufzug: false, istMiete: "", bodenrichtwert: "",
-    kaufpreis: "", mea: "", etage: "", hausgeld: "", gewerbeflaeche: "",
-    gewerbemiete: "", vermieteteEinheiten: "", uploadedFiles: [],
+  const [formData, setFormData] = useState<AnalyseFormData>(() => {
+    const base: AnalyseFormData = {
+      plz: "", stadt: "", objekttyp: "", wohnflaeche: "", grundstueck: "",
+      baujahr: "", zustand: "", ausstattung: "mittel", lage: "mittel",
+      energieeffizienz: "unbekannt", anzahlWohnungen: "", stellplaetze: "",
+      keller: false, balkon: false, aufzug: false, istMiete: "", bodenrichtwert: "",
+      kaufpreis: "", mea: "", etage: "", hausgeld: "", gewerbeflaeche: "",
+      gewerbemiete: "", vermieteteEinheiten: "", uploadedFiles: [],
+    }
+    if (initialData) {
+      const mapped = mapInitialToFormData(initialData)
+      return { ...base, ...mapped }
+    }
+    return base
   })
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const initRef = useRef(false)
 
   const progress = Math.round((STEP_ORDER.indexOf(currentStep) / (STEP_ORDER.length - 1)) * 100)
 
-  // Simulated typing delay for natural feel
   const addBotMessage = useCallback((message: Omit<Message, "id" | "type">, delay = 600) => {
     setIsTyping(true)
     setTimeout(() => {
@@ -104,19 +158,111 @@ export function ChatWizard({ onDataChange, onCalculate, initialQuery }: ChatWiza
     setMessages((prev) => [...prev, { id: Date.now(), type: "user", content }])
   }, [])
 
-  // Initial greeting
+  // --- Produce the prompt for a given step ---
+  const promptForStep = useCallback((step: StepType) => {
+    switch (step) {
+      case "plz":
+        addBotMessage({
+          content: "Wo befindet sich die Immobilie?",
+          inputType: "form",
+          formFields: [
+            { label: "PLZ", key: "plz", placeholder: "z.B. 40239" },
+            { label: "Stadt", key: "stadt", placeholder: "z.B. Duesseldorf" },
+          ],
+        }, 300)
+        break
+      case "objekttyp":
+        addBotMessage({ content: "Um welchen Objekttyp handelt es sich?", options: objektTypen }, 300)
+        break
+      case "flaechen": {
+        const typ = formData.objekttyp || initialData?.objekttyp || ""
+        let fields: { label: string; key: string; placeholder: string; suffix?: string }[] = []
+        if (typ === "etw") {
+          fields = [
+            { label: "Wohnflaeche", key: "wohnflaeche", placeholder: "z.B. 85", suffix: "m2" },
+            { label: "Miteigentumsanteil", key: "mea", placeholder: "z.B. 125", suffix: "Promille" },
+            { label: "Etage", key: "etage", placeholder: "z.B. 3 (EG=0)" },
+          ]
+        } else if (typ === "wgh") {
+          fields = [
+            { label: "Wohnflaeche", key: "wohnflaeche", placeholder: "z.B. 600", suffix: "m2" },
+            { label: "Gewerbeflaeche", key: "gewerbeflaeche", placeholder: "z.B. 200", suffix: "m2" },
+            { label: "Grundstueck", key: "grundstueck", placeholder: "z.B. 800", suffix: "m2" },
+          ]
+        } else {
+          fields = [
+            { label: "Wohnflaeche", key: "wohnflaeche", placeholder: "z.B. 850", suffix: "m2" },
+            { label: "Grundstueck", key: "grundstueck", placeholder: "z.B. 1200", suffix: "m2" },
+          ]
+        }
+        addBotMessage({ content: "Wie gross ist das Objekt?", inputType: "form", formFields: fields }, 300)
+        break
+      }
+      case "baujahr":
+        addBotMessage({
+          content: "Wann wurde das Gebaeude errichtet?",
+          inputType: "form",
+          formFields: [{ label: "Baujahr", key: "baujahr", placeholder: "z.B. 1965" }],
+        }, 300)
+        break
+      case "miete": {
+        const typ = formData.objekttyp || ""
+        const content = typ === "etw" ? "Was ist die monatliche Kaltmiete der Wohnung? Falls selbstgenutzt, geben Sie 0 ein."
+          : typ === "mfh" ? "Wie hoch ist die gesamte monatliche Kaltmiete aller Einheiten zusammen?"
+          : typ === "wgh" ? "Wie hoch ist die monatliche Wohnmiete (Kaltmiete)?"
+          : "Wie hoch ist die aktuelle monatliche Kaltmiete (Ist-Miete)?"
+        addBotMessage({ content, inputType: "number" }, 300)
+        break
+      }
+      case "bodenrichtwert":
+        addBotMessage({
+          content: "Bitte geben Sie den Bodenrichtwert ein - diesen finden Sie im BORIS-Portal Ihres Bundeslandes.",
+          inputType: "number",
+        }, 300)
+        break
+      case "kaufpreis":
+        addBotMessage({
+          content: "Gibt es einen konkreten Kaufpreis? Das ermoeglicht die Renditeberechnung. Geben Sie 0 ein, falls Sie nur die Bewertung moechten.",
+          inputType: "number",
+        }, 300)
+        break
+      default:
+        break
+    }
+  }, [addBotMessage, formData.objekttyp, initialData?.objekttyp])
+
+  // --- INITIAL: show summary of pre-parsed data, then jump to first missing step ---
   useEffect(() => {
-    if (initialQuery) {
-      setMessages([{ id: 1, type: "user", content: initialQuery }])
+    if (initRef.current) return
+    initRef.current = true
+
+    if (hasPrefilledData && initialData) {
+      // Notify parent about pre-filled data
+      onDataChange(mapInitialToFormData(initialData))
+
+      // Build human-readable summary
+      const lines = buildSummaryLines(initialData)
+      const summaryText = lines.join(" | ")
+
+      // Show the user's original query
+      if (initialQuery) {
+        setMessages([{ id: 1, type: "user", content: initialQuery }])
+      }
+
+      // Bot shows what it understood
+      const firstMissing = findFirstMissingStep(initialData)
+      setCurrentStep(firstMissing)
+
       addBotMessage({
-        content: "Danke fuer die Beschreibung! Lassen Sie mich Ihnen helfen, eine praezise Marktpreiseinschaetzung zu erstellen. Wo befindet sich das Objekt?",
-        inputType: "form",
-        formFields: [
-          { label: "PLZ", key: "plz", placeholder: "z.B. 40239" },
-          { label: "Stadt", key: "stadt", placeholder: "z.B. Duesseldorf" },
-        ],
-      }, 800)
+        content: `Ich habe folgende Eckdaten erkannt:\n\n${lines.map(l => "- " + l).join("\n")}\n\nIch ueberspringe die bereits bekannten Angaben und frage nur noch was fehlt.`,
+      }, 500)
+
+      // After the summary, prompt for the first missing step
+      setTimeout(() => {
+        promptForStep(firstMissing)
+      }, 1400)
     } else {
+      // No pre-filled data - normal flow
       addBotMessage({
         content: "Hallo! Ich bin Ihr Proplytics-Assistent und erstelle fuer Sie eine professionelle Marktpreiseinschaetzung nach ImmoWertV 2024. Wo befindet sich die Immobilie?",
         inputType: "form",
@@ -199,7 +345,7 @@ export function ChatWizard({ onDataChange, onCalculate, initialQuery }: ChatWiza
         setFormData(prev => ({ ...prev, lage: value as AnalyseFormData['lage'] }))
         onDataChange({ lage: value as AnalyseFormData['lage'] })
         addBotMessage({
-          content: "Fast geschafft! Welche Energieeffizienzklasse hat das Gebaeude? Falls unbekannt, kein Problem.",
+          content: "Fast geschafft! Welche Energieeffizienzklasse hat das Gebaeude?",
           options: energieOptionen,
         })
         setCurrentStep("energie")
@@ -272,7 +418,7 @@ export function ChatWizard({ onDataChange, onCalculate, initialQuery }: ChatWiza
           setFormData(prev => ({ ...prev, gewerbemiete: val }))
           onDataChange({ gewerbemiete: val })
           addBotMessage({
-            content: "Super, Mietdaten erfasst! Jetzt noch der Bodenrichtwert. Sie finden diesen kostenlos im BORIS-Portal Ihres Bundeslandes.",
+            content: "Super! Jetzt noch der Bodenrichtwert (BORIS-Portal).",
             inputType: "number",
           })
           setCurrentStep("bodenrichtwert")
@@ -280,7 +426,7 @@ export function ChatWizard({ onDataChange, onCalculate, initialQuery }: ChatWiza
           setFormData(prev => ({ ...prev, istMiete: val }))
           onDataChange({ istMiete: val })
           addBotMessage({
-            content: "Gut notiert. Bitte geben Sie den Bodenrichtwert ein - diesen finden Sie im BORIS-Portal Ihres Bundeslandes.",
+            content: "Gut notiert. Bitte geben Sie den Bodenrichtwert ein (BORIS-Portal).",
             inputType: "number",
           })
           setCurrentStep("bodenrichtwert")
@@ -291,11 +437,21 @@ export function ChatWizard({ onDataChange, onCalculate, initialQuery }: ChatWiza
       case "bodenrichtwert": {
         setFormData(prev => ({ ...prev, bodenrichtwert: val }))
         onDataChange({ bodenrichtwert: val })
-        addBotMessage({
-          content: "Letzte Frage: Gibt es einen konkreten Kaufpreis? Das ermoeglicht mir, die Rendite zu berechnen. Geben Sie 0 ein, falls Sie nur die Bewertung moechten.",
-          inputType: "number",
-        })
-        setCurrentStep("kaufpreis")
+
+        // If we already have a kaufpreis from initialData, skip this step
+        if (formData.kaufpreis && formData.kaufpreis !== "0") {
+          const finalData = { ...formData, bodenrichtwert: val }
+          setFormData(finalData)
+          setCurrentStep("complete")
+          onCalculate(finalData)
+          handleAutoSave(finalData)
+        } else {
+          addBotMessage({
+            content: "Letzte Frage: Gibt es einen konkreten Kaufpreis? Geben Sie 0 ein, falls Sie nur die Bewertung moechten.",
+            inputType: "number",
+          })
+          setCurrentStep("kaufpreis")
+        }
         break
       }
 
@@ -305,51 +461,53 @@ export function ChatWizard({ onDataChange, onCalculate, initialQuery }: ChatWiza
         onDataChange({ kaufpreis: val })
         setCurrentStep("complete")
         onCalculate(finalData)
-
-        // Auto-save if user is logged in
-        if (user) {
-          addBotMessage({
-            content: "Perfekt - alle Daten erfasst! Ihre Marktpreiseinschaetzung wird jetzt berechnet und automatisch gespeichert...",
-          }, 300)
-          setTimeout(async () => {
-            try {
-              const { calculateValuation } = await import("@/lib/calculate-valuation")
-              const resultData = calculateValuation(finalData)
-              const { data } = await saveBewertung({
-                formData: finalData,
-                resultData,
-                adresse: `${finalData.plz} ${finalData.stadt}`,
-                userId: user.id,
-              })
-              if (data) {
-                setSavedId(data.id)
-                setMessages(prev => [...prev, {
-                  id: Date.now(),
-                  type: "bot",
-                  content: "Die Bewertung wurde gespeichert! Sie finden die Ergebnisse links im Ergebnis-Panel und koennen diese jederzeit in Ihrem Portal abrufen.",
-                  isComplete: true,
-                }])
-              }
-            } catch {
-              setMessages(prev => [...prev, {
-                id: Date.now(),
-                type: "bot",
-                content: "Die Berechnung ist fertig! Schauen Sie sich die Ergebnisse im linken Panel an. Klicken Sie oben auf 'Speichern', um die Bewertung zu sichern.",
-                isComplete: true,
-              }])
-            }
-          }, 2000)
-        } else {
-          addBotMessage({
-            content: "Die Berechnung ist fertig! Schauen Sie sich die Ergebnisse im linken Panel an. Melden Sie sich an, um die Bewertung dauerhaft zu speichern.",
-            isComplete: true,
-          }, 1500)
-        }
+        handleAutoSave(finalData)
         break
       }
     }
 
     setInputValue("")
+  }
+
+  const handleAutoSave = (finalData: AnalyseFormData) => {
+    if (user) {
+      addBotMessage({
+        content: "Alle Daten erfasst! Ihre Marktpreiseinschaetzung wird berechnet und gespeichert...",
+      }, 300)
+      setTimeout(async () => {
+        try {
+          const { calculateValuation } = await import("@/lib/calculate-valuation")
+          const resultData = calculateValuation(finalData)
+          const { data } = await saveBewertung({
+            formData: finalData,
+            resultData,
+            adresse: `${finalData.plz} ${finalData.stadt}`,
+            userId: user.id,
+          })
+          if (data) {
+            setSavedId(data.id)
+            setMessages(prev => [...prev, {
+              id: Date.now(),
+              type: "bot",
+              content: "Gespeichert! Die Ergebnisse inkl. Investment-Score und Ampelbewertung finden Sie links. Sie koennen die Bewertung oben als PDF exportieren.",
+              isComplete: true,
+            }])
+          }
+        } catch {
+          setMessages(prev => [...prev, {
+            id: Date.now(),
+            type: "bot",
+            content: "Berechnung fertig! Ergebnisse im linken Panel. Klicken Sie oben auf 'PDF Export' um die Bewertung herunterzuladen, oder auf 'Speichern' um sie zu sichern.",
+            isComplete: true,
+          }])
+        }
+      }, 2000)
+    } else {
+      addBotMessage({
+        content: "Berechnung fertig! Die Ergebnisse mit Investment-Score finden Sie links. Klicken Sie oben auf 'PDF Export' fuer den Download. Fuer dauerhaftes Speichern melden Sie sich an.",
+        isComplete: true,
+      }, 1500)
+    }
   }
 
   const handleUploadComplete = (files: UploadedFile[]) => {
@@ -365,9 +523,18 @@ export function ChatWizard({ onDataChange, onCalculate, initialQuery }: ChatWiza
   }
 
   const goToMieteStep = () => {
+    // If miete already known from initialData, skip
+    if (formData.istMiete && formData.istMiete !== "0") {
+      addBotMessage({
+        content: "Miete ist bereits bekannt. Bitte geben Sie den Bodenrichtwert ein (BORIS-Portal).",
+        inputType: "number",
+      }, 300)
+      setCurrentStep("bodenrichtwert")
+      return
+    }
     let mieteContent = "Wie hoch ist die aktuelle monatliche Kaltmiete (Ist-Miete)?"
     if (formData.objekttyp === "etw") {
-      mieteContent = "Was ist die monatliche Kaltmiete der Wohnung? Falls selbstgenutzt, geben Sie 0 ein."
+      mieteContent = "Was ist die monatliche Kaltmiete? Falls selbstgenutzt, geben Sie 0 ein."
     } else if (formData.objekttyp === "mfh") {
       mieteContent = "Wie hoch ist die gesamte monatliche Kaltmiete aller Einheiten zusammen?"
     } else if (formData.objekttyp === "wgh") {
@@ -452,7 +619,7 @@ export function ChatWizard({ onDataChange, onCalculate, initialQuery }: ChatWiza
           vermieteteEinheiten: data.vermieteteEinheiten,
         })
         addBotMessage({
-          content: "Optional: Laden Sie Fotos, Grundrisse oder Dokumente hoch - die KI analysiert diese und verbessert die Bewertungsgenauigkeit.",
+          content: "Optional: Laden Sie Fotos oder Dokumente hoch - die KI verbessert die Bewertungsgenauigkeit.",
           inputType: "upload",
         })
         setCurrentStep("upload")
@@ -475,92 +642,102 @@ export function ChatWizard({ onDataChange, onCalculate, initialQuery }: ChatWiza
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
         {messages.map((message) => (
-          <div key={message.id} className={cn("flex gap-3", message.type === "user" ? "justify-end" : "justify-start")}>
-            {message.type === "bot" && (
-              <div className="flex-shrink-0">
-                <ProplyticsLogo size="sm" />
-              </div>
+          <div
+            key={message.id}
+            className={cn(
+              "flex",
+              message.type === "user" ? "justify-end" : "justify-start"
             )}
+          >
             <div
               className={cn(
                 "max-w-[85%] rounded-2xl px-4 py-3",
-                message.type === "user" ? "bg-primary text-primary-foreground" : "bg-card border border-border",
+                message.type === "user"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-card border border-border shadow-sm"
               )}
             >
-              <p className="text-sm leading-relaxed">{message.content}</p>
-
-              {/* Completion CTA */}
-              {message.isComplete && (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {savedId && (
-                    <Button size="sm" variant="outline" className="gap-1.5 text-xs" asChild>
-                      <Link href="/portal">
-                        <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
-                        Zum Portal
-                      </Link>
-                    </Button>
-                  )}
-                  <Button size="sm" variant="outline" className="gap-1.5 text-xs" asChild>
-                    <Link href={`/portal/bewertungen${savedId ? `/${savedId}` : ""}`}>
-                      <ArrowRight className="h-3.5 w-3.5" />
-                      Bewertung ansehen
-                    </Link>
-                  </Button>
+              {/* Bot avatar */}
+              {message.type === "bot" && (
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center">
+                    <ProplyticsLogo size="xs" />
+                  </div>
+                  <span className="text-xs font-medium text-muted-foreground">Proplytics</span>
                 </div>
               )}
 
-              {/* Option Buttons */}
-              {message.options && (
+              {/* Content */}
+              <p className="text-sm leading-relaxed whitespace-pre-line">{message.content}</p>
+
+              {/* Option buttons */}
+              {message.options && currentStep !== "complete" && (
                 <div className="flex flex-wrap gap-2 mt-3">
-                  {message.options.map((option) => (
+                  {message.options.map((opt) => (
                     <Button
-                      key={option.value}
+                      key={opt.value}
                       variant="outline"
                       size="sm"
-                      className="text-xs bg-transparent"
-                      onClick={() => handleOptionSelect(option.value, option.label)}
+                      className="text-xs"
+                      onClick={() => handleOptionSelect(opt.value, opt.label)}
                     >
-                      {option.label}
-                      {option.description && <span className="ml-1 text-muted-foreground">({option.description})</span>}
+                      <span>{opt.label}</span>
+                      {opt.description && (
+                        <span className="ml-1 text-muted-foreground">({opt.description})</span>
+                      )}
                     </Button>
                   ))}
                 </div>
               )}
 
-              {/* Form Fields */}
-              {message.inputType === "form" && message.formFields && (
-                <FormInputs
-                  fields={message.formFields}
-                  onSubmit={handleFormSubmit}
-                  defaultValues={formData}
-                  showExtras={message.showExtras}
-                />
+              {/* Form fields */}
+              {message.inputType === "form" && message.formFields && currentStep !== "complete" && (
+                <FormInput fields={message.formFields} showExtras={message.showExtras} onSubmit={handleFormSubmit} />
               )}
 
-              {/* Upload UI */}
+              {/* Upload */}
               {message.inputType === "upload" && currentStep === "upload" && (
-                <UploadSection onComplete={handleUploadComplete} onSkip={handleSkipUpload} />
+                <div className="mt-3 space-y-2">
+                  <Button variant="outline" size="sm" onClick={handleSkipUpload} className="text-xs">
+                    Uebersprungen - weiter
+                  </Button>
+                </div>
+              )}
+
+              {/* Complete state */}
+              {message.isComplete && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Button asChild size="sm" variant="outline" className="text-xs">
+                    <Link href="/portal">
+                      Zum Portal <ArrowRight className="ml-1 h-3 w-3" />
+                    </Link>
+                  </Button>
+                  {savedId && (
+                    <Button asChild size="sm" className="text-xs">
+                      <Link href={`/portal/bewertung/${savedId}`}>
+                        Bewertung ansehen <ExternalLink className="ml-1 h-3 w-3" />
+                      </Link>
+                    </Button>
+                  )}
+                </div>
               )}
             </div>
-            {message.type === "user" && (
-              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                <span className="text-xs font-medium">Du</span>
-              </div>
-            )}
           </div>
         ))}
 
-        {/* Typing Indicator */}
+        {/* Typing indicator */}
         {isTyping && (
-          <div className="flex gap-3 justify-start">
-            <div className="flex-shrink-0">
-              <ProplyticsLogo size="sm" />
-            </div>
-            <div className="bg-card border border-border rounded-2xl px-4 py-3">
-              <div className="flex gap-1.5 items-center h-5">
-                <div className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce [animation-delay:0ms]" />
-                <div className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce [animation-delay:150ms]" />
-                <div className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce [animation-delay:300ms]" />
+          <div className="flex justify-start">
+            <div className="bg-card border border-border rounded-2xl px-4 py-3 shadow-sm">
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center">
+                  <ProplyticsLogo size="xs" />
+                </div>
+                <div className="flex gap-1">
+                  <span className="w-2 h-2 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <span className="w-2 h-2 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                  <span className="w-2 h-2 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                </div>
               </div>
             </div>
           </div>
@@ -569,176 +746,97 @@ export function ChatWizard({ onDataChange, onCalculate, initialQuery }: ChatWiza
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Area for number inputs */}
-      {(currentStep === "miete" || currentStep === "bodenrichtwert" || currentStep === "kaufpreis") && (
-        <div className="p-4 border-t border-border">
-          <div className="flex gap-2">
-            <Input
-              type="number"
-              placeholder={
-                currentStep === "miete" ? "z.B. 12500"
-                  : currentStep === "bodenrichtwert" ? "z.B. 580"
-                  : "z.B. 3200000 (oder 0)"
-              }
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleInputSubmit()}
-              className="bg-input"
-              autoFocus
-            />
-            <span className="flex items-center text-sm text-muted-foreground">
-              {currentStep === "bodenrichtwert" ? "EUR/m2" : "EUR"}
-            </span>
-            <Button onClick={handleInputSubmit} size="icon" className="bg-primary hover:bg-primary/90">
-              <Send className="w-4 h-4" />
-            </Button>
-          </div>
+      {/* Input Area */}
+      {currentStep !== "complete" && !messages.some(m => m.options || m.inputType === "form" || m.inputType === "upload") === false && (
+        <div className="border-t border-border bg-card/50 p-4">
+          {(currentStep === "miete" || currentStep === "bodenrichtwert" || currentStep === "kaufpreis") && (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                handleInputSubmit()
+              }}
+              className="flex gap-2"
+            >
+              <Input
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                placeholder={
+                  currentStep === "miete" ? "Monatliche Kaltmiete in EUR" :
+                  currentStep === "bodenrichtwert" ? "Bodenrichtwert in EUR/m2" :
+                  "Kaufpreis in EUR"
+                }
+                type="number"
+                className="flex-1"
+                autoFocus
+              />
+              <Button type="submit" size="icon" disabled={!inputValue.trim()}>
+                <Send className="h-4 w-4" />
+              </Button>
+            </form>
+          )}
         </div>
       )}
     </div>
   )
 }
 
-function UploadSection({
-  onComplete,
-  onSkip,
+// --- Inline form component for multi-field steps ---
+function FormInput({
+  fields,
+  showExtras,
+  onSubmit,
 }: {
-  onComplete: (files: UploadedFile[]) => void
-  onSkip: () => void
-}) {
-  const [files, setFiles] = useState<UploadedFile[]>([])
-  const [isDragging, setIsDragging] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(false)
-    handleFiles(Array.from(e.dataTransfer.files))
-  }
-
-  const handleFiles = async (newFiles: File[]) => {
-    const uploadedFiles: UploadedFile[] = []
-    for (const [index, file] of newFiles.entries()) {
-      const category = detectCategory(file.name, file.type)
-      const uploadedFile: UploadedFile = {
-        id: `${Date.now()}-${index}`, name: file.name, type: file.type,
-        size: file.size, category, url: URL.createObjectURL(file),
-      }
-      if (file.type.startsWith('image/')) {
-        try {
-          const base64 = await fileToBase64(file)
-          const aiAnalysis = await analyzeImageWithAI(base64, category)
-          if (aiAnalysis) uploadedFile.aiAnalysis = aiAnalysis
-        } catch { /* continue without AI */ }
-      }
-      uploadedFiles.push(uploadedFile)
-    }
-    setFiles(prev => [...prev, ...uploadedFiles])
-  }
-
-  const detectCategory = (name: string, type: string): UploadedFile['category'] => {
-    const n = name.toLowerCase()
-    if (n.includes('grundriss') || n.includes('floor')) return 'grundriss'
-    if (n.includes('energie') || n.includes('ausweis')) return 'energie'
-    if (n.includes('expose') || type === 'application/pdf') return 'expose'
-    if (n.includes('aussen') || n.includes('fassade')) return 'aussen'
-    if (type.startsWith('image/')) return 'innen'
-    return 'sonstiges'
-  }
-
-  return (
-    <div className="mt-3 space-y-3">
-      <div
-        onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
-        onDragLeave={() => setIsDragging(false)}
-        onDrop={handleDrop}
-        onClick={() => fileInputRef.current?.click()}
-        className={cn(
-          "border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors",
-          isDragging ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
-        )}
-      >
-        <input ref={fileInputRef} type="file" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" className="hidden"
-          onChange={(e) => e.target.files && handleFiles(Array.from(e.target.files))} />
-        <div className="text-muted-foreground text-sm">
-          <p className="font-medium">Dateien hier ablegen</p>
-          <p className="text-xs mt-1">oder klicken zum Auswaehlen</p>
-        </div>
-      </div>
-      {files.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {files.map(file => (
-            <div key={file.id} className="flex items-center gap-2 bg-muted rounded-lg px-2 py-1 text-xs">
-              <span className="truncate max-w-[120px]">{file.name}</span>
-              <button onClick={() => setFiles(prev => prev.filter(f => f.id !== file.id))} className="text-muted-foreground hover:text-destructive">x</button>
-            </div>
-          ))}
-        </div>
-      )}
-      <div className="flex gap-2">
-        <Button variant="outline" size="sm" className="flex-1" onClick={onSkip}>Ueberspringen</Button>
-        <Button size="sm" className="flex-1" onClick={() => onComplete(files)}>
-          {files.length > 0 ? "Weiter mit Analyse" : "Ohne Dateien fortfahren"}
-        </Button>
-      </div>
-    </div>
-  )
-}
-
-function FormInputs({
-  fields, onSubmit, defaultValues, showExtras = false,
-}: {
-  fields: { label: string; key: string; placeholder: string; suffix?: string; type?: "text" | "checkbox" }[]
-  onSubmit: (data: Record<string, string>) => void
-  defaultValues: Record<string, string | boolean>
+  fields: { label: string; key: string; placeholder: string; suffix?: string; type?: string }[]
   showExtras?: boolean
+  onSubmit: (data: Record<string, string>) => void
 }) {
-  const [values, setValues] = useState<Record<string, string>>(() => {
-    const initial: Record<string, string> = {}
-    fields.forEach((f) => {
-      const val = defaultValues[f.key as keyof typeof defaultValues]
-      initial[f.key] = typeof val === 'boolean' ? String(val) : (val as string) || ""
-    })
-    return initial
-  })
-  const [extras, setExtras] = useState({ keller: false, balkon: false, aufzug: false })
+  const [values, setValues] = useState<Record<string, string>>({})
 
-  const handleSubmit = () => {
-    if (showExtras) {
-      onSubmit({ ...values, keller: String(extras.keller), balkon: String(extras.balkon), aufzug: String(extras.aufzug) })
-    } else {
-      onSubmit(values)
-    }
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    onSubmit(values)
   }
 
   return (
-    <div className="mt-3 space-y-2">
+    <form onSubmit={handleSubmit} className="mt-3 space-y-2">
       {fields.map((field) => (
-        <div key={field.key} className="flex items-center gap-2">
-          <label className="text-xs text-muted-foreground w-24 flex-shrink-0">{field.label}</label>
-          <div className="flex-1 flex items-center gap-1">
-            <Input type="text" placeholder={field.placeholder} value={values[field.key]}
-              onChange={(e) => setValues(prev => ({ ...prev, [field.key]: e.target.value }))}
-              onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-              className="bg-input text-sm h-8" />
-            {field.suffix && <span className="text-xs text-muted-foreground">{field.suffix}</span>}
+        <div key={field.key}>
+          <label className="text-xs text-muted-foreground mb-1 block">{field.label}</label>
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder={field.placeholder}
+              value={values[field.key] || ""}
+              onChange={(e) => setValues((prev) => ({ ...prev, [field.key]: e.target.value }))}
+              className="text-sm"
+            />
+            {field.suffix && <span className="text-xs text-muted-foreground whitespace-nowrap">{field.suffix}</span>}
           </div>
         </div>
       ))}
+
       {showExtras && (
-        <div className="flex flex-wrap gap-4 pt-2">
-          <label className="flex items-center gap-2 text-xs cursor-pointer">
-            <Checkbox checked={extras.keller} onCheckedChange={(c) => setExtras(p => ({ ...p, keller: !!c }))} /> Keller
-          </label>
-          <label className="flex items-center gap-2 text-xs cursor-pointer">
-            <Checkbox checked={extras.balkon} onCheckedChange={(c) => setExtras(p => ({ ...p, balkon: !!c }))} /> Balkon/Terrasse
-          </label>
-          <label className="flex items-center gap-2 text-xs cursor-pointer">
-            <Checkbox checked={extras.aufzug} onCheckedChange={(c) => setExtras(p => ({ ...p, aufzug: !!c }))} /> Aufzug
-          </label>
+        <div className="flex flex-wrap gap-3 pt-2">
+          {[
+            { key: "keller", label: "Keller" },
+            { key: "balkon", label: "Balkon/Terrasse" },
+            { key: "aufzug", label: "Aufzug" },
+          ].map((cb) => (
+            <label key={cb.key} className="flex items-center gap-1.5 text-xs cursor-pointer">
+              <Checkbox
+                checked={values[cb.key] === "true"}
+                onCheckedChange={(checked) =>
+                  setValues((prev) => ({ ...prev, [cb.key]: checked ? "true" : "false" }))
+                }
+              />
+              {cb.label}
+            </label>
+          ))}
         </div>
       )}
-      <Button size="sm" className="w-full mt-2" onClick={handleSubmit}>Weiter</Button>
-    </div>
+
+      <Button type="submit" size="sm" className="w-full mt-2">
+        Weiter <ArrowRight className="ml-1 h-3 w-3" />
+      </Button>
+    </form>
   )
 }

@@ -1,6 +1,6 @@
 import { Suspense } from "react"
 import Link from "next/link"
-import { getPosts, getCurrentUser } from "./actions"
+import { getPosts, getCurrentUser } from "./server-actions"
 import type { CommunityPost } from "./types"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"

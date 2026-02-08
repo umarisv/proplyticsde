@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, Suspense } from "react"
+import { useState, useMemo, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -36,6 +36,17 @@ function AnalysePageContent() {
   const searchParams = useSearchParams()
   const initialQuery = searchParams.get('q') || ""
   const initialAddress = searchParams.get('address') || "Musterstraße 123, 40239 Düsseldorf"
+
+  // Collect all pre-parsed data from landing page URL params
+  const initialData = useMemo(() => {
+    const data: Record<string, string> = {}
+    const keys = ["plz", "stadt", "objekttyp", "baujahr", "wohnflaeche", "grundstueck", "kaufpreis", "mieteinnahmen", "wohneinheiten", "zustand", "zimmer"]
+    for (const k of keys) {
+      const v = searchParams.get(k)
+      if (v) data[k] = v
+    }
+    return Object.keys(data).length > 0 ? data : undefined
+  }, [searchParams])
   
   const [formData, setFormData] = useState<AnalyseFormData>(defaultFormData)
   const [address, setAddress] = useState(initialAddress)
@@ -100,7 +111,7 @@ function AnalysePageContent() {
             </TabsTrigger>
           </TabsList>
           <TabsContent value="chat" className="flex-1 m-0 overflow-hidden">
-            <ChatWizard onDataChange={handleDataChange} onCalculate={handleCalculate} initialQuery={initialQuery} />
+            <ChatWizard onDataChange={handleDataChange} onCalculate={handleCalculate} initialQuery={initialQuery} initialData={initialData} />
           </TabsContent>
           <TabsContent value="map" className="flex-1 m-0 overflow-hidden">
             <MapPanel address={address} />
@@ -132,7 +143,7 @@ function AnalysePageContent() {
 
         {/* Center Panel - Chat */}
         <main className="flex-1 min-w-[400px] bg-background">
-          <ChatWizard onDataChange={handleDataChange} onCalculate={handleCalculate} initialQuery={initialQuery} />
+          <ChatWizard onDataChange={handleDataChange} onCalculate={handleCalculate} initialQuery={initialQuery} initialData={initialData} />
         </main>
 
         {/* Right Panel - Map */}

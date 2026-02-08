@@ -532,6 +532,101 @@ export function generatePDFReport({ resultData, formData, address, uploadedFiles
       </div>
     </div>
 
+    ${resultData.investmentScore ? `
+    <div class="page-break"></div>
+    <div class="page">
+      <div class="header" style="padding: 16px; margin-bottom: 16px;">
+        <div class="header-top" style="margin-bottom: 0;">
+          <div>
+            <h2 style="font-size: 18px; margin: 0;">INVESTMENT-SCORING</h2>
+            <p style="opacity: 0.8; font-size: 11px; margin-top: 4px;">Gesamtbeurteilung nach 6 Dimensionen</p>
+          </div>
+          <div class="marktwert-box">
+            <p class="marktwert-label">Investment-Score</p>
+            <p class="marktwert-value" style="color: ${resultData.investmentScore.gesamtScore >= 66 ? '#10b981' : resultData.investmentScore.gesamtScore >= 33 ? '#f59e0b' : '#ef4444'};">${resultData.investmentScore.gesamtScore}/100</p>
+            <p style="font-size: 12px; font-weight: 600; color: ${resultData.investmentScore.empfehlung === 'Go' ? '#10b981' : resultData.investmentScore.empfehlung === 'Bedingt Go' ? '#f59e0b' : '#ef4444'};">${resultData.investmentScore.empfehlung}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="section" style="margin-bottom: 16px;">
+        <h2 class="section-title">Empfehlung</h2>
+        <p style="font-size: 11px; line-height: 1.6;">${resultData.investmentScore.empfehlungText}</p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px;">
+        ${Object.entries(resultData.investmentScore.dimensionen).map(([key, dim]) => {
+          const ampelColor = dim.ampel === 'gruen' ? '#10b981' : dim.ampel === 'gelb' ? '#f59e0b' : '#ef4444'
+          const ampelBg = dim.ampel === 'gruen' ? '#f0fdf4' : dim.ampel === 'gelb' ? '#fffbeb' : '#fef2f2'
+          return `
+            <div style="background: ${ampelBg}; border: 1px solid ${ampelColor}40; border-radius: 8px; padding: 12px; border-left: 4px solid ${ampelColor};">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <span style="font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">${dim.label}</span>
+                <span style="font-size: 14px; font-weight: 700; color: ${ampelColor};">${dim.score}/3</span>
+              </div>
+              ${dim.details.slice(0, 2).map(d => `<p style="font-size: 9px; color: #64748b; margin-top: 2px;">- ${d}</p>`).join('')}
+            </div>
+          `
+        }).join('')}
+      </div>
+
+      ${resultData.investmentScore.dealKillers.length > 0 ? `
+        <div class="section" style="background: #fef2f2; border-color: #ef4444;">
+          <h2 class="section-title" style="color: #ef4444; border-color: #ef4444;">Deal-Killer</h2>
+          ${resultData.investmentScore.dealKillers.map(dk => `
+            <div style="margin-bottom: 8px;">
+              <p style="font-size: 11px; font-weight: 600; color: #ef4444;">${dk.label}</p>
+              <p style="font-size: 10px; color: #64748b;">${dk.description}</p>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+
+      <div class="section">
+        <h2 class="section-title">Stress-Tests</h2>
+        <table class="data-table">
+          <tr style="background: #f1f5f9; font-weight: 600;">
+            <td>Szenario</td><td>Basis</td><td>Stress</td><td>Aenderung</td><td>Status</td>
+          </tr>
+          ${resultData.investmentScore.stressTests.map(st => {
+            const stColor = st.status === 'gruen' ? '#10b981' : st.status === 'gelb' ? '#f59e0b' : '#ef4444'
+            return `
+              <tr>
+                <td>${st.label}</td>
+                <td>${st.baseValue.toLocaleString('de-DE')}</td>
+                <td>${st.stressedValue.toLocaleString('de-DE')}</td>
+                <td>${st.change}</td>
+                <td style="color: ${stColor}; font-weight: 600;">${st.status === 'gruen' ? 'OK' : st.status === 'gelb' ? 'Warnung' : 'Kritisch'}</td>
+              </tr>
+            `
+          }).join('')}
+        </table>
+      </div>
+
+      <div class="two-column">
+        <div class="section">
+          <h2 class="section-title">Erweiterte Kennzahlen</h2>
+          <table class="data-table">
+            <tr><td>Cash-on-Cash Return</td><td>${formatPercent(resultData.investmentScore.kennzahlen.cashOnCash)}</td></tr>
+            <tr><td>DSCR (Debt Service Coverage)</td><td>${resultData.investmentScore.kennzahlen.dscr.toFixed(2)}x</td></tr>
+            <tr><td>ICR (Interest Coverage)</td><td>${resultData.investmentScore.kennzahlen.icr.toFixed(2)}x</td></tr>
+            <tr><td>LTV (Loan-to-Value)</td><td>${formatPercent(resultData.investmentScore.kennzahlen.ltv)}</td></tr>
+            <tr><td>Break-Even Auslastung</td><td>${formatPercent(resultData.investmentScore.kennzahlen.breakEvenOccupancy)}</td></tr>
+          </table>
+        </div>
+        <div class="section">
+          <h2 class="section-title">Rendite-Uebersicht</h2>
+          <table class="data-table">
+            <tr><td>Brutto-Rendite</td><td>${formatPercent(resultData.investmentScore.kennzahlen.bruttoRendite)}</td></tr>
+            <tr><td>Netto-Rendite</td><td>${formatPercent(resultData.investmentScore.kennzahlen.nettoRendite)}</td></tr>
+            <tr><td>Mietmultiplikator</td><td>${resultData.investmentScore.kennzahlen.mietmultiplikator.toFixed(1)}x</td></tr>
+            <tr><td>Eigenkapitalrendite</td><td>${formatPercent(resultData.eigenkapitalrendite)}</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+    ` : ''}
+
     <div class="footer">
       <p class="footer-title">Rechtlicher Hinweis</p>
       <p>Alle Angaben sind ohne Gewähr und basieren auf den übermittelten Informationen. Wir übernehmen keine Gewähr für Vollständigkeit, Richtigkeit und Aktualität.</p>
