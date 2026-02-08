@@ -1,341 +1,212 @@
-"use client"
-
 import Link from "next/link"
-import { useState } from "react"
+import { getPosts, getCurrentUser, type CommunityPost } from "./actions"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+import { SiteHeader } from "@/components/site-header"
+import { SiteFooter } from "@/components/site-footer"
 import {
-  ArrowRight,
-  Search,
-  MessageCircle,
+  MessageSquare,
+  Heart,
+  Plus,
+  BarChart3,
+  Lock,
   Users,
-  ThumbsUp,
-  Eye,
-  User,
-  Calendar,
 } from "lucide-react"
-import { PageHero } from "@/components/page-hero"
+import { CommunityFilters } from "./community-filters"
 
-const communityTopics = [
-  {
-    id: "zinspolitik-diskussion",
-    title: "EZB Zinsentscheidung: Was bedeutet das fuer Immobilienkaufer?",
-    excerpt:
-      "Die EZB hat gestern die Zinsen stabil gehalten. Wie wirkt sich das auf die Immobilienpreise aus? Diskutieren wir ueber die Auswirkungen.",
-    author: "Markus_Finanzguru",
-    date: "2024-01-23",
-    replies: 24,
-    views: 156,
-    likes: 12,
-    category: "Finanzierung",
-    tags: ["EZB", "Zinsen", "Immobilienkauf"],
-    isHot: true,
-  },
-  {
-    id: "preisentwicklung-fragen",
-    title: "Sind die Immobilienpreise in Muenchen noch gerechtfertigt?",
-    excerpt:
-      "Bei 15.000 EUR/m2 in Top-Lagen frage ich mich, ob das noch rational ist. Wie beurteilt ihr die Preis-Nutzen-Relation?",
-    author: "Sarah_Investorin",
-    date: "2024-01-22",
-    replies: 18,
-    views: 203,
-    likes: 8,
-    category: "Preise",
-    tags: ["Muenchen", "Preise", "Investition"],
-    isHot: true,
-  },
-  {
-    id: "sanierungstipps-teilen",
-    title: "Erfolgreiche Sanierungen: Eure besten Tipps und Erfahrungen",
-    excerpt:
-      "Ich plane eine Komplettsanierung meines Altbaus. Welche Erfahrungen habt ihr gemacht? Welche Handwerker empfehlt ihr?",
-    author: "Thomas_Sanierer",
-    date: "2024-01-21",
-    replies: 31,
-    views: 289,
-    likes: 22,
-    category: "Sanierung",
-    tags: ["Sanierung", "Altbau", "Handwerker"],
-    isHot: false,
-  },
-  {
-    id: "vermietung-erfahrungen",
-    title: "Vermietung an Studenten: Pro und Contra",
-    excerpt:
-      "Ich ueberlege, meine Wohnung an Studenten zu vermieten. Wie sind eure Erfahrungen?",
-    author: "Lisa_Vermieterin",
-    date: "2024-01-20",
-    replies: 15,
-    views: 167,
-    likes: 6,
-    category: "Vermietung",
-    tags: ["Studenten", "Vermietung", "Erfahrungen"],
-    isHot: false,
-  },
-  {
-    id: "steueroptimierung-tipps",
-    title: "Steuervorteile bei Immobilien: Was nutzt ihr?",
-    excerpt:
-      "Welche steuerlichen Vorteile bei Immobilienbesitz kennt ihr? AfA, Werbungskosten, Tipps?",
-    author: "Michael_Steuerfuchs",
-    date: "2024-01-19",
-    replies: 27,
-    views: 334,
-    likes: 19,
-    category: "Steuern",
-    tags: ["Steuern", "AfA", "Werbungskosten"],
-    isHot: false,
-  },
-  {
-    id: "klimawandel-immobilien",
-    title: "Klimawandel und Immobilienwert: Wie schuetzt man sich?",
-    excerpt:
-      "Angesichts der zunehmenden Wetterextreme mache ich mir Sorgen um meinen Immobilienwert.",
-    author: "Anna_Nachhaltig",
-    date: "2024-01-18",
-    replies: 20,
-    views: 245,
-    likes: 14,
-    category: "Nachhaltigkeit",
-    tags: ["Klimawandel", "Risiken", "Nachhaltigkeit"],
-    isHot: false,
-  },
-]
+export const metadata = {
+  title: "Community - proplytics.de",
+  description:
+    "Tauschen Sie sich mit anderen Immobilien-Investoren ueber Objekte aus und erhalten Sie Meinungsbilder.",
+}
 
 const categories = [
-  "Alle",
-  "Finanzierung",
-  "Preise",
-  "Sanierung",
-  "Vermietung",
-  "Steuern",
-  "Nachhaltigkeit",
+  { value: "alle", label: "Alle" },
+  { value: "meinungsbild", label: "Meinungsbild" },
+  { value: "deal-analyse", label: "Deal-Analyse" },
+  { value: "finanzierung", label: "Finanzierung" },
+  { value: "strategie", label: "Strategie" },
+  { value: "steuern", label: "Steuern & Recht" },
+  { value: "allgemein", label: "Allgemein" },
 ]
 
-export default function CommunityPage() {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("Alle")
-  const [sortBy, setSortBy] = useState<"newest" | "popular" | "active">(
-    "newest"
-  )
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const mins = Math.floor(diff / 60000)
+  if (mins < 1) return "gerade eben"
+  if (mins < 60) return `vor ${mins} Min.`
+  const hrs = Math.floor(mins / 60)
+  if (hrs < 24) return `vor ${hrs} Std.`
+  const days = Math.floor(hrs / 24)
+  if (days < 30) return `vor ${days} Tagen`
+  return new Date(dateStr).toLocaleDateString("de-DE")
+}
 
-  const filteredTopics = communityTopics
-    .filter((topic) => {
-      const matchesSearch =
-        topic.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        topic.excerpt.toLowerCase().includes(searchTerm.toLowerCase())
-      const matchesCategory =
-        selectedCategory === "Alle" || topic.category === selectedCategory
-      return matchesSearch && matchesCategory
-    })
-    .sort((a, b) => {
-      if (sortBy === "popular") return b.likes + b.replies - (a.likes + a.replies)
-      return new Date(b.date).getTime() - new Date(a.date).getTime()
-    })
+function PostCard({ post }: { post: CommunityPost }) {
+  const isMeinungsbild = post.post_type === "meinungsbild"
 
   return (
-    <div className="bg-background text-foreground">
-      <PageHero
-        badge="Immobilien-Community"
-        badgeIcon={<Users className="h-4 w-4 text-primary" />}
-        title="Wissen teilen."
-        titleAccent="Gemeinsam wachsen."
-        description="Tauschen Sie sich mit Immobilienexperten aus, diskutieren Sie aktuelle Trends und finden Sie Antworten auf Ihre Fragen."
-      >
-        <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <MessageCircle className="h-4 w-4 text-primary" />
-            <span>24/7 Diskussionen</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Users className="h-4 w-4 text-primary" />
-            <span>Experten & Enthusiasten</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Eye className="h-4 w-4 text-primary" />
-            <span>Taegliche Updates</span>
-          </div>
-        </div>
-      </PageHero>
-
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-        {/* Search & Filter */}
-        <div className="mb-8 rounded-2xl border border-border bg-card p-6">
-          <div className="flex flex-col items-center gap-4 lg:flex-row">
-            <div className="relative max-w-md flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder="Themen durchsuchen..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="rounded-full pl-10"
-              />
-            </div>
-
-            <div className="flex items-center gap-4">
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="rounded-full border border-border bg-background px-4 py-2 text-sm focus:border-primary/50 focus:ring-primary/50"
-              >
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
-
-              <select
-                value={sortBy}
-                onChange={(e) =>
-                  setSortBy(e.target.value as "newest" | "popular" | "active")
-                }
-                className="rounded-full border border-border bg-background px-4 py-2 text-sm focus:border-primary/50 focus:ring-primary/50"
-              >
-                <option value="newest">Neueste</option>
-                <option value="popular">Beliebt</option>
-                <option value="active">Aktiv</option>
-              </select>
-            </div>
-
-            <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-              Neues Thema
-            </Button>
-          </div>
-        </div>
-
-        {/* Topics */}
-        <div className="flex flex-col gap-4">
-          {filteredTopics.map((topic) => (
-            <Card
-              key={topic.id}
-              className="border-border transition-all hover:border-primary/20 hover:shadow-md"
-            >
-              <CardContent className="p-6">
-                <div className="mb-3 flex items-center gap-2">
-                  <Badge className="border-none bg-primary/10 text-primary hover:bg-primary/10">
-                    {topic.category}
+    <Link href={`/community/${post.id}`}>
+      <Card className="group transition-all hover:border-primary/20 hover:shadow-sm">
+        <CardContent className="p-5">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0 flex-1 space-y-2">
+              {/* Badges */}
+              <div className="flex flex-wrap items-center gap-2">
+                {isMeinungsbild && (
+                  <Badge className="border-amber-200 bg-amber-50 text-amber-700 text-[10px]">
+                    Meinungsbild
                   </Badge>
-                  {topic.isHot && (
-                    <Badge className="border-none bg-destructive/10 text-destructive hover:bg-destructive/10">
-                      Heiss
-                    </Badge>
+                )}
+                <Badge variant="outline" className="text-[10px]">
+                  {categories.find((c) => c.value === post.category)?.label ??
+                    post.category}
+                </Badge>
+                {post.is_pinned && (
+                  <Badge variant="secondary" className="text-[10px]">
+                    Angepinnt
+                  </Badge>
+                )}
+              </div>
+
+              {/* Title */}
+              <h3 className="text-base font-semibold leading-snug text-foreground group-hover:text-primary transition-colors line-clamp-2">
+                {post.title}
+              </h3>
+
+              {/* Object data for Meinungsbild */}
+              {isMeinungsbild && post.objektdaten && (
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                  {post.objektdaten.objekttyp && (
+                    <span>{post.objektdaten.objekttyp}</span>
+                  )}
+                  {post.objektdaten.kaufpreis && (
+                    <span>{post.objektdaten.kaufpreis} EUR</span>
+                  )}
+                  {post.objektdaten.wohneinheiten && (
+                    <span>{post.objektdaten.wohneinheiten} WE</span>
+                  )}
+                  {post.objektdaten.baujahr && (
+                    <span>Bj. {post.objektdaten.baujahr}</span>
                   )}
                 </div>
-                <h3 className="mb-2 text-xl font-bold transition-colors hover:text-primary">
-                  <Link href={`/community/${topic.id}`}>{topic.title}</Link>
-                </h3>
-                <p className="mb-3 text-sm leading-relaxed text-muted-foreground">
-                  {topic.excerpt}
-                </p>
-                <div className="mb-3 flex flex-wrap gap-1">
-                  {topic.tags.map((tag) => (
-                    <Badge
-                      key={tag}
-                      variant="secondary"
-                      className="text-xs"
-                    >
-                      #{tag}
-                    </Badge>
-                  ))}
-                </div>
+              )}
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <User className="h-3.5 w-3.5" />
-                      {topic.author}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Calendar className="h-3.5 w-3.5" />
-                      {new Date(topic.date).toLocaleDateString("de-DE")}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <MessageCircle className="h-3.5 w-3.5" />
-                      {topic.replies}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Eye className="h-3.5 w-3.5" />
-                      {topic.views}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <ThumbsUp className="h-3.5 w-3.5" />
-                      {topic.likes}
-                    </span>
-                  </div>
+              {/* Content preview */}
+              <p className="text-sm text-muted-foreground line-clamp-2">
+                {post.content}
+              </p>
 
-                  <Button asChild variant="outline" size="sm">
-                    <Link
-                      href={`/community/${topic.id}`}
-                      className="flex items-center gap-2"
-                    >
-                      Diskussion beitreten
-                      <ArrowRight className="h-4 w-4" />
-                    </Link>
-                  </Button>
+              {/* Meta */}
+              <div className="flex items-center gap-4 pt-1 text-xs text-muted-foreground">
+                <span>{post.author_name}</span>
+                <span>{timeAgo(post.created_at)}</span>
+              </div>
+            </div>
+
+            {/* Stats */}
+            <div className="hidden shrink-0 flex-col items-end gap-2 sm:flex">
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <MessageSquare className="h-3.5 w-3.5" />
+                <span>{post.reply_count}</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Heart className="h-3.5 w-3.5" />
+                <span>{post.like_count}</span>
+              </div>
+              {isMeinungsbild && (
+                <div className="flex items-center gap-1.5 text-xs text-primary">
+                  <BarChart3 className="h-3.5 w-3.5" />
+                  <span>Bewerten</span>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </Link>
+  )
+}
+
+export default async function CommunityPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ kategorie?: string }>
+}) {
+  const params = await searchParams
+  const user = await getCurrentUser()
+  const category = params.kategorie || "alle"
+  const posts = await getPosts(category)
+
+  return (
+    <>
+      <SiteHeader />
+      <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
+        {/* Header */}
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-bold tracking-tight">Community</h1>
+            <p className="text-muted-foreground">
+              Tauschen Sie sich mit anderen Investoren ueber Objekte und
+              Strategien aus.
+            </p>
+          </div>
+          {user ? (
+            <Button
+              asChild
+              className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              <Link href="/community/neu">
+                <Plus className="h-4 w-4" />
+                Neuer Beitrag
+              </Link>
+            </Button>
+          ) : (
+            <Button asChild variant="outline" className="gap-2">
+              <Link href="/login?redirect=/community">
+                <Lock className="h-4 w-4" />
+                Anmelden zum Mitmachen
+              </Link>
+            </Button>
+          )}
         </div>
 
-        {filteredTopics.length === 0 && (
-          <div className="py-12 text-center">
-            <MessageCircle className="mx-auto mb-4 h-16 w-16 text-muted-foreground/30" />
-            <h3 className="mb-2 text-xl font-semibold">Keine Themen gefunden</h3>
-            <p className="mb-6 text-muted-foreground">
-              Versuche andere Suchbegriffe oder Kategorien.
-            </p>
-            <Button onClick={() => setSearchTerm("")}>
-              Alle Themen anzeigen
-            </Button>
+        {/* Filters */}
+        <div className="mb-6">
+          <CommunityFilters
+            categories={categories}
+            activeCategory={category}
+          />
+        </div>
+
+        {/* Posts list */}
+        {posts.length === 0 ? (
+          <Card>
+            <CardContent className="py-16 text-center">
+              <Users className="mx-auto mb-4 h-10 w-10 text-muted-foreground/40" />
+              <h3 className="text-lg font-semibold">Noch keine Beitraege</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {user
+                  ? "Seien Sie der Erste - starten Sie eine Diskussion oder teilen Sie ein Objekt fuer ein Meinungsbild."
+                  : "Melden Sie sich an um Beitraege zu sehen und an Diskussionen teilzunehmen."}
+              </p>
+              {user && (
+                <Button asChild className="mt-4" size="sm">
+                  <Link href="/community/neu">Ersten Beitrag erstellen</Link>
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {posts.map((post) => (
+              <PostCard key={post.id} post={post} />
+            ))}
           </div>
         )}
-
-        {/* Community Stats CTA */}
-        <div className="mt-12 rounded-2xl border border-border bg-card p-8 text-center">
-          <div className="mb-8 grid grid-cols-2 gap-6 md:grid-cols-4">
-            <div>
-              <div className="mb-1 text-3xl font-bold text-primary">
-                {communityTopics.length}
-              </div>
-              <div className="text-sm text-muted-foreground">Aktive Themen</div>
-            </div>
-            <div>
-              <div className="mb-1 text-3xl font-bold text-primary">
-                {communityTopics.reduce((s, t) => s + t.replies, 0)}
-              </div>
-              <div className="text-sm text-muted-foreground">Antworten</div>
-            </div>
-            <div>
-              <div className="mb-1 text-3xl font-bold text-primary">
-                {communityTopics.reduce((s, t) => s + t.views, 0)}
-              </div>
-              <div className="text-sm text-muted-foreground">Views</div>
-            </div>
-            <div>
-              <div className="mb-1 text-3xl font-bold text-primary">
-                {new Set(communityTopics.map((t) => t.author)).size}
-              </div>
-              <div className="text-sm text-muted-foreground">Aktive Mitglieder</div>
-            </div>
-          </div>
-          <h3 className="mb-3 text-2xl font-bold">
-            Werde Teil der Community
-          </h3>
-          <p className="mx-auto mb-6 max-w-2xl text-lg text-muted-foreground">
-            Tauschen Sie sich mit Immobilienexperten aus, teilen Sie Ihre
-            Erfahrungen und lernen Sie von anderen.
-          </p>
-          <Button className="bg-primary font-semibold text-primary-foreground hover:bg-primary/90">
-            Jetzt beitreten
-          </Button>
-        </div>
-      </div>
-    </div>
+      </main>
+      <SiteFooter />
+    </>
   )
 }
