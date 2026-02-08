@@ -142,4 +142,7 @@ export interface AnalyseResultData {
     originalMarktwert: number
     korrekturBetrag: number
   }
+
+  // Investment-Scoring (aus investment-scoring.ts)
+  investmentScore?: import("./investment-scoring").InvestmentScore
 }

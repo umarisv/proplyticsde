@@ -1,4 +1,5 @@
 import type { AnalyseFormData, AnalyseResultData, AIAnalysisResult } from "@/lib/types"
+import { calculateInvestmentScore } from "@/lib/investment-scoring"
 
 export function calculateValuation(formData: AnalyseFormData): AnalyseResultData {
   const wohnflaeche = Number.parseFloat(formData.wohnflaeche) || 850
@@ -204,6 +205,22 @@ export function calculateValuation(formData: AnalyseFormData): AnalyseResultData
   const cashflowJahr = cashflowMonat * 12
   const eigenkapitalrendite = (cashflowJahr / eigenkapital) * 100
 
+  // Investment-Scoring berechnen
+  const investmentScore = calculateInvestmentScore({
+    kaufpreis: effektiverKaufpreis,
+    wohnflaeche,
+    mieteinnahmenMonat: istMieteMonat,
+    baujahr,
+    objekttyp: formData.objekttyp,
+    zustand: formData.zustand,
+    plz: formData.plz,
+    stadt: formData.stadt,
+    eigenkapital,
+    zinssatz,
+    tilgung,
+    wohneinheiten: anzahlWohnungen,
+  })
+
   return {
     marktwert,
     marktwertMin,
@@ -240,6 +257,7 @@ export function calculateValuation(formData: AnalyseFormData): AnalyseResultData
     cashflowMonat,
     cashflowJahr,
     eigenkapitalrendite,
+    investmentScore,
   }
 }
 
