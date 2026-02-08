@@ -11,6 +11,8 @@ import {
   Building2,
   TrendingUp,
   BarChart3,
+  BookOpen,
+  Users,
 } from "lucide-react"
 
 const suggestions = [
@@ -236,8 +238,32 @@ export default function HomePage() {
           ))}
         </div>
 
+        {/* Platform sections */}
+        <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {[
+            { href: "/portal", icon: Building2, label: "Portal", desc: "Ihre Bewertungen verwalten" },
+            { href: "/portal/marktplatz", icon: TrendingUp, label: "Marktplatz", desc: "Partner und Dienstleister" },
+            { href: "/portal/academy", icon: BookOpen, label: "Academy", desc: "Immobilienwissen vertiefen" },
+            { href: "/blog", icon: FileText, label: "Blog", desc: "Fachartikel und Analysen" },
+            { href: "/community", icon: Users, label: "Community", desc: "Austausch mit Experten" },
+            { href: "/analyse", icon: BarChart3, label: "Analyse", desc: "Detaillierte Auswertung" },
+          ].map((item) => (
+            <a
+              key={item.href}
+              href={item.href}
+              className="group flex flex-col gap-1.5 rounded-xl border border-border bg-card p-3.5 transition-all hover:border-primary/20 hover:shadow-sm"
+            >
+              <div className="flex items-center gap-2">
+                <item.icon className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium group-hover:text-primary">{item.label}</span>
+              </div>
+              <span className="text-xs text-muted-foreground">{item.desc}</span>
+            </a>
+          ))}
+        </div>
+
         {/* Subtle info */}
-        <p className="mt-6 text-center text-xs text-muted-foreground/50">
+        <p className="mt-8 text-center text-xs text-muted-foreground/50">
           KI-gestuetzte Analyse nach ImmoWertV 2024 - DSGVO-konform
         </p>
       </div>

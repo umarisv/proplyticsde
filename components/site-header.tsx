@@ -6,9 +6,12 @@ import { useState } from "react"
 import { TrendingUp, Menu, X } from "lucide-react"
 
 const navLinks = [
+  { href: "/analyse", label: "Analyse" },
+  { href: "/portal", label: "Portal" },
+  { href: "/portal/marktplatz", label: "Marktplatz" },
+  { href: "/portal/academy", label: "Academy" },
   { href: "/blog", label: "Blog" },
   { href: "/community", label: "Community" },
-  { href: "/portal", label: "Portal" },
 ]
 
 export function SiteHeader() {

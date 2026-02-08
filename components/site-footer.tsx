@@ -1,9 +1,12 @@
 import Link from "next/link"
 
 const links = [
+  { href: "/analyse", label: "Analyse" },
+  { href: "/portal", label: "Portal" },
+  { href: "/portal/marktplatz", label: "Marktplatz" },
+  { href: "/portal/academy", label: "Academy" },
   { href: "/blog", label: "Blog" },
   { href: "/community", label: "Community" },
-  { href: "/portal", label: "Portal" },
   { href: "/impressum", label: "Impressum" },
   { href: "/datenschutz", label: "Datenschutz" },
 ]
