@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
-import type { MeinungsbildAggregation, MeinungsbildRating } from "../actions"
+import type { MeinungsbildAggregation, MeinungsbildRating } from "../types"
 
 const dimensions = [
   { key: "rendite", label: "Rendite", desc: "Bruttomietrendite, Cashflow, IRR" },

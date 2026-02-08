@@ -282,8 +282,6 @@ export function ResultsPanel({
     }
   }, [data, formData])
 
-  console.log("[v0] ResultsPanel render - data:", !!data, "investmentScore:", !!data?.investmentScore, "riskAnalysis:", !!riskAnalysis)
-
   if (isCalculating) {
     return (
       <div className="p-4 h-full">

@@ -4,9 +4,6 @@ import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import type { CommunityPost, CommunityReply, MeinungsbildRating } from "./types"
 
-// Re-export types for convenience (type-only exports are fine in "use server")
-export type { CommunityPost, CommunityReply, MeinungsbildRating, MeinungsbildAggregation } from "./types"
-
 // ─── Fetch all posts ─────────────────────────────────────
 export async function getPosts(category?: string): Promise<CommunityPost[]> {
   const supabase = await createClient()
