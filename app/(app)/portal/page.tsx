@@ -1,9 +1,6 @@
-"use client"
-
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
 import {
   Building2,
   GraduationCap,
@@ -13,16 +10,59 @@ import {
   Plus,
   TrendingUp,
   Clock,
-  CheckCircle2,
   Calendar,
   PlayCircle,
+  BarChart3,
 } from "lucide-react"
 import Link from "next/link"
+import { createClient } from "@/lib/supabase/server"
+import { formatCurrency, formatDate } from "@/lib/format"
+import type { Bewertung } from "@/lib/database.types"
+import type { AnalyseResultData } from "@/lib/types"
 
-export default function PortalDashboardPage() {
+function getMarktwert(bewertung: Bewertung): number {
+  const ergebnisse = bewertung.ergebnisse as unknown as AnalyseResultData | null
+  return ergebnisse?.marktwert ?? 0
+}
+
+function getObjektLabel(typ: string | null): string {
+  const labels: Record<string, string> = {
+    mfh: "Mehrfamilienhaus",
+    zfh: "Zweifamilienhaus",
+    efh: "Einfamilienhaus",
+    etw: "Eigentumswohnung",
+    wgh: "Wohn-/Geschaeftshaus",
+  }
+  return labels[typ ?? ""] ?? typ ?? "Immobilie"
+}
+
+export default async function PortalDashboardPage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  let bewertungen: Bewertung[] = []
+  let totalCount = 0
+
+  if (user) {
+    const { data, count } = await supabase
+      .from("bewertungen")
+      .select("*", { count: "exact" })
+      .eq("user_id", user.id)
+      .eq("status", "aktiv")
+      .order("created_at", { ascending: false })
+      .limit(6)
+
+    bewertungen = (data ?? []) as Bewertung[]
+    totalCount = count ?? 0
+  }
+
+  const portfolioWert = bewertungen.reduce((sum, b) => sum + getMarktwert(b), 0)
+  const recentBewertungen = bewertungen.slice(0, 3)
+
   return (
     <div className="bg-background text-foreground">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+        {/* Header */}
         <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">
@@ -46,36 +86,8 @@ export default function PortalDashboardPage() {
           </div>
         </div>
 
-        {/* Quick Stats */}
+        {/* Stats */}
         <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
-          <Card className="bg-primary text-primary-foreground">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium opacity-90">
-                Subscription Plan
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-2xl font-bold">Pro Account</p>
-                  <p className="text-xs opacity-80">
-                    Verlaengert sich am 15.02.2026
-                  </p>
-                </div>
-                <Badge className="border-none bg-white/20 text-white hover:bg-white/20">
-                  Aktiv
-                </Badge>
-              </div>
-              <div className="mt-4">
-                <div className="mb-1 flex justify-between text-xs font-medium">
-                  <span>Bewertungen diesen Monat</span>
-                  <span>12 / Unbegrenzt</span>
-                </div>
-                <Progress value={35} className="h-1 bg-white/20" />
-              </div>
-            </CardContent>
-          </Card>
-
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -85,9 +97,9 @@ export default function PortalDashboardPage() {
             <CardContent>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-3xl font-bold">24</p>
+                  <p className="text-3xl font-bold">{totalCount}</p>
                   <p className="text-xs text-muted-foreground">
-                    +3 zum Vormonat
+                    {totalCount === 0 ? "Starten Sie Ihre erste Analyse" : "Gespeicherte Bewertungen"}
                   </p>
                 </div>
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -106,13 +118,38 @@ export default function PortalDashboardPage() {
             <CardContent>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-3xl font-bold">8,4 Mio</p>
-                  <p className="text-xs font-medium text-primary">
-                    +4,2% Marktwert-Steigerung
+                  <p className="text-3xl font-bold">
+                    {portfolioWert > 0 ? formatCurrency(portfolioWert, { compact: true }) : "--"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {portfolioWert > 0 ? "Summierte Marktwerte" : "Noch keine Bewertungen"}
                   </p>
                 </div>
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
                   <TrendingUp className="h-6 w-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Durchschnittl. Marktwert
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-3xl font-bold">
+                    {totalCount > 0 ? formatCurrency(portfolioWert / totalCount, { compact: true }) : "--"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {totalCount > 0 ? "Pro Objekt" : "Noch keine Daten"}
+                  </p>
+                </div>
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <BarChart3 className="h-6 w-6" />
                 </div>
               </div>
             </CardContent>
@@ -126,10 +163,10 @@ export default function PortalDashboardPage() {
             <div className="mb-4 flex items-center justify-between">
               <h2 className="flex items-center gap-2 text-xl font-bold">
                 <GraduationCap className="h-5 w-5 text-primary" />
-                Lernfortschritt Academy
+                Academy
               </h2>
               <Link
-                href="/portal/academy"
+                href="/academy"
                 className="flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80"
               >
                 Alle Kurse <ArrowRight className="h-4 w-4" />
@@ -149,15 +186,12 @@ export default function PortalDashboardPage() {
                     <p className="truncate text-sm font-bold">
                       Immobilien-Investment Masterclass
                     </p>
-                    <div className="mt-1 flex items-center gap-2">
-                      <Progress value={45} className="h-1 flex-1" />
-                      <span className="shrink-0 text-xs font-bold text-muted-foreground">
-                        45%
-                      </span>
-                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Renditeberechnung, Finanzierung & Steuern
+                    </p>
                   </div>
                   <Button size="icon" variant="ghost" asChild className="shrink-0">
-                    <Link href="/portal/academy">
+                    <Link href="/academy">
                       <PlayCircle className="h-5 w-5" />
                     </Link>
                   </Button>
@@ -165,7 +199,7 @@ export default function PortalDashboardPage() {
               </Card>
               <Card className="border-l-4 border-l-amber-500">
                 <CardContent className="flex items-center gap-4 p-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-500">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-500/10 text-amber-500">
                     <Clock className="h-5 w-5" />
                   </div>
                   <div className="flex-1">
@@ -176,7 +210,7 @@ export default function PortalDashboardPage() {
                       {"Q&A mit Coach Marcus (Steuer-Spezial)"}
                     </p>
                     <p className="mt-0.5 text-xs text-muted-foreground">
-                      Heute, 19:00 Uhr
+                      Jeden Mittwoch, 19:00 Uhr
                     </p>
                   </div>
                   <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">
@@ -195,7 +229,7 @@ export default function PortalDashboardPage() {
                 Dienstleistungen
               </h2>
               <Link
-                href="/portal/marktplatz"
+                href="/marktplatz"
                 className="flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80"
               >
                 Marktplatz <ArrowRight className="h-4 w-4" />
@@ -212,25 +246,7 @@ export default function PortalDashboardPage() {
                     Finden Sie passende Partner fuer Ihre Objekte.
                   </p>
                   <Button variant="outline" size="sm" asChild className="mt-3">
-                    <Link href="/portal/marktplatz">Partner finden</Link>
-                  </Button>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="flex items-center justify-between p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded bg-emerald-100 text-primary">
-                      <CheckCircle2 className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold">Angebot erhalten</p>
-                      <p className="text-xs text-muted-foreground">
-                        Maler-Meister Duesseldorf (Renovierung Objekt A)
-                      </p>
-                    </div>
-                  </div>
-                  <Button variant="ghost" size="sm">
-                    Details
+                    <Link href="/marktplatz">Partner finden</Link>
                   </Button>
                 </CardContent>
               </Card>
@@ -242,61 +258,84 @@ export default function PortalDashboardPage() {
         <div>
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl font-bold">Zuletzt bewertete Objekte</h2>
-            <Link
-              href="/portal/bewertungen"
-              className="flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80"
-            >
-              Alle anzeigen <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {[
-              { addr: "Musterstrasse 123, Berlin", type: "Mehrfamilienhaus", price: "350.000" },
-              { addr: "Beispielweg 45, Hamburg", type: "Eigentumswohnung", price: "220.000" },
-              { addr: "Hauptstr. 7, Muenchen", type: "Einfamilienhaus", price: "580.000" },
-            ].map((obj) => (
-              <Card
-                key={obj.addr}
-                className="transition-colors hover:border-primary/20"
+            {totalCount > 3 && (
+              <Link
+                href="/portal/bewertungen"
+                className="flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80"
               >
-                <CardContent className="p-4">
-                  <div className="mb-3 flex items-start justify-between">
-                    <div>
-                      <p className="truncate text-sm font-bold">{obj.addr}</p>
-                      <p className="text-xs uppercase tracking-wider text-muted-foreground">
-                        {obj.type}
-                      </p>
-                    </div>
-                    <Badge variant="outline" className="text-xs">
-                      {obj.price} EUR
-                    </Badge>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-8 flex-1 gap-1 text-xs"
-                      asChild
-                    >
-                      <Link href="/analyse">
-                        <FileText className="h-3 w-3" /> Report
-                      </Link>
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-8 flex-1 gap-1 text-xs text-primary"
-                      asChild
-                    >
-                      <Link href="/portal/bewertungen/some-id">
-                        <Plus className="h-3 w-3" /> Bankmappe
-                      </Link>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                Alle anzeigen <ArrowRight className="h-4 w-4" />
+              </Link>
+            )}
           </div>
+
+          {recentBewertungen.length === 0 ? (
+            <Card>
+              <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <Building2 className="h-8 w-8" />
+                </div>
+                <div>
+                  <p className="text-lg font-semibold">Noch keine Bewertungen</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Starten Sie Ihre erste KI-gestuetzte Immobilienanalyse.
+                  </p>
+                </div>
+                <Button asChild className="mt-2 gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
+                  <Link href="/analyse">
+                    <Plus className="h-4 w-4" />
+                    Erste Analyse starten
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {recentBewertungen.map((b) => {
+                const marktwert = getMarktwert(b)
+                return (
+                  <Card
+                    key={b.id}
+                    className="transition-colors hover:border-primary/20"
+                  >
+                    <CardContent className="p-4">
+                      <div className="mb-3 flex items-start justify-between">
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-bold">
+                            {b.adresse ?? `${b.plz} ${b.stadt}`}
+                          </p>
+                          <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                            {getObjektLabel(b.objekttyp)}
+                          </p>
+                        </div>
+                        {marktwert > 0 && (
+                          <Badge variant="outline" className="ml-2 shrink-0 text-xs">
+                            {formatCurrency(marktwert, { compact: true })}
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="mb-3 flex flex-wrap gap-2 text-xs text-muted-foreground">
+                        {b.wohnflaeche && <span>{b.wohnflaeche} m2</span>}
+                        {b.baujahr && <span>Bj. {b.baujahr}</span>}
+                        {b.created_at && <span>{formatDate(b.created_at)}</span>}
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 flex-1 gap-1 text-xs"
+                          asChild
+                        >
+                          <Link href={`/analyse?id=${b.id}`}>
+                            <FileText className="h-3 w-3" /> Details
+                          </Link>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              })}
+            </div>
+          )}
         </div>
       </div>
     </div>

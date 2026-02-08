@@ -26,6 +26,7 @@ interface Message {
 interface ChatWizardProps {
   onDataChange: (data: Partial<AnalyseFormData>) => void
   onCalculate: (data: AnalyseFormData) => void
+  initialQuery?: string
 }
 
 const initialMessages: Message[] = [
@@ -84,7 +85,7 @@ const energieOptionen = [
   { label: "Unbekannt", value: "unbekannt" },
 ]
 
-export function ChatWizard({ onDataChange, onCalculate }: ChatWizardProps) {
+export function ChatWizard({ onDataChange, onCalculate, initialQuery }: ChatWizardProps) {
   const [messages, setMessages] = useState<Message[]>(initialMessages)
   const [currentStep, setCurrentStep] = useState<StepType>("plz")
   const [inputValue, setInputValue] = useState("")
@@ -120,6 +121,28 @@ export function ChatWizard({ onDataChange, onCalculate }: ChatWizardProps) {
     uploadedFiles: [],
   })
   const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  // Show initial query from landing page as context message
+  const [initialQueryShown, setInitialQueryShown] = useState(false)
+  useEffect(() => {
+    if (initialQuery && !initialQueryShown) {
+      setInitialQueryShown(true)
+      setMessages((prev) => [
+        ...prev,
+        { id: Date.now(), type: "user", content: initialQuery },
+        {
+          id: Date.now() + 1,
+          type: "bot",
+          content: `Vielen Dank fuer Ihre Beschreibung! Lassen Sie uns die Details erfassen. Bitte geben Sie zuerst die PLZ und Stadt ein:`,
+          inputType: "form",
+          formFields: [
+            { label: "PLZ", key: "plz", placeholder: "z.B. 40239" },
+            { label: "Stadt", key: "stadt", placeholder: "z.B. Duesseldorf" },
+          ],
+        },
+      ])
+    }
+  }, [initialQuery, initialQueryShown])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })

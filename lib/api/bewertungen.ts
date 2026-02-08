@@ -143,49 +143,33 @@ export async function saveBewertung(input: BewertungInput): Promise<{ data: Bewe
 
 // Get all bewertungen (filtered by user if authenticated)
 export async function getBewertungen(): Promise<{ data: Bewertung[] | null; error: Error | null }> {
-  console.log('🔍 getBewertungen called')
-
   if (!isSupabaseConfigured()) {
-    console.log('⚠️ Supabase not configured, using sample data')
     return { data: [], error: null }
   }
 
   try {
-    console.log('🔐 Getting user ID...')
     const userId = await getCurrentUserId()
-    console.log('👤 User ID:', userId)
 
-    console.log('📡 Making Supabase query...')
     let query = supabase
       .from('bewertungen')
       .select('*')
       .eq('status', 'aktiv')
 
-    // If user is logged in, show only their bewertungen
     if (userId) {
       query = query.eq('user_id', userId)
-      console.log('🔒 Filtering by user_id:', userId)
-    } else {
-      console.log('🔓 No user filter (RLS will handle)')
     }
 
     const { data, error } = await query
       .order('created_at', { ascending: false })
-      .limit(5) // Reduced for testing
-
-    console.log('📊 Query result:', { data, error })
+      .limit(50)
 
     if (error) {
-      console.error('❌ Supabase error:', error)
       return { data: [], error: new Error(error.message) }
     }
 
-    console.log('✅ Success! Found', data?.length || 0, 'bewertungen')
     return { data: data || [], error: null }
-
   } catch (err) {
-    console.error('💥 Exception in getBewertungen:', err)
-    return { data: [], error: new Error(`Exception: ${err.message}`) }
+    return { data: [], error: new Error(`Fehler beim Laden der Bewertungen`) }
   }
 }
 

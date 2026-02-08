@@ -34,6 +34,7 @@ const defaultFormData: AnalyseFormData = {
 function AnalysePageContent() {
   const isMobile = useIsMobile()
   const searchParams = useSearchParams()
+  const initialQuery = searchParams.get('q') || ""
   const initialAddress = searchParams.get('address') || "Musterstraße 123, 40239 Düsseldorf"
   
   const [formData, setFormData] = useState<AnalyseFormData>(defaultFormData)
@@ -99,7 +100,7 @@ function AnalysePageContent() {
             </TabsTrigger>
           </TabsList>
           <TabsContent value="chat" className="flex-1 m-0 overflow-hidden">
-            <ChatWizard onDataChange={handleDataChange} onCalculate={handleCalculate} />
+            <ChatWizard onDataChange={handleDataChange} onCalculate={handleCalculate} initialQuery={initialQuery} />
           </TabsContent>
           <TabsContent value="map" className="flex-1 m-0 overflow-hidden">
             <MapPanel address={address} />
@@ -131,7 +132,7 @@ function AnalysePageContent() {
 
         {/* Center Panel - Chat */}
         <main className="flex-1 min-w-[400px] bg-background">
-          <ChatWizard onDataChange={handleDataChange} onCalculate={handleCalculate} />
+          <ChatWizard onDataChange={handleDataChange} onCalculate={handleCalculate} initialQuery={initialQuery} />
         </main>
 
         {/* Right Panel - Map */}

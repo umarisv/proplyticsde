@@ -114,10 +114,10 @@ export function AnalyseHeader({ address, onNewAnalysis, resultData, formData, be
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Link href="https://dashboard.proplytics.de" target="_blank">
+              <Link href="/portal">
                 <Button variant="outline" size="sm">
                   <LayoutDashboard className="w-4 h-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Dashboard</span>
+                  <span className="hidden sm:inline">Portal</span>
                 </Button>
               </Link>
             </TooltipTrigger>
