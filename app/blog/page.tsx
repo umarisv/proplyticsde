@@ -3,7 +3,8 @@ import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Clock, User, Sparkles } from "lucide-react"
+import { ArrowRight, Clock, User, BookOpen } from "lucide-react"
+import { PageHero } from "@/components/page-hero"
 
 export const metadata: Metadata = {
   title: "Blog",
@@ -75,33 +76,22 @@ export default function BlogPage() {
 
   return (
     <div className="bg-background text-foreground">
-      {/* Hero */}
-      <section className="border-b border-border bg-secondary/30 py-16 md:py-20">
-        <div className="mx-auto max-w-7xl px-4 text-center sm:px-6">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-1.5">
-            <Sparkles className="h-4 w-4 text-emerald-600" />
-            <span className="text-sm font-medium text-emerald-700">
-              Immobilien-Blog
-            </span>
-          </div>
-          <h1 className="mb-4 text-balance text-4xl font-bold tracking-tight md:text-5xl">
-            Wissen & Marktanalysen
-          </h1>
-          <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-            Aktuelle Trends, datenbasierte Analysen und Expertenwissen fuer
-            Immobilieninvestoren und Eigentuemer.
-          </p>
-        </div>
-      </section>
+      <PageHero
+        badge="Immobilien-Blog"
+        badgeIcon={<BookOpen className="h-4 w-4 text-primary" />}
+        title="Wissen &"
+        titleAccent="Marktanalysen"
+        description="Aktuelle Trends, datenbasierte Analysen und Expertenwissen fuer Immobilieninvestoren und Eigentuemer."
+      />
 
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 md:py-16">
+      <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 md:py-16">
         {/* Featured Post */}
         <section className="mb-16">
           <h2 className="mb-6 text-xl font-bold">Featured Artikel</h2>
           <Card className="overflow-hidden border-border transition-shadow hover:shadow-lg">
             <CardHeader className="pb-3">
               <div className="mb-2 flex items-center gap-2">
-                <Badge className="border-none bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
+                <Badge className="border-none bg-primary/10 text-primary hover:bg-primary/10">
                   {featuredPost.category}
                 </Badge>
                 <span className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -112,7 +102,7 @@ export default function BlogPage() {
               <CardTitle className="text-2xl md:text-3xl">
                 <Link
                   href={`/blog/${featuredPost.id}`}
-                  className="transition-colors hover:text-emerald-600"
+                  className="transition-colors hover:text-primary"
                 >
                   {featuredPost.title}
                 </Link>
@@ -165,7 +155,7 @@ export default function BlogPage() {
                   <CardTitle className="text-lg">
                     <Link
                       href={`/blog/${post.id}`}
-                      className="transition-colors hover:text-emerald-600"
+                      className="transition-colors hover:text-primary"
                     >
                       {post.title}
                     </Link>
@@ -182,7 +172,7 @@ export default function BlogPage() {
                     </span>
                     <Link
                       href={`/blog/${post.id}`}
-                      className="font-medium text-emerald-600 hover:text-emerald-700"
+                      className="font-medium text-primary hover:text-primary/80"
                     >
                       {"Lesen ->"}
                     </Link>

@@ -13,7 +13,9 @@ import {
   BarChart3,
   BookOpen,
   Users,
+  LayoutDashboard,
 } from "lucide-react"
+import { ProplyticsLogo } from "@/components/proplytics-logo"
 
 const suggestions = [
   {
@@ -33,6 +35,15 @@ const suggestions = [
   },
 ]
 
+const platformLinks = [
+  { href: "/portal", icon: LayoutDashboard, label: "Portal", desc: "Ihre Bewertungen verwalten" },
+  { href: "/portal/marktplatz", icon: TrendingUp, label: "Marktplatz", desc: "Partner und Dienstleister" },
+  { href: "/portal/academy", icon: BookOpen, label: "Academy", desc: "Immobilienwissen vertiefen" },
+  { href: "/blog", icon: FileText, label: "Blog", desc: "Fachartikel und Analysen" },
+  { href: "/community", icon: Users, label: "Community", desc: "Austausch mit Experten" },
+  { href: "/analyse", icon: BarChart3, label: "Analyse", desc: "Detaillierte Auswertung" },
+]
+
 interface UploadedFile {
   name: string
   type: string
@@ -49,7 +60,6 @@ export default function HomePage() {
 
   const handleSubmit = () => {
     if (!query.trim() && files.length === 0) return
-    // Navigate to analyse page with the query
     const params = new URLSearchParams()
     if (query.trim()) params.set("q", query.trim())
     router.push(`/analyse${params.toString() ? "?" + params.toString() : ""}`)
@@ -83,9 +93,7 @@ export default function HomePage() {
     setIsDragging(true)
   }
 
-  const handleDragLeave = () => {
-    setIsDragging(false)
-  }
+  const handleDragLeave = () => setIsDragging(false)
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
@@ -115,7 +123,7 @@ export default function HomePage() {
 
   return (
     <div
-      className="flex min-h-[calc(100vh-3.5rem-3.5rem)] flex-col items-center justify-center px-4"
+      className="flex min-h-[calc(100vh-3.5rem-3.5rem)] flex-col items-center justify-center px-4 py-12"
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
@@ -132,32 +140,41 @@ export default function HomePage() {
       )}
 
       <div className="w-full max-w-2xl">
-        {/* Title */}
+        {/* Brand greeting */}
         <div className="mb-8 text-center">
-          <h1 className="mb-2 text-2xl font-semibold tracking-tight sm:text-3xl">
+          <div className="mb-5 flex justify-center">
+            <ProplyticsLogo size="lg" showText={false} />
+          </div>
+          <h1 className="mb-2 text-2xl font-bold tracking-tight sm:text-3xl">
             Was moechten Sie analysieren?
           </h1>
           <p className="text-sm text-muted-foreground sm:text-base">
-            Beschreiben Sie Ihre Immobilie oder Ihr Anliegen.
+            Beschreiben Sie Ihre Immobilie oder laden Sie Dokumente hoch.
           </p>
         </div>
 
         {/* Input Box */}
-        <div className={`rounded-2xl border bg-card shadow-sm transition-all ${query || files.length > 0 ? "border-primary/30 shadow-md shadow-primary/5" : "border-border"}`}>
+        <div
+          className={`overflow-hidden rounded-2xl border bg-card shadow-sm transition-all ${
+            query || files.length > 0
+              ? "border-primary/30 shadow-md shadow-primary/5"
+              : "border-border hover:border-border/80"
+          }`}
+        >
           {/* Uploaded files */}
           {files.length > 0 && (
-            <div className="flex flex-wrap gap-2 px-4 pt-4">
+            <div className="flex flex-wrap gap-2 border-b border-border/40 px-4 py-3">
               {files.map((file, i) => (
                 <div
                   key={i}
-                  className="flex items-center gap-2 rounded-lg bg-secondary px-3 py-1.5 text-xs"
+                  className="flex items-center gap-2 rounded-lg bg-secondary px-2.5 py-1.5 text-xs"
                 >
                   {isImage(file.type) ? (
-                    <ImageIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                    <ImageIcon className="h-3.5 w-3.5 text-primary/70" />
                   ) : (
-                    <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                    <FileText className="h-3.5 w-3.5 text-primary/70" />
                   )}
-                  <span className="max-w-[120px] truncate">{file.name}</span>
+                  <span className="max-w-[120px] truncate font-medium">{file.name}</span>
                   <span className="text-muted-foreground">{formatSize(file.size)}</span>
                   <button
                     onClick={() => removeFile(i)}
@@ -176,14 +193,14 @@ export default function HomePage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Beschreiben Sie Ihre Immobilie, laden Sie Bilder hoch oder stellen Sie eine Frage..."
-            className="w-full resize-none bg-transparent px-4 pt-4 pb-2 text-sm leading-relaxed outline-none placeholder:text-muted-foreground/60 sm:text-base"
+            placeholder="z.B. 3-Zimmer-Wohnung in Berlin, 85qm, Baujahr 1998..."
+            className="w-full resize-none bg-transparent px-4 pt-4 pb-2 text-sm leading-relaxed outline-none placeholder:text-muted-foreground/50 sm:text-base"
             rows={3}
           />
 
           {/* Bottom bar */}
           <div className="flex items-center justify-between px-3 pb-3">
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-0.5">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -217,7 +234,7 @@ export default function HomePage() {
             <button
               onClick={handleSubmit}
               disabled={!query.trim() && files.length === 0}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-30 disabled:hover:bg-primary"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-all hover:bg-primary/90 disabled:opacity-20"
             >
               <ArrowUp className="h-4 w-4" />
             </button>
@@ -230,42 +247,43 @@ export default function HomePage() {
             <button
               key={s.label}
               onClick={() => handleSuggestion(s.prompt)}
-              className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3.5 py-2 text-xs font-medium text-muted-foreground transition-all hover:border-primary/20 hover:bg-secondary hover:text-foreground sm:text-sm"
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-2 text-xs font-medium text-muted-foreground transition-all hover:border-primary/20 hover:text-foreground sm:text-sm"
             >
-              <s.icon className="h-3.5 w-3.5" />
+              <s.icon className="h-3.5 w-3.5 text-primary/60" />
               {s.label}
             </button>
           ))}
         </div>
 
         {/* Platform sections */}
-        <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {[
-            { href: "/portal", icon: Building2, label: "Portal", desc: "Ihre Bewertungen verwalten" },
-            { href: "/portal/marktplatz", icon: TrendingUp, label: "Marktplatz", desc: "Partner und Dienstleister" },
-            { href: "/portal/academy", icon: BookOpen, label: "Academy", desc: "Immobilienwissen vertiefen" },
-            { href: "/blog", icon: FileText, label: "Blog", desc: "Fachartikel und Analysen" },
-            { href: "/community", icon: Users, label: "Community", desc: "Austausch mit Experten" },
-            { href: "/analyse", icon: BarChart3, label: "Analyse", desc: "Detaillierte Auswertung" },
-          ].map((item) => (
+        <div className="mt-12 grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {platformLinks.map((item) => (
             <a
               key={item.href}
               href={item.href}
-              className="group flex flex-col gap-1.5 rounded-xl border border-border bg-card p-3.5 transition-all hover:border-primary/20 hover:shadow-sm"
+              className="group flex flex-col gap-1.5 rounded-xl border border-border/60 bg-card p-4 transition-all hover:border-primary/20 hover:shadow-sm"
             >
-              <div className="flex items-center gap-2">
-                <item.icon className="h-4 w-4 text-primary" />
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10">
+                  <item.icon className="h-3.5 w-3.5 text-primary" />
+                </div>
                 <span className="text-sm font-medium group-hover:text-primary">{item.label}</span>
               </div>
-              <span className="text-xs text-muted-foreground">{item.desc}</span>
+              <span className="pl-[38px] text-xs text-muted-foreground">{item.desc}</span>
             </a>
           ))}
         </div>
 
-        {/* Subtle info */}
-        <p className="mt-8 text-center text-xs text-muted-foreground/50">
-          KI-gestuetzte Analyse nach ImmoWertV 2024 - DSGVO-konform
-        </p>
+        {/* Trust bar */}
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-4 text-[11px] text-muted-foreground/40">
+          <span>ImmoWertV 2024</span>
+          <span className="h-3 w-px bg-border" />
+          <span>DSGVO-konform</span>
+          <span className="h-3 w-px bg-border" />
+          <span>KI-gestuetzt</span>
+          <span className="h-3 w-px bg-border" />
+          <span>Made in Germany</span>
+        </div>
       </div>
     </div>
   )

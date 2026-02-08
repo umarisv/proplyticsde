@@ -15,8 +15,8 @@ import {
   Eye,
   User,
   Calendar,
-  Sparkles,
 } from "lucide-react"
+import { PageHero } from "@/components/page-hero"
 
 const communityTopics = [
   {
@@ -138,43 +138,30 @@ export default function CommunityPage() {
 
   return (
     <div className="bg-background text-foreground">
-      {/* Hero */}
-      <section className="border-b border-border bg-secondary/30 py-16 md:py-20">
-        <div className="mx-auto max-w-7xl px-4 text-center sm:px-6">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-1.5">
-            <Users className="h-4 w-4 text-emerald-600" />
-            <span className="text-sm font-medium text-emerald-700">
-              Immobilien-Community
-            </span>
+      <PageHero
+        badge="Immobilien-Community"
+        badgeIcon={<Users className="h-4 w-4 text-primary" />}
+        title="Wissen teilen."
+        titleAccent="Gemeinsam wachsen."
+        description="Tauschen Sie sich mit Immobilienexperten aus, diskutieren Sie aktuelle Trends und finden Sie Antworten auf Ihre Fragen."
+      >
+        <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <MessageCircle className="h-4 w-4 text-primary" />
+            <span>24/7 Diskussionen</span>
           </div>
-          <h1 className="mb-4 text-balance text-4xl font-bold tracking-tight md:text-5xl">
-            Wissen teilen.{" "}
-            <span className="bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">
-              Gemeinsam wachsen.
-            </span>
-          </h1>
-          <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-            Tauschen Sie sich mit Immobilienexperten aus, diskutieren Sie aktuelle
-            Trends und finden Sie Antworten auf Ihre Fragen.
-          </p>
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <MessageCircle className="h-4 w-4 text-emerald-500" />
-              <span>24/7 Diskussionen</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-emerald-500" />
-              <span>Experten & Enthusiasten</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Eye className="h-4 w-4 text-emerald-500" />
-              <span>Taegliche Updates</span>
-            </div>
+          <div className="flex items-center gap-2">
+            <Users className="h-4 w-4 text-primary" />
+            <span>Experten & Enthusiasten</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Eye className="h-4 w-4 text-primary" />
+            <span>Taegliche Updates</span>
           </div>
         </div>
-      </section>
+      </PageHero>
 
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
         {/* Search & Filter */}
         <div className="mb-8 rounded-2xl border border-border bg-card p-6">
           <div className="flex flex-col items-center gap-4 lg:flex-row">
@@ -193,7 +180,7 @@ export default function CommunityPage() {
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="rounded-full border border-border bg-background px-4 py-2 text-sm focus:border-emerald-300 focus:ring-emerald-300"
+                className="rounded-full border border-border bg-background px-4 py-2 text-sm focus:border-primary/50 focus:ring-primary/50"
               >
                 {categories.map((cat) => (
                   <option key={cat} value={cat}>
@@ -207,7 +194,7 @@ export default function CommunityPage() {
                 onChange={(e) =>
                   setSortBy(e.target.value as "newest" | "popular" | "active")
                 }
-                className="rounded-full border border-border bg-background px-4 py-2 text-sm focus:border-emerald-300 focus:ring-emerald-300"
+                className="rounded-full border border-border bg-background px-4 py-2 text-sm focus:border-primary/50 focus:ring-primary/50"
               >
                 <option value="newest">Neueste</option>
                 <option value="popular">Beliebt</option>
@@ -215,7 +202,7 @@ export default function CommunityPage() {
               </select>
             </div>
 
-            <Button className="bg-emerald-500 text-white hover:bg-emerald-600">
+            <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
               Neues Thema
             </Button>
           </div>
@@ -226,20 +213,20 @@ export default function CommunityPage() {
           {filteredTopics.map((topic) => (
             <Card
               key={topic.id}
-              className="border-border transition-all hover:border-emerald-200 hover:shadow-md"
+              className="border-border transition-all hover:border-primary/20 hover:shadow-md"
             >
               <CardContent className="p-6">
                 <div className="mb-3 flex items-center gap-2">
-                  <Badge className="border-none bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
+                  <Badge className="border-none bg-primary/10 text-primary hover:bg-primary/10">
                     {topic.category}
                   </Badge>
                   {topic.isHot && (
-                    <Badge className="border-none bg-red-100 text-red-700 hover:bg-red-100">
+                    <Badge className="border-none bg-destructive/10 text-destructive hover:bg-destructive/10">
                       Heiss
                     </Badge>
                   )}
                 </div>
-                <h3 className="mb-2 text-xl font-bold transition-colors hover:text-emerald-600">
+                <h3 className="mb-2 text-xl font-bold transition-colors hover:text-primary">
                   <Link href={`/community/${topic.id}`}>{topic.title}</Link>
                 </h3>
                 <p className="mb-3 text-sm leading-relaxed text-muted-foreground">
@@ -310,7 +297,7 @@ export default function CommunityPage() {
         )}
 
         {/* Community Stats CTA */}
-        <div className="mt-12 rounded-2xl bg-emerald-500 p-8 text-center text-white">
+        <div className="mt-12 rounded-2xl bg-primary p-8 text-center text-primary-foreground">
           <div className="mb-8 grid grid-cols-2 gap-6 md:grid-cols-4">
             <div>
               <div className="mb-1 text-3xl font-bold">
@@ -344,7 +331,7 @@ export default function CommunityPage() {
             Tauschen Sie sich mit Immobilienexperten aus, teilen Sie Ihre
             Erfahrungen und lernen Sie von anderen.
           </p>
-          <Button className="bg-white font-semibold text-emerald-600 hover:bg-emerald-50">
+          <Button className="bg-primary-foreground font-semibold text-primary hover:bg-primary-foreground/90">
             Jetzt beitreten
           </Button>
         </div>

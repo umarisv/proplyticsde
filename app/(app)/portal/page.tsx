@@ -29,7 +29,7 @@ export default function PortalDashboardPage() {
           <nav className="flex items-center gap-4">
             <Link
               href="/portal"
-              className="border-b-2 border-emerald-500 pb-2 text-sm font-semibold text-foreground"
+              className="border-b-2 border-primary pb-2 text-sm font-semibold text-foreground"
             >
               Uebersicht
             </Link>
@@ -71,7 +71,7 @@ export default function PortalDashboardPage() {
               <Calendar className="h-4 w-4" />
               Live-Call buchen
             </Button>
-            <Button asChild className="gap-2 bg-emerald-500 text-white hover:bg-emerald-600">
+            <Button asChild className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
               <Link href="/analyse">
                 <Plus className="h-4 w-4" />
                 Neue Analyse
@@ -82,7 +82,7 @@ export default function PortalDashboardPage() {
 
         {/* Quick Stats */}
         <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
-          <Card className="bg-emerald-500 text-white">
+          <Card className="bg-primary text-primary-foreground">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium opacity-90">
                 Subscription Plan
@@ -124,7 +124,7 @@ export default function PortalDashboardPage() {
                     +3 zum Vormonat
                   </p>
                 </div>
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
                   <Building2 className="h-6 w-6" />
                 </div>
               </div>
@@ -141,11 +141,11 @@ export default function PortalDashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-3xl font-bold">8,4 Mio</p>
-                  <p className="text-xs font-medium text-emerald-600">
+                  <p className="text-xs font-medium text-primary">
                     +4,2% Marktwert-Steigerung
                   </p>
                 </div>
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
                   <TrendingUp className="h-6 w-6" />
                 </div>
               </div>
@@ -159,12 +159,12 @@ export default function PortalDashboardPage() {
           <div>
             <div className="mb-4 flex items-center justify-between">
               <h2 className="flex items-center gap-2 text-xl font-bold">
-                <GraduationCap className="h-5 w-5 text-emerald-600" />
+                <GraduationCap className="h-5 w-5 text-primary" />
                 Lernfortschritt Academy
               </h2>
               <Link
                 href="/portal/academy"
-                className="flex items-center gap-1 text-sm font-medium text-emerald-600 hover:text-emerald-700"
+                className="flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80"
               >
                 Alle Kurse <ArrowRight className="h-4 w-4" />
               </Link>
@@ -199,11 +199,11 @@ export default function PortalDashboardPage() {
               </Card>
               <Card className="border-l-4 border-l-amber-500">
                 <CardContent className="flex items-center gap-4 p-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-500">
                     <Clock className="h-5 w-5" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-xs font-bold uppercase tracking-wider text-amber-600">
+                    <p className="text-xs font-bold uppercase tracking-wider text-amber-500">
                       Naechster Live-Call
                     </p>
                     <p className="text-sm font-medium">
@@ -213,7 +213,7 @@ export default function PortalDashboardPage() {
                       Heute, 19:00 Uhr
                     </p>
                   </div>
-                  <Button size="sm" className="bg-emerald-500 text-white hover:bg-emerald-600">
+                  <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">
                     Teilnehmen
                   </Button>
                 </CardContent>
@@ -225,12 +225,12 @@ export default function PortalDashboardPage() {
           <div>
             <div className="mb-4 flex items-center justify-between">
               <h2 className="flex items-center gap-2 text-xl font-bold">
-                <Store className="h-5 w-5 text-emerald-600" />
+                <Store className="h-5 w-5 text-primary" />
                 Dienstleistungen
               </h2>
               <Link
                 href="/portal/marktplatz"
-                className="flex items-center gap-1 text-sm font-medium text-emerald-600 hover:text-emerald-700"
+                className="flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80"
               >
                 Marktplatz <ArrowRight className="h-4 w-4" />
               </Link>
@@ -238,7 +238,7 @@ export default function PortalDashboardPage() {
             <div className="flex flex-col gap-4">
               <Card className="border-2 border-dashed border-border">
                 <CardContent className="flex flex-col items-center p-6 text-center">
-                  <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+                  <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
                     <Plus className="h-6 w-6" />
                   </div>
                   <p className="text-sm font-bold">Dienstleister anfragen</p>
@@ -253,7 +253,7 @@ export default function PortalDashboardPage() {
               <Card>
                 <CardContent className="flex items-center justify-between p-4">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded bg-emerald-100 text-emerald-600">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded bg-emerald-100 text-primary">
                       <CheckCircle2 className="h-5 w-5" />
                     </div>
                     <div>
@@ -278,7 +278,7 @@ export default function PortalDashboardPage() {
             <h2 className="text-xl font-bold">Zuletzt bewertete Objekte</h2>
             <Link
               href="/portal/bewertungen"
-              className="flex items-center gap-1 text-sm font-medium text-emerald-600 hover:text-emerald-700"
+              className="flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80"
             >
               Alle anzeigen <ArrowRight className="h-4 w-4" />
             </Link>
@@ -291,7 +291,7 @@ export default function PortalDashboardPage() {
             ].map((obj) => (
               <Card
                 key={obj.addr}
-                className="transition-colors hover:border-emerald-200"
+                className="transition-colors hover:border-primary/20"
               >
                 <CardContent className="p-4">
                   <div className="mb-3 flex items-start justify-between">
@@ -319,7 +319,7 @@ export default function PortalDashboardPage() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-8 flex-1 gap-1 text-xs text-emerald-600"
+                      className="h-8 flex-1 gap-1 text-xs text-primary"
                       asChild
                     >
                       <Link href="/portal/bewertungen/some-id">
