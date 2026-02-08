@@ -10,18 +10,22 @@ export function MarketingHeader() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   
   useEffect(() => {
-    const supabase = createClient()
-    if (!supabase) return
-    
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setIsLoggedIn(!!session)
-    })
-    
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsLoggedIn(!!session)
-    })
-    
-    return () => subscription.unsubscribe()
+    try {
+      const supabase = createClient()
+      if (!supabase) return
+      
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        setIsLoggedIn(!!session)
+      }).catch(() => {})
+      
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        setIsLoggedIn(!!session)
+      })
+      
+      return () => subscription.unsubscribe()
+    } catch (e) {
+      console.error("[v0] MarketingHeader auth error:", e)
+    }
   }, [])
 
   return (

@@ -28,63 +28,62 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
-  const configured = isClientConfigured()
-  console.log("[v0] AuthProvider - configured:", configured)
-  const supabase = configured ? createClient() : null
-  console.log("[v0] AuthProvider - supabase client:", supabase ? "exists" : "null")
-
-  const fetchProfile = async (userId: string) => {
-    if (!supabase) return
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single()
-    
-    if (data) {
-      setProfile(data)
-    }
-  }
-
-  const refreshProfile = async () => {
-    if (user) {
-      await fetchProfile(user.id)
-    }
-  }
 
   useEffect(() => {
-    if (!supabase) {
+    console.log("[v0] AuthProvider useEffect running")
+    
+    const configured = isClientConfigured()
+    console.log("[v0] AuthProvider - configured:", configured)
+    
+    if (!configured) {
+      console.log("[v0] AuthProvider - not configured, skipping")
       setLoading(false)
       return
     }
 
-    // Get initial session
-    const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      setSession(session)
-      setUser(session?.user ?? null)
-      
-      if (session?.user) {
-        await fetchProfile(session.user.id)
+    const supabase = createClient()
+    if (!supabase) {
+      console.log("[v0] AuthProvider - no supabase client")
+      setLoading(false)
+      return
+    }
+
+    const fetchProfile = async (userId: string) => {
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single()
+        if (data) setProfile(data)
+      } catch (e) {
+        console.error("[v0] fetchProfile error:", e)
       }
-      
+    }
+
+    const getSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        setSession(session)
+        setUser(session?.user ?? null)
+        if (session?.user) await fetchProfile(session.user.id)
+      } catch (e) {
+        console.error("[v0] getSession error:", e)
+      }
       setLoading(false)
     }
 
     getSession()
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (_event, session) => {
         setSession(session)
         setUser(session?.user ?? null)
-        
         if (session?.user) {
           await fetchProfile(session.user.id)
         } else {
           setProfile(null)
         }
-        
         setLoading(false)
       }
     )
@@ -95,12 +94,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const signOut = async () => {
-    if (supabase) {
-      await supabase.auth.signOut()
+    try {
+      const configured = isClientConfigured()
+      if (configured) {
+        const supabase = createClient()
+        if (supabase) await supabase.auth.signOut()
+      }
+    } catch (e) {
+      console.error("[v0] signOut error:", e)
     }
     setUser(null)
     setProfile(null)
     setSession(null)
+  }
+
+  const refreshProfile = async () => {
+    if (!user) return
+    try {
+      const configured = isClientConfigured()
+      if (!configured) return
+      const supabase = createClient()
+      if (!supabase) return
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+      if (data) setProfile(data)
+    } catch (e) {
+      console.error("[v0] refreshProfile error:", e)
+    }
   }
 
   return (
