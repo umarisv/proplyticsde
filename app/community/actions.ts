@@ -2,58 +2,10 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
+import type { CommunityPost, CommunityReply, MeinungsbildRating } from "./types"
 
-// ─── Types ───────────────────────────────────────────────
-export type CommunityPost = {
-  id: string
-  user_id: string
-  title: string
-  content: string
-  category: string
-  post_type: "diskussion" | "meinungsbild"
-  objektdaten: Record<string, string> | null
-  is_pinned: boolean
-  created_at: string
-  updated_at: string
-  author_name: string | null
-  reply_count: number
-  like_count: number
-  user_has_liked?: boolean
-}
-
-export type CommunityReply = {
-  id: string
-  post_id: string
-  user_id: string
-  content: string
-  created_at: string
-  author_name: string | null
-}
-
-export type MeinungsbildRating = {
-  id: string
-  post_id: string
-  user_id: string
-  rendite: number
-  risiko: number
-  finanzierung: number
-  value_add: number
-  lage_markt: number
-  deal_sourcing: number
-  kommentar: string | null
-  created_at: string
-  author_name: string | null
-}
-
-export type MeinungsbildAggregation = {
-  count: number
-  rendite: number
-  risiko: number
-  finanzierung: number
-  value_add: number
-  lage_markt: number
-  deal_sourcing: number
-}
+// Re-export types for convenience (type-only exports are fine in "use server")
+export type { CommunityPost, CommunityReply, MeinungsbildRating, MeinungsbildAggregation } from "./types"
 
 // ─── Fetch all posts ─────────────────────────────────────
 export async function getPosts(category?: string): Promise<CommunityPost[]> {
@@ -74,7 +26,6 @@ export async function getPosts(category?: string): Promise<CommunityPost[]> {
 
   if (error || !posts) return []
 
-  // Enrich with reply count, like count, author name
   const enriched = await Promise.all(
     posts.map(async (post) => {
       const [replyRes, likeRes, authorRes, userLikeRes] = await Promise.all([
@@ -181,18 +132,6 @@ export async function getRatings(postId: string): Promise<MeinungsbildRating[]> 
   return enriched
 }
 
-export function aggregateRatings(ratings: MeinungsbildRating[]): MeinungsbildAggregation {
-  if (ratings.length === 0) {
-    return { count: 0, rendite: 0, risiko: 0, finanzierung: 0, value_add: 0, lage_markt: 0, deal_sourcing: 0 }
-  }
-  const dims = ["rendite", "risiko", "finanzierung", "value_add", "lage_markt", "deal_sourcing"] as const
-  const agg: Record<string, number> = {}
-  for (const d of dims) {
-    agg[d] = Math.round((ratings.reduce((s, r) => s + r[d], 0) / ratings.length) * 10) / 10
-  }
-  return { count: ratings.length, ...agg } as MeinungsbildAggregation
-}
-
 // ─── Create post ─────────────────────────────────────────
 export async function createPost(formData: FormData) {
   const supabase = await createClient()
@@ -281,7 +220,6 @@ export async function submitRating(postId: string, formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: "Nicht eingeloggt" }
 
-  // Check if user already rated
   const { data: existing } = await supabase
     .from("community_ratings")
     .select("id")

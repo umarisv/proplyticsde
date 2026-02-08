@@ -134,12 +134,9 @@ export default async function CommunityPage({
   searchParams: Promise<{ kategorie?: string }>
 }) {
   const params = await searchParams
-  console.log("[v0] Community page rendering, params:", params)
   const user = await getCurrentUser()
-  console.log("[v0] Community user:", user?.id ?? "not logged in")
   const category = params.kategorie || "alle"
   const posts = await getPosts(category)
-  console.log("[v0] Community posts loaded:", posts.length)
 
   return (
       <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
