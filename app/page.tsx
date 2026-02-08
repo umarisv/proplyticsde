@@ -11,6 +11,7 @@ import {
 } from "@/components/sections"
 
 export default function LandingPage() {
+  console.log("[v0] LandingPage rendering")
   return (
     <div className="min-h-screen bg-white">
       <MarketingHeader />

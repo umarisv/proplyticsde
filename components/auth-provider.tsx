@@ -29,7 +29,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
   const configured = isClientConfigured()
+  console.log("[v0] AuthProvider - configured:", configured)
   const supabase = configured ? createClient() : null
+  console.log("[v0] AuthProvider - supabase client:", supabase ? "exists" : "null")
 
   const fetchProfile = async (userId: string) => {
     if (!supabase) return
