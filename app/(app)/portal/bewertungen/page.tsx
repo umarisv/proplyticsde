@@ -64,19 +64,19 @@ export default function PortalBewertungenPage() {
   })
 
   return (
-    <div className="min-h-screen bg-muted/30 pb-20">
-      <header className="bg-white border-b py-8 px-6">
+    <div className="bg-background pb-20">
+      <div className="border-b border-border bg-card py-8 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto space-y-4">
           <Button variant="ghost" size="sm" onClick={() => router.push('/portal')} className="-ml-2">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Zurück zum Portal
+            Zurueck zum Portal
           </Button>
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="space-y-1">
               <h1 className="text-3xl font-bold tracking-tight">Meine Bewertungen</h1>
               <p className="text-muted-foreground">Verwalten Sie Ihre Immobilien-Analysen und erstellen Sie Bankmappen.</p>
             </div>
-            <Button asChild className="gap-2">
+            <Button asChild className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
               <Link href="/analyse">
                 <Plus className="w-4 h-4" />
                 Neue Analyse
@@ -94,9 +94,9 @@ export default function PortalBewertungenPage() {
             />
           </div>
         </div>
-      </header>
+      </div>
 
-      <main className="max-w-6xl mx-auto px-6 py-8">
+      <main className="max-w-6xl mx-auto px-4 py-8 sm:px-6">
         {isLoading ? (
           <LoadingState message="Lade Ihre Bewertungen..." />
         ) : error ? (

@@ -52,7 +52,7 @@ export function HeroSection() {
 
           {/* Headline */}
           <h1
-            className={`text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight text-slate-900 mb-6 transition-all duration-700 delay-100 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+            className={`text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight text-foreground mb-6 transition-all duration-700 delay-100 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
           >
             Immobilie analysieren.{" "}
             <span className="bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">
@@ -62,17 +62,17 @@ export function HeroSection() {
 
           {/* Subline */}
           <p
-            className={`text-lg md:text-xl text-slate-600 mb-10 max-w-lg mx-auto leading-relaxed transition-all duration-700 delay-200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+            className={`text-lg md:text-xl text-muted-foreground mb-10 max-w-lg mx-auto leading-relaxed transition-all duration-700 delay-200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
           >
             Detaillierte Marktanalyse, Wirtschaftlichkeitsberechnung & professionelle Bewertung.
           </p>
 
           {/* Search Bar */}
           <div
-            className={`flex flex-col sm:flex-row items-center gap-3 p-2 rounded-2xl max-w-xl mx-auto bg-white/90 backdrop-blur-sm border border-slate-200 shadow-xl shadow-slate-200/20 transition-all duration-700 delay-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+            className={`flex flex-col sm:flex-row items-center gap-3 p-2 rounded-2xl max-w-xl mx-auto bg-card/90 backdrop-blur-sm border border-border shadow-xl shadow-primary/5 transition-all duration-700 delay-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
           >
             <div className="relative flex-1 w-full">
-              <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-emerald-500" />
+              <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary" />
               <Input
                 ref={inputRef}
                 type="text"
@@ -80,7 +80,7 @@ export function HeroSection() {
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="pl-12 h-14 bg-transparent text-slate-900 border-0 placeholder:text-slate-400 focus-visible:ring-0 text-base w-full"
+                className="pl-12 h-14 bg-transparent text-foreground border-0 placeholder:text-muted-foreground focus-visible:ring-0 text-base w-full"
               />
             </div>
             
@@ -103,7 +103,7 @@ export function HeroSection() {
 
           {/* Trust Pills */}
           <div
-            className={`mt-10 flex flex-wrap items-center justify-center gap-6 md:gap-8 text-sm text-slate-500 transition-all duration-700 delay-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+            className={`mt-10 flex flex-wrap items-center justify-center gap-6 md:gap-8 text-sm text-muted-foreground transition-all duration-700 delay-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
           >
             <div className="flex items-center gap-2">
               <svg className="h-4 w-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">

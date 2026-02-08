@@ -25,14 +25,14 @@ const steps = [
 
 export function HowItWorks() {
   return (
-    <section id="how-it-works" className="py-16 md:py-24 bg-white">
+    <section id="how-it-works" className="py-16 md:py-24 bg-card">
       <div className="mx-auto w-full max-w-6xl px-4">
         {/* Header */}
         <div className="text-center mb-20">
-          <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-black mb-4">
+          <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-foreground mb-4">
             So funktioniert's
           </h2>
-          <p className="text-black/60 text-lg max-w-md mx-auto">
+          <p className="text-muted-foreground text-lg max-w-md mx-auto">
             In drei einfachen Schritten zur Immobilienbewertung.
           </p>
         </div>
@@ -53,10 +53,10 @@ export function HowItWorks() {
                 <step.icon className="h-6 w-6 text-emerald-500" />
               </div>
               
-              <h3 className="text-black font-medium text-lg mb-2">
+              <h3 className="text-foreground font-medium text-lg mb-2">
                 {step.title}
               </h3>
-              <p className="text-black/60 text-sm leading-relaxed max-w-[200px] mx-auto">
+              <p className="text-muted-foreground text-sm leading-relaxed max-w-[200px] mx-auto">
                 {step.description}
               </p>
             </div>

@@ -11,7 +11,7 @@ const links = [
 
 export function Footer() {
   return (
-    <footer className="py-8 bg-white border-t border-black/5">
+    <footer className="py-8 bg-card border-t border-border">
       <div className="mx-auto w-full max-w-6xl px-4">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           {/* Brand */}
@@ -28,10 +28,10 @@ export function Footer() {
               <rect x="15.5" y="8" width="3" height="10" rx="1" fill="url(#logoGradientFooter)"/>
               <rect x="20" y="12" width="3" height="6" rx="1" fill="url(#logoGradientFooter)" opacity="0.7"/>
             </svg>
-            <span className="text-sm text-black">
+            <span className="text-sm text-foreground">
               Proplytics
             </span>
-            <span className="text-black/40 text-sm ml-2">
+            <span className="text-muted-foreground text-sm ml-2">
               © {new Date().getFullYear()}
             </span>
           </div>
@@ -42,7 +42,7 @@ export function Footer() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-sm text-black/50 hover:text-black transition-colors"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 {link.label}
               </Link>

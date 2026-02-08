@@ -72,7 +72,7 @@ function AnimatedCounter({
     : Math.floor(count).toLocaleString('de-DE')
 
   return (
-    <div ref={ref} className="text-3xl md:text-4xl font-semibold text-black mb-1">
+    <div ref={ref} className="text-3xl md:text-4xl font-semibold text-foreground mb-1">
       {prefix}{displayValue}{suffix}
     </div>
   )
@@ -80,7 +80,7 @@ function AnimatedCounter({
 
 export function SocialProof() {
   return (
-    <section className="py-16 md:py-20 bg-gradient-to-b from-white to-slate-50 border-t border-black/5">
+    <section className="py-16 md:py-20 bg-gradient-to-b from-card to-secondary border-t border-border">
       <div className="mx-auto w-full max-w-6xl px-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
           {stats.map((stat) => (
@@ -91,7 +91,7 @@ export function SocialProof() {
                 prefix={stat.prefix}
                 decimals={stat.decimals}
               />
-              <div className="text-sm text-black/50">
+              <div className="text-sm text-muted-foreground">
                 {stat.label}
               </div>
             </div>
