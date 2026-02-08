@@ -205,21 +205,26 @@ export function calculateValuation(formData: AnalyseFormData): AnalyseResultData
   const cashflowJahr = cashflowMonat * 12
   const eigenkapitalrendite = (cashflowJahr / eigenkapital) * 100
 
-  // Investment-Scoring berechnen
-  const investmentScore = calculateInvestmentScore({
-    kaufpreis: effektiverKaufpreis,
-    wohnflaeche,
-    mieteinnahmenMonat: istMieteMonat,
-    baujahr,
-    objekttyp: formData.objekttyp,
-    zustand: formData.zustand,
-    plz: formData.plz,
-    stadt: formData.stadt,
-    eigenkapital,
-    zinssatz,
-    tilgung,
-    wohneinheiten: anzahlWohnungen,
-  })
+  // Investment-Scoring berechnen (mit try/catch fuer Robustheit)
+  let investmentScore: ReturnType<typeof calculateInvestmentScore> | undefined
+  try {
+    investmentScore = calculateInvestmentScore({
+      kaufpreis: effektiverKaufpreis,
+      wohnflaeche,
+      mieteinnahmenMonat: istMieteMonat,
+      baujahr,
+      objekttyp: formData.objekttyp,
+      zustand: formData.zustand,
+      plz: formData.plz,
+      stadt: formData.stadt,
+      eigenkapital,
+      zinssatz,
+      tilgung,
+      wohneinheiten: anzahlWohnungen,
+    })
+  } catch (e) {
+    console.error("[v0] Investment scoring failed:", e)
+  }
 
   return {
     marktwert,

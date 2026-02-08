@@ -237,7 +237,7 @@ export function BankMappe({ data, formData, address, onExportPDF }: BankMappePro
     <div className="flex flex-col gap-6 max-w-7xl mx-auto">
       {/* Premium Header */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#022b25] via-[#033d35] to-[#022b25] p-8 text-white shadow-2xl">
-        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
+        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
         <div className="relative z-10">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
             <div className="space-y-4">

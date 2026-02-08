@@ -1,11 +1,12 @@
 interface ProplyticsLogoProps {
-  size?: "sm" | "md" | "lg"
+  size?: "xs" | "sm" | "md" | "lg"
   showText?: boolean
   className?: string
 }
 
 export function ProplyticsLogo({ size = "md", showText = true, className = "" }: ProplyticsLogoProps) {
   const sizes = {
+    xs: { icon: 18, text: "text-xs", gap: "gap-1" },
     sm: { icon: 22, text: "text-sm", gap: "gap-1.5" },
     md: { icon: 28, text: "text-base", gap: "gap-2" },
     lg: { icon: 36, text: "text-xl", gap: "gap-2.5" },
