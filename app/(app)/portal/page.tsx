@@ -18,44 +18,10 @@ import {
   PlayCircle,
 } from "lucide-react"
 import Link from "next/link"
-import { UserMenu } from "@/components/user-menu"
 
 export default function PortalDashboardPage() {
   return (
     <div className="bg-background text-foreground">
-      {/* Portal Sub-Nav */}
-      <div className="border-b border-border bg-secondary/30">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
-          <nav className="flex items-center gap-4">
-            <Link
-              href="/portal"
-              className="border-b-2 border-primary pb-2 text-sm font-semibold text-foreground"
-            >
-              Uebersicht
-            </Link>
-            <Link
-              href="/portal/academy"
-              className="pb-2 text-sm font-medium text-muted-foreground hover:text-foreground"
-            >
-              Academy
-            </Link>
-            <Link
-              href="/portal/marktplatz"
-              className="pb-2 text-sm font-medium text-muted-foreground hover:text-foreground"
-            >
-              Marktplatz
-            </Link>
-            <Link
-              href="/portal/bewertungen"
-              className="pb-2 text-sm font-medium text-muted-foreground hover:text-foreground"
-            >
-              Bewertungen
-            </Link>
-          </nav>
-          <UserMenu />
-        </div>
-      </div>
-
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
         <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
