@@ -1,345 +1,246 @@
-import Link from "next/link"
+"use client"
+
+import { useState, useRef } from "react"
+import { useRouter } from "next/navigation"
 import {
-  ArrowRight,
+  ArrowUp,
+  Paperclip,
+  Image as ImageIcon,
+  FileText,
+  X,
+  Building2,
   TrendingUp,
-  PieChart,
-  Wrench,
-  MapPin,
-  GitCompare,
-  FileDown,
-  Sparkles,
-  Shield,
-  CheckCircle,
   BarChart3,
-  Users,
-  BookOpen,
-  ShoppingBag,
-  GraduationCap,
-  LayoutDashboard,
-  ChevronRight,
 } from "lucide-react"
 
-const features = [
+const suggestions = [
+  {
+    icon: Building2,
+    label: "Wohnung bewerten",
+    prompt: "Ich moechte eine 3-Zimmer-Wohnung in Muenchen Schwabing bewerten lassen. Baujahr 1985, ca. 78 qm, guter Zustand.",
+  },
   {
     icon: TrendingUp,
-    title: "Marktwert Range",
-    description:
-      "Realistische Wertspanne basierend auf aktuellen Marktdaten und Vergleichswerten.",
+    label: "Rendite berechnen",
+    prompt: "Ich habe ein Mehrfamilienhaus zum Kauf gefunden und moechte die Rendite und den Cashflow analysieren.",
   },
-  {
-    icon: PieChart,
-    title: "Rendite & IRR",
-    description:
-      "Sofortige Rentabilitaetsanalyse fuer fundierte Investitionsentscheidungen.",
-  },
-  {
-    icon: Wrench,
-    title: "Sanierungsbedarf",
-    description:
-      "Kostenschaetzung fuer notwendige Modernisierungen und Instandhaltung.",
-  },
-  {
-    icon: MapPin,
-    title: "Mietspiegel & Lage",
-    description:
-      "Lokale Marktindikatoren und detaillierte Lagefaktoren im Ueberblick.",
-  },
-  {
-    icon: GitCompare,
-    title: "Vergleichsobjekte",
-    description:
-      "Aehnliche Immobilien in der Umgebung zum direkten Vergleich.",
-  },
-  {
-    icon: FileDown,
-    title: "PDF Report",
-    description:
-      "Professioneller Bewertungsreport zum Download in einem Klick.",
-  },
-]
-
-const steps = [
-  {
-    num: "01",
-    title: "Adresse eingeben",
-    description:
-      "Geben Sie die Adresse der Immobilie ein und starten Sie die Analyse.",
-  },
-  {
-    num: "02",
-    title: "KI analysiert",
-    description:
-      "Unsere KI wertet Marktdaten, Vergleichsobjekte und Lagefaktoren aus.",
-  },
-  {
-    num: "03",
-    title: "Ergebnis erhalten",
-    description:
-      "Erhalten Sie eine professionelle Bewertung mit PDF-Report.",
-  },
-]
-
-const platformSections = [
   {
     icon: BarChart3,
-    title: "Analyse",
-    description:
-      "KI-gestuetzte Immobilienbewertung mit detaillierter Marktanalyse.",
-    href: "/analyse",
-    color: "bg-emerald-500",
-  },
-  {
-    icon: LayoutDashboard,
-    title: "Portal",
-    description:
-      "Ihr persoenliches Dashboard mit allen Bewertungen und Dokumenten.",
-    href: "/portal",
-    color: "bg-sky-500",
-  },
-  {
-    icon: ShoppingBag,
-    title: "Marktplatz",
-    description:
-      "Finden Sie Dienstleister, Gutachter und Services rund um Immobilien.",
-    href: "/portal/marktplatz",
-    color: "bg-amber-500",
-  },
-  {
-    icon: Users,
-    title: "Community",
-    description:
-      "Tauschen Sie sich mit anderen Investoren und Eigentuemern aus.",
-    href: "/community",
-    color: "bg-teal-500",
-  },
-  {
-    icon: GraduationCap,
-    title: "Academy",
-    description:
-      "Lernen Sie alles ueber Immobilienbewertung und Investitionen.",
-    href: "/portal/academy",
-    color: "bg-rose-500",
-  },
-  {
-    icon: BookOpen,
-    title: "Blog",
-    description:
-      "Aktuelle Artikel, Marktberichte und Expertenwissen.",
-    href: "/blog",
-    color: "bg-cyan-500",
+    label: "Markt analysieren",
+    prompt: "Wie entwickelt sich der Immobilienmarkt in Berlin aktuell? Ich suche nach Investitionsmoeglichkeiten.",
   },
 ]
 
-const stats = [
-  { value: "10.000+", label: "Bewertungen" },
-  { value: "98%", label: "Genauigkeit" },
-  { value: "< 60s", label: "Analysezeit" },
-  { value: "4.8/5", label: "Kundenzufriedenheit" },
-]
+interface UploadedFile {
+  name: string
+  type: string
+  size: number
+}
 
-export default function LandingPage() {
+export default function HomePage() {
+  const [query, setQuery] = useState("")
+  const [files, setFiles] = useState<UploadedFile[]>([])
+  const [isDragging, setIsDragging] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const router = useRouter()
+
+  const handleSubmit = () => {
+    if (!query.trim() && files.length === 0) return
+    // Navigate to analyse page with the query
+    const params = new URLSearchParams()
+    if (query.trim()) params.set("q", query.trim())
+    router.push(`/analyse${params.toString() ? "?" + params.toString() : ""}`)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault()
+      handleSubmit()
+    }
+  }
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = e.target.files
+    if (!selectedFiles) return
+    const newFiles: UploadedFile[] = Array.from(selectedFiles).map((f) => ({
+      name: f.name,
+      type: f.type,
+      size: f.size,
+    }))
+    setFiles((prev) => [...prev, ...newFiles])
+    if (fileInputRef.current) fileInputRef.current.value = ""
+  }
+
+  const removeFile = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = () => {
+    setIsDragging(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+    const droppedFiles = e.dataTransfer.files
+    if (!droppedFiles) return
+    const newFiles: UploadedFile[] = Array.from(droppedFiles).map((f) => ({
+      name: f.name,
+      type: f.type,
+      size: f.size,
+    }))
+    setFiles((prev) => [...prev, ...newFiles])
+  }
+
+  const handleSuggestion = (prompt: string) => {
+    setQuery(prompt)
+    textareaRef.current?.focus()
+  }
+
+  const formatSize = (bytes: number) => {
+    if (bytes < 1024) return bytes + " B"
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + " KB"
+    return (bytes / (1024 * 1024)).toFixed(1) + " MB"
+  }
+
+  const isImage = (type: string) => type.startsWith("image/")
+
   return (
-    <div className="bg-background text-foreground">
-      {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 -z-10">
-          <div className="absolute left-1/2 top-0 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-500/5 blur-3xl" />
-          <div className="absolute bottom-0 right-0 h-[400px] w-[400px] translate-x-1/4 rounded-full bg-emerald-500/5 blur-3xl" />
+    <div
+      className="flex min-h-[calc(100vh-3.5rem-3.5rem)] flex-col items-center justify-center px-4"
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      {/* Drag overlay */}
+      {isDragging && (
+        <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <div className="rounded-2xl border-2 border-dashed border-primary/50 bg-primary/5 px-12 py-10 text-center">
+            <Paperclip className="mx-auto mb-3 h-8 w-8 text-primary" />
+            <p className="text-lg font-medium">Dateien hier ablegen</p>
+            <p className="mt-1 text-sm text-muted-foreground">Bilder, PDFs, Dokumente</p>
+          </div>
+        </div>
+      )}
+
+      <div className="w-full max-w-2xl">
+        {/* Title */}
+        <div className="mb-8 text-center">
+          <h1 className="mb-2 text-2xl font-semibold tracking-tight sm:text-3xl">
+            Was moechten Sie analysieren?
+          </h1>
+          <p className="text-sm text-muted-foreground sm:text-base">
+            Beschreiben Sie Ihre Immobilie oder Ihr Anliegen.
+          </p>
         </div>
 
-        <div className="mx-auto max-w-7xl px-4 pb-20 pt-16 sm:px-6 md:pb-28 md:pt-24">
-          <div className="mx-auto max-w-3xl text-center">
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-1.5">
-              <Sparkles className="h-4 w-4 text-emerald-600" />
-              <span className="text-sm font-medium text-emerald-700">
-                KI-gestuetzte Immobilienbewertung
-              </span>
-            </div>
-
-            <h1 className="mb-6 text-balance text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
-              Immobilie analysieren.{" "}
-              <span className="bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">
-                Professionell.
-              </span>
-            </h1>
-
-            <p className="mx-auto mb-10 max-w-xl text-pretty text-lg leading-relaxed text-muted-foreground sm:text-xl">
-              Detaillierte Marktanalyse, Wirtschaftlichkeitsberechnung &
-              professionelle Bewertung - in unter 60 Sekunden.
-            </p>
-
-            <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-              <Link
-                href="/analyse"
-                className="inline-flex h-13 w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-8 text-base font-semibold text-white shadow-lg shadow-emerald-500/20 transition-all hover:bg-emerald-600 hover:shadow-emerald-500/30 sm:w-auto"
-              >
-                Kostenlose Analyse starten
-                <ArrowRight className="h-5 w-5" />
-              </Link>
-              <Link
-                href="/portal"
-                className="inline-flex h-13 w-full items-center justify-center gap-2 rounded-xl border border-border px-8 text-base font-medium transition-colors hover:bg-secondary sm:w-auto"
-              >
-                Zum Portal
-                <ChevronRight className="h-4 w-4" />
-              </Link>
-            </div>
-
-            <div className="mt-12 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-muted-foreground">
-              {["ImmoWertV 2024", "DSGVO-konform", "Vollstaendige Analyse", "Kostenloser Einstieg"].map((item) => (
-                <div key={item} className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-emerald-500" />
-                  <span>{item}</span>
+        {/* Input Box */}
+        <div className={`rounded-2xl border bg-card shadow-sm transition-all ${query || files.length > 0 ? "border-primary/30 shadow-md shadow-primary/5" : "border-border"}`}>
+          {/* Uploaded files */}
+          {files.length > 0 && (
+            <div className="flex flex-wrap gap-2 px-4 pt-4">
+              {files.map((file, i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-2 rounded-lg bg-secondary px-3 py-1.5 text-xs"
+                >
+                  {isImage(file.type) ? (
+                    <ImageIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                  ) : (
+                    <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                  )}
+                  <span className="max-w-[120px] truncate">{file.name}</span>
+                  <span className="text-muted-foreground">{formatSize(file.size)}</span>
+                  <button
+                    onClick={() => removeFile(i)}
+                    className="ml-0.5 rounded p-0.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
                 </div>
               ))}
             </div>
+          )}
+
+          {/* Textarea */}
+          <textarea
+            ref={textareaRef}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Beschreiben Sie Ihre Immobilie, laden Sie Bilder hoch oder stellen Sie eine Frage..."
+            className="w-full resize-none bg-transparent px-4 pt-4 pb-2 text-sm leading-relaxed outline-none placeholder:text-muted-foreground/60 sm:text-base"
+            rows={3}
+          />
+
+          {/* Bottom bar */}
+          <div className="flex items-center justify-between px-3 pb-3">
+            <div className="flex items-center gap-1">
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
+                className="hidden"
+                onChange={handleFileSelect}
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                title="Dateien hochladen"
+              >
+                <Paperclip className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => {
+                  if (fileInputRef.current) {
+                    fileInputRef.current.accept = "image/*"
+                    fileInputRef.current.click()
+                    fileInputRef.current.accept = "image/*,.pdf,.doc,.docx,.xls,.xlsx"
+                  }
+                }}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                title="Bild hochladen"
+              >
+                <ImageIcon className="h-4 w-4" />
+              </button>
+            </div>
+
+            <button
+              onClick={handleSubmit}
+              disabled={!query.trim() && files.length === 0}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-30 disabled:hover:bg-primary"
+            >
+              <ArrowUp className="h-4 w-4" />
+            </button>
           </div>
         </div>
-      </section>
 
-      {/* Stats */}
-      <section className="border-y border-border bg-secondary/30">
-        <div className="mx-auto grid max-w-7xl grid-cols-2 divide-x divide-border sm:px-6 md:grid-cols-4">
-          {stats.map((stat) => (
-            <div key={stat.label} className="px-4 py-8 text-center sm:px-6">
-              <div className="text-2xl font-bold text-emerald-600 sm:text-3xl">
-                {stat.value}
-              </div>
-              <div className="mt-1 text-sm text-muted-foreground">
-                {stat.label}
-              </div>
-            </div>
+        {/* Suggestions */}
+        <div className="mt-4 flex flex-wrap justify-center gap-2">
+          {suggestions.map((s) => (
+            <button
+              key={s.label}
+              onClick={() => handleSuggestion(s.prompt)}
+              className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3.5 py-2 text-xs font-medium text-muted-foreground transition-all hover:border-primary/20 hover:bg-secondary hover:text-foreground sm:text-sm"
+            >
+              <s.icon className="h-3.5 w-3.5" />
+              {s.label}
+            </button>
           ))}
         </div>
-      </section>
 
-      {/* Features */}
-      <section className="py-20 md:py-28">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="mb-16 text-center">
-            <h2 className="mb-4 text-balance text-3xl font-bold tracking-tight md:text-4xl">
-              Alles was Sie brauchen
-            </h2>
-            <p className="mx-auto max-w-lg text-lg text-muted-foreground">
-              Umfassende Analyse-Tools fuer fundierte Immobilienentscheidungen.
-            </p>
-          </div>
-
-          <div className="mx-auto grid max-w-5xl gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {features.map((feature) => (
-              <div
-                key={feature.title}
-                className="group rounded-2xl border border-border bg-card p-6 transition-all hover:border-emerald-200 hover:shadow-md"
-              >
-                <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 transition-colors group-hover:bg-emerald-100">
-                  <feature.icon className="h-5 w-5 text-emerald-600" />
-                </div>
-                <h3 className="mb-2 font-semibold">{feature.title}</h3>
-                <p className="text-sm leading-relaxed text-muted-foreground">
-                  {feature.description}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* How it works */}
-      <section className="border-t border-border bg-secondary/30 py-20 md:py-28">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="mb-16 text-center">
-            <h2 className="mb-4 text-balance text-3xl font-bold tracking-tight md:text-4xl">
-              So funktioniert es
-            </h2>
-            <p className="mx-auto max-w-lg text-lg text-muted-foreground">
-              In drei einfachen Schritten zur professionellen Bewertung.
-            </p>
-          </div>
-
-          <div className="mx-auto grid max-w-4xl gap-8 md:grid-cols-3">
-            {steps.map((step, i) => (
-              <div key={step.num} className="relative text-center">
-                {i < steps.length - 1 && (
-                  <div className="absolute left-[calc(50%+40px)] top-6 hidden h-px w-[calc(100%-80px)] bg-border md:block" />
-                )}
-                <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500 text-sm font-bold text-white">
-                  {step.num}
-                </div>
-                <h3 className="mb-2 text-lg font-semibold">{step.title}</h3>
-                <p className="text-sm leading-relaxed text-muted-foreground">
-                  {step.description}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Platform Sections */}
-      <section className="border-t border-border py-20 md:py-28">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="mb-16 text-center">
-            <h2 className="mb-4 text-balance text-3xl font-bold tracking-tight md:text-4xl">
-              Die Proplytics Plattform
-            </h2>
-            <p className="mx-auto max-w-lg text-lg text-muted-foreground">
-              Mehr als nur Bewertung - eine komplette Plattform fuer Immobilienprofis.
-            </p>
-          </div>
-
-          <div className="mx-auto grid max-w-5xl gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {platformSections.map((section) => (
-              <Link
-                key={section.title}
-                href={section.href}
-                className="group flex flex-col rounded-2xl border border-border bg-card p-6 transition-all hover:border-emerald-200 hover:shadow-md"
-              >
-                <div
-                  className={`mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl ${section.color}`}
-                >
-                  <section.icon className="h-5 w-5 text-white" />
-                </div>
-                <h3 className="mb-2 font-semibold">{section.title}</h3>
-                <p className="flex-1 text-sm leading-relaxed text-muted-foreground">
-                  {section.description}
-                </p>
-                <div className="mt-4 flex items-center gap-1 text-sm font-medium text-emerald-600 opacity-0 transition-opacity group-hover:opacity-100">
-                  Entdecken <ChevronRight className="h-4 w-4" />
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Trust / CTA */}
-      <section className="border-t border-border bg-secondary/30 py-20 md:py-28">
-        <div className="mx-auto max-w-7xl px-4 text-center sm:px-6">
-          <Shield className="mx-auto mb-6 h-12 w-12 text-emerald-500" />
-          <h2 className="mb-4 text-balance text-3xl font-bold tracking-tight md:text-4xl">
-            Vertrauen & Sicherheit
-          </h2>
-          <p className="mx-auto mb-10 max-w-lg text-lg leading-relaxed text-muted-foreground">
-            Ihre Daten sind bei uns sicher. DSGVO-konform, nach deutschen Standards
-            und mit hoechster Datenschutzsorgfalt.
-          </p>
-          <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-            <Link
-              href="/analyse"
-              className="inline-flex h-12 items-center gap-2 rounded-xl bg-emerald-500 px-6 text-sm font-semibold text-white transition-colors hover:bg-emerald-600"
-            >
-              Jetzt kostenlos starten
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              href="/register"
-              className="inline-flex h-12 items-center gap-2 rounded-xl border border-border px-6 text-sm font-medium transition-colors hover:bg-secondary"
-            >
-              Account erstellen
-            </Link>
-          </div>
-        </div>
-      </section>
+        {/* Subtle info */}
+        <p className="mt-6 text-center text-xs text-muted-foreground/50">
+          KI-gestuetzte Analyse nach ImmoWertV 2024 - DSGVO-konform
+        </p>
+      </div>
     </div>
   )
 }
