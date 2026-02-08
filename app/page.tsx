@@ -14,6 +14,7 @@ import {
   BookOpen,
   Users,
   LayoutDashboard,
+  ArrowRight,
 } from "lucide-react"
 import { ProplyticsLogo } from "@/components/proplytics-logo"
 
@@ -36,10 +37,10 @@ const suggestions = [
 ]
 
 const platformLinks = [
-  { href: "/portal", icon: LayoutDashboard, label: "Portal", desc: "Ihre Bewertungen verwalten" },
-  { href: "/portal/marktplatz", icon: TrendingUp, label: "Marktplatz", desc: "Partner und Dienstleister" },
-  { href: "/portal/academy", icon: BookOpen, label: "Academy", desc: "Immobilienwissen vertiefen" },
-  { href: "/blog", icon: FileText, label: "Blog", desc: "Fachartikel und Analysen" },
+  { href: "/portal", icon: LayoutDashboard, label: "Portal", desc: "Bewertungen verwalten" },
+  { href: "/portal/marktplatz", icon: TrendingUp, label: "Marktplatz", desc: "Partner finden" },
+  { href: "/portal/academy", icon: BookOpen, label: "Academy", desc: "Wissen vertiefen" },
+  { href: "/blog", icon: FileText, label: "Blog", desc: "Fachartikel lesen" },
   { href: "/community", icon: Users, label: "Community", desc: "Austausch mit Experten" },
   { href: "/analyse", icon: BarChart3, label: "Analyse", desc: "Detaillierte Auswertung" },
 ]
@@ -123,62 +124,63 @@ export default function HomePage() {
 
   return (
     <div
-      className="flex min-h-[calc(100vh-3.5rem-3.5rem)] flex-col items-center justify-center px-4 py-12"
+      className="relative flex min-h-[calc(100vh-3.5rem-3.5rem)] flex-col items-center justify-center px-4 py-16"
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      {/* Drag overlay */}
+      {/* Background glow */}
+      <div className="pointer-events-none absolute left-1/2 top-1/4 -translate-x-1/2 -translate-y-1/2">
+        <div className="h-[400px] w-[800px] rounded-full bg-primary/[0.04] blur-[120px]" />
+      </div>
+
       {isDragging && (
         <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-          <div className="rounded-2xl border-2 border-dashed border-primary/50 bg-primary/5 px-12 py-10 text-center">
-            <Paperclip className="mx-auto mb-3 h-8 w-8 text-primary" />
-            <p className="text-lg font-medium">Dateien hier ablegen</p>
+          <div className="rounded-xl border border-dashed border-primary/40 bg-primary/5 px-12 py-10 text-center">
+            <Paperclip className="mx-auto mb-3 h-6 w-6 text-primary" />
+            <p className="font-medium">Dateien hier ablegen</p>
             <p className="mt-1 text-sm text-muted-foreground">Bilder, PDFs, Dokumente</p>
           </div>
         </div>
       )}
 
-      <div className="w-full max-w-2xl">
-        {/* Brand greeting */}
-        <div className="mb-8 text-center">
-          <div className="mb-5 flex justify-center">
-            <ProplyticsLogo size="lg" showText={false} />
-          </div>
-          <h1 className="mb-2 text-2xl font-bold tracking-tight sm:text-3xl">
-            Was moechten Sie analysieren?
+      <div className="relative w-full max-w-2xl">
+        {/* Greeting */}
+        <div className="mb-10 text-center">
+          <h1 className="mb-3 text-3xl font-bold tracking-tight sm:text-4xl">
+            Was moechten Sie{" "}
+            <span className="text-gradient">analysieren</span>?
           </h1>
-          <p className="text-sm text-muted-foreground sm:text-base">
+          <p className="text-muted-foreground">
             Beschreiben Sie Ihre Immobilie oder laden Sie Dokumente hoch.
           </p>
         </div>
 
         {/* Input Box */}
         <div
-          className={`overflow-hidden rounded-2xl border bg-card shadow-sm transition-all ${
+          className={`overflow-hidden rounded-xl border transition-all ${
             query || files.length > 0
-              ? "border-primary/30 shadow-md shadow-primary/5"
+              ? "border-primary/30 glow-sm"
               : "border-border hover:border-border/80"
-          }`}
+          } bg-card`}
         >
-          {/* Uploaded files */}
           {files.length > 0 && (
-            <div className="flex flex-wrap gap-2 border-b border-border/40 px-4 py-3">
+            <div className="flex flex-wrap gap-2 border-b border-border/50 px-4 py-3">
               {files.map((file, i) => (
                 <div
                   key={i}
-                  className="flex items-center gap-2 rounded-lg bg-secondary px-2.5 py-1.5 text-xs"
+                  className="flex items-center gap-2 rounded-md bg-secondary px-2.5 py-1.5 text-xs"
                 >
                   {isImage(file.type) ? (
-                    <ImageIcon className="h-3.5 w-3.5 text-primary/70" />
+                    <ImageIcon className="h-3.5 w-3.5 text-primary/60" />
                   ) : (
-                    <FileText className="h-3.5 w-3.5 text-primary/70" />
+                    <FileText className="h-3.5 w-3.5 text-primary/60" />
                   )}
-                  <span className="max-w-[120px] truncate font-medium">{file.name}</span>
+                  <span className="max-w-[120px] truncate">{file.name}</span>
                   <span className="text-muted-foreground">{formatSize(file.size)}</span>
                   <button
                     onClick={() => removeFile(i)}
-                    className="ml-0.5 rounded p-0.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                    className="ml-0.5 rounded p-0.5 text-muted-foreground transition-colors hover:text-foreground"
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -187,18 +189,16 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* Textarea */}
           <textarea
             ref={textareaRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="z.B. 3-Zimmer-Wohnung in Berlin, 85qm, Baujahr 1998..."
-            className="w-full resize-none bg-transparent px-4 pt-4 pb-2 text-sm leading-relaxed outline-none placeholder:text-muted-foreground/50 sm:text-base"
+            className="w-full resize-none bg-transparent px-4 pt-4 pb-2 text-sm leading-relaxed outline-none placeholder:text-muted-foreground/40"
             rows={3}
           />
 
-          {/* Bottom bar */}
           <div className="flex items-center justify-between px-3 pb-3">
             <div className="flex items-center gap-0.5">
               <input
@@ -211,7 +211,7 @@ export default function HomePage() {
               />
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                 title="Dateien hochladen"
               >
                 <Paperclip className="h-4 w-4" />
@@ -224,7 +224,7 @@ export default function HomePage() {
                     fileInputRef.current.accept = "image/*,.pdf,.doc,.docx,.xls,.xlsx"
                   }
                 }}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                 title="Bild hochladen"
               >
                 <ImageIcon className="h-4 w-4" />
@@ -234,7 +234,7 @@ export default function HomePage() {
             <button
               onClick={handleSubmit}
               disabled={!query.trim() && files.length === 0}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-all hover:bg-primary/90 disabled:opacity-20"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground transition-all hover:bg-primary/90 disabled:opacity-20"
             >
               <ArrowUp className="h-4 w-4" />
             </button>
@@ -247,41 +247,41 @@ export default function HomePage() {
             <button
               key={s.label}
               onClick={() => handleSuggestion(s.prompt)}
-              className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-2 text-xs font-medium text-muted-foreground transition-all hover:border-primary/20 hover:text-foreground sm:text-sm"
+              className="inline-flex items-center gap-2 rounded-md border border-border/50 bg-card/50 px-3.5 py-2 text-xs text-muted-foreground transition-all hover:border-primary/20 hover:text-foreground"
             >
-              <s.icon className="h-3.5 w-3.5 text-primary/60" />
+              <s.icon className="h-3.5 w-3.5 text-primary/50" />
               {s.label}
             </button>
           ))}
         </div>
 
-        {/* Platform sections */}
-        <div className="mt-12 grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {/* Platform links */}
+        <div className="mt-14 grid grid-cols-2 gap-2 sm:grid-cols-3">
           {platformLinks.map((item) => (
             <a
               key={item.href}
               href={item.href}
-              className="group flex flex-col gap-1.5 rounded-xl border border-border/60 bg-card p-4 transition-all hover:border-primary/20 hover:shadow-sm"
+              className="group flex items-center gap-3 rounded-lg border border-border/30 bg-card/30 p-3.5 transition-all hover:border-border hover:bg-card"
             >
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10">
-                  <item.icon className="h-3.5 w-3.5 text-primary" />
-                </div>
-                <span className="text-sm font-medium group-hover:text-primary">{item.label}</span>
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-secondary">
+                <item.icon className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-primary" />
               </div>
-              <span className="pl-[38px] text-xs text-muted-foreground">{item.desc}</span>
+              <div className="min-w-0">
+                <div className="text-sm font-medium">{item.label}</div>
+                <div className="truncate text-xs text-muted-foreground">{item.desc}</div>
+              </div>
             </a>
           ))}
         </div>
 
-        {/* Trust bar */}
-        <div className="mt-10 flex flex-wrap items-center justify-center gap-4 text-[11px] text-muted-foreground/40">
+        {/* Trust */}
+        <div className="mt-12 flex flex-wrap items-center justify-center gap-4 text-[11px] tracking-wide text-muted-foreground/30">
           <span>ImmoWertV 2024</span>
-          <span className="h-3 w-px bg-border" />
+          <span className="h-3 w-px bg-border/50" />
           <span>DSGVO-konform</span>
-          <span className="h-3 w-px bg-border" />
+          <span className="h-3 w-px bg-border/50" />
           <span>KI-gestuetzt</span>
-          <span className="h-3 w-px bg-border" />
+          <span className="h-3 w-px bg-border/50" />
           <span>Made in Germany</span>
         </div>
       </div>

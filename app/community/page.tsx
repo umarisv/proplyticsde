@@ -297,41 +297,41 @@ export default function CommunityPage() {
         )}
 
         {/* Community Stats CTA */}
-        <div className="mt-12 rounded-2xl bg-primary p-8 text-center text-primary-foreground">
+        <div className="mt-12 rounded-2xl border border-border bg-card p-8 text-center">
           <div className="mb-8 grid grid-cols-2 gap-6 md:grid-cols-4">
             <div>
-              <div className="mb-1 text-3xl font-bold">
+              <div className="mb-1 text-3xl font-bold text-primary">
                 {communityTopics.length}
               </div>
-              <div className="text-sm opacity-80">Aktive Themen</div>
+              <div className="text-sm text-muted-foreground">Aktive Themen</div>
             </div>
             <div>
-              <div className="mb-1 text-3xl font-bold">
+              <div className="mb-1 text-3xl font-bold text-primary">
                 {communityTopics.reduce((s, t) => s + t.replies, 0)}
               </div>
-              <div className="text-sm opacity-80">Antworten</div>
+              <div className="text-sm text-muted-foreground">Antworten</div>
             </div>
             <div>
-              <div className="mb-1 text-3xl font-bold">
+              <div className="mb-1 text-3xl font-bold text-primary">
                 {communityTopics.reduce((s, t) => s + t.views, 0)}
               </div>
-              <div className="text-sm opacity-80">Views</div>
+              <div className="text-sm text-muted-foreground">Views</div>
             </div>
             <div>
-              <div className="mb-1 text-3xl font-bold">
+              <div className="mb-1 text-3xl font-bold text-primary">
                 {new Set(communityTopics.map((t) => t.author)).size}
               </div>
-              <div className="text-sm opacity-80">Aktive Mitglieder</div>
+              <div className="text-sm text-muted-foreground">Aktive Mitglieder</div>
             </div>
           </div>
           <h3 className="mb-3 text-2xl font-bold">
             Werde Teil der Community
           </h3>
-          <p className="mx-auto mb-6 max-w-2xl text-lg opacity-90">
+          <p className="mx-auto mb-6 max-w-2xl text-lg text-muted-foreground">
             Tauschen Sie sich mit Immobilienexperten aus, teilen Sie Ihre
             Erfahrungen und lernen Sie von anderen.
           </p>
-          <Button className="bg-primary-foreground font-semibold text-primary hover:bg-primary-foreground/90">
+          <Button className="bg-primary font-semibold text-primary-foreground hover:bg-primary/90">
             Jetzt beitreten
           </Button>
         </div>

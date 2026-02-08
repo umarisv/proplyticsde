@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, Mail, Lock, ArrowLeft } from 'lucide-react'
 import { Suspense } from 'react'
+import { ProplyticsLogo } from '@/components/proplytics-logo'
 
 function LoginForm() {
   const [email, setEmail] = useState('')
@@ -47,14 +48,12 @@ function LoginForm() {
   }
 
   return (
-    <Card className="shadow-xl border-0">
+    <Card className="border-border/50 shadow-xl">
       <CardHeader className="space-y-1 text-center">
-        <div className="flex justify-center mb-4">
-          <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
-            <Mail className="w-6 h-6 text-primary" />
-          </div>
+        <div className="flex justify-center mb-5">
+          <ProplyticsLogo size="md" showText={false} />
         </div>
-        <CardTitle className="text-2xl font-bold">Willkommen zurück</CardTitle>
+        <CardTitle className="text-2xl font-bold">Willkommen zurueck</CardTitle>
         <CardDescription>
           Melden Sie sich an, um Ihre Bewertungen zu speichern
         </CardDescription>
@@ -126,7 +125,7 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <Card className="shadow-xl border-0">
+      <Card className="border-border/50 shadow-xl">
         <CardContent className="p-8 flex justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </CardContent>

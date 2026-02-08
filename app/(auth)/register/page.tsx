@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, Mail, Lock, User, ArrowLeft, CheckCircle } from 'lucide-react'
+import { ProplyticsLogo } from '@/components/proplytics-logo'
 
 export default function RegisterPage() {
   const [email, setEmail] = useState('')
@@ -57,14 +58,14 @@ export default function RegisterPage() {
 
   if (success) {
     return (
-      <Card className="shadow-xl border-0">
+      <Card className="border-border/50 shadow-xl">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-4">
-            <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
-              <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
+            <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+              <CheckCircle className="w-6 h-6 text-primary" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">E-Mail bestätigen</CardTitle>
+          <CardTitle className="text-2xl font-bold">E-Mail bestaetigen</CardTitle>
           <CardDescription className="text-base">
             Wir haben Ihnen eine Bestätigungs-E-Mail an <strong>{email}</strong> gesendet.
           </CardDescription>
@@ -89,12 +90,10 @@ export default function RegisterPage() {
   }
 
   return (
-    <Card className="shadow-xl border-0">
+    <Card className="border-border/50 shadow-xl">
       <CardHeader className="space-y-1 text-center">
-        <div className="flex justify-center mb-4">
-          <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
-            <User className="w-6 h-6 text-primary" />
-          </div>
+        <div className="flex justify-center mb-5">
+          <ProplyticsLogo size="md" showText={false} />
         </div>
         <CardTitle className="text-2xl font-bold">Konto erstellen</CardTitle>
         <CardDescription>

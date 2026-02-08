@@ -6,37 +6,28 @@ interface ProplyticsLogoProps {
 
 export function ProplyticsLogo({ size = "md", showText = true, className = "" }: ProplyticsLogoProps) {
   const sizes = {
-    sm: { icon: 24, text: "text-sm" },
-    md: { icon: 32, text: "text-base" },
-    lg: { icon: 40, text: "text-xl" },
+    sm: { icon: 22, text: "text-sm", gap: "gap-1.5" },
+    md: { icon: 28, text: "text-base", gap: "gap-2" },
+    lg: { icon: 36, text: "text-xl", gap: "gap-2.5" },
   }
 
   const s = sizes[size]
 
   return (
-    <span className={`inline-flex items-center gap-2 ${className}`}>
+    <span className={`inline-flex items-center ${s.gap} ${className}`}>
       <svg
         width={s.icon}
         height={s.icon}
-        viewBox="0 0 40 40"
+        viewBox="0 0 28 28"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         aria-hidden="true"
       >
-        {/* Rounded square background */}
-        <rect width="40" height="40" rx="10" className="fill-primary" />
-        {/* Stylized "P" with data-line accent */}
-        <path
-          d="M13 10h8a7 7 0 0 1 0 14h-4v6h-4V10z"
-          className="fill-primary-foreground"
-          opacity="0.95"
-        />
-        {/* Cut-out inner of P */}
-        <rect x="17" y="14" width="4" height="6" rx="2" className="fill-primary" />
-        {/* Data line accent - small rising bars */}
-        <rect x="26" y="26" width="3" height="4" rx="1" className="fill-primary-foreground" opacity="0.5" />
-        <rect x="30" y="23" width="3" height="7" rx="1" className="fill-primary-foreground" opacity="0.7" />
-        <rect x="34" y="19" width="3" height="11" rx="1" className="fill-primary-foreground" opacity="0.4" />
+        <rect width="28" height="28" rx="7" className="fill-primary" />
+        {/* Minimalist chart bars */}
+        <rect x="6" y="16" width="4" height="6" rx="1" fill="currentColor" className="text-primary-foreground" opacity="0.6" />
+        <rect x="12" y="11" width="4" height="11" rx="1" fill="currentColor" className="text-primary-foreground" opacity="0.8" />
+        <rect x="18" y="6" width="4" height="16" rx="1" fill="currentColor" className="text-primary-foreground" />
       </svg>
       {showText && (
         <span className={`font-semibold tracking-tight ${s.text}`}>
