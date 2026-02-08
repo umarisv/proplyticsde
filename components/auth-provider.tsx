@@ -51,8 +51,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .eq('id', userId)
           .single()
         if (data) setProfile(data)
-      } catch (e) {
-        console.error("[v0] fetchProfile error:", e)
+      } catch {
+        // silently fail
       }
     }
 
@@ -65,8 +65,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session?.user ?? null)
         if (session?.user) await fetchProfile(session.user.id)
       } catch (e: unknown) {
-        if (e instanceof Error && e.name === 'AbortError') return
-        console.error("[v0] getSession error:", e)
+        if (cancelled) return
+        if (e instanceof Error && (e.name === 'AbortError' || e.message?.includes('aborted'))) return
       }
       if (!cancelled) setLoading(false)
     }
@@ -99,8 +99,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const supabase = createClient()
         if (supabase) await supabase.auth.signOut()
       }
-    } catch (e) {
-      console.error("[v0] signOut error:", e)
+    } catch {
+      // silently fail
     }
     setUser(null)
     setProfile(null)
@@ -120,8 +120,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('id', user.id)
         .single()
       if (data) setProfile(data)
-    } catch (e) {
-      console.error("[v0] refreshProfile error:", e)
+    } catch {
+      // silently fail
     }
   }
 

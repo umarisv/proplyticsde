@@ -5,8 +5,8 @@ import {
   getReplies,
   getRatings,
   getCurrentUser,
+  aggregateRatings,
 } from "../actions"
-import { aggregateRatings } from "../types"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -44,7 +44,7 @@ export default async function PostDetailPage({
   if (!post) notFound()
 
   const isMeinungsbild = post.post_type === "meinungsbild"
-  const agg = aggregateRatings(ratings)
+  const agg = await aggregateRatings(ratings)
   const userHasRated = user
     ? ratings.some((r) => r.user_id === user.id)
     : false
