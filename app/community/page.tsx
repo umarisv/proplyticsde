@@ -1,10 +1,9 @@
+import { Suspense } from "react"
 import Link from "next/link"
 import { getPosts, getCurrentUser, type CommunityPost } from "./actions"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { SiteHeader } from "@/components/site-header"
-import { SiteFooter } from "@/components/site-footer"
 import {
   MessageSquare,
   Heart,
@@ -135,14 +134,15 @@ export default async function CommunityPage({
   searchParams: Promise<{ kategorie?: string }>
 }) {
   const params = await searchParams
+  console.log("[v0] Community page rendering, params:", params)
   const user = await getCurrentUser()
+  console.log("[v0] Community user:", user?.id ?? "not logged in")
   const category = params.kategorie || "alle"
   const posts = await getPosts(category)
+  console.log("[v0] Community posts loaded:", posts.length)
 
   return (
-    <>
-      <SiteHeader />
-      <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
+      <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
         {/* Header */}
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="space-y-1">
@@ -174,10 +174,12 @@ export default async function CommunityPage({
 
         {/* Filters */}
         <div className="mb-6">
-          <CommunityFilters
-            categories={categories}
-            activeCategory={category}
-          />
+          <Suspense fallback={<div className="h-10" />}>
+            <CommunityFilters
+              categories={categories}
+              activeCategory={category}
+            />
+          </Suspense>
         </div>
 
         {/* Posts list */}
@@ -205,8 +207,6 @@ export default async function CommunityPage({
             ))}
           </div>
         )}
-      </main>
-      <SiteFooter />
-    </>
+      </div>
   )
 }

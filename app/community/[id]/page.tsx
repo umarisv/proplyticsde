@@ -7,8 +7,6 @@ import {
   aggregateRatings,
   getCurrentUser,
 } from "../actions"
-import { SiteHeader } from "@/components/site-header"
-import { SiteFooter } from "@/components/site-footer"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -52,9 +50,7 @@ export default async function PostDetailPage({
     : false
 
   return (
-    <>
-      <SiteHeader />
-      <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
+      <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
         {/* Back */}
         <div className="mb-6">
           <Button variant="ghost" size="sm" asChild className="-ml-2">
@@ -245,8 +241,6 @@ export default async function PostDetailPage({
             </div>
           )}
         </div>
-      </main>
-      <SiteFooter />
-    </>
+      </div>
   )
 }
