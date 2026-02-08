@@ -1,21 +1,19 @@
-import React from "react"
-import type { Metadata } from 'next'
+import type { Metadata } from "next"
+import "./globals.css"
 
 export const metadata: Metadata = {
-  title: 'proplytics.de',
-  description: 'Immobilienbewertungen verwalten und mit KI-Agent besprechen',
+  title: "proplytics.de - KI-Immobilienbewertung",
+  description: "Professionelle Immobilienbewertung mit KI-Technologie",
 }
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode
-}>) {
+}) {
   return (
     <html lang="de">
-      <body className="font-sans antialiased">
-        {children}
-      </body>
+      <body>{children}</body>
     </html>
   )
 }
