@@ -5,7 +5,7 @@ import {
   getReplies,
   getRatings,
   getCurrentUser,
-} from "../server-actions"
+} from "../actions"
 import { aggregateRatings } from "../types"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
