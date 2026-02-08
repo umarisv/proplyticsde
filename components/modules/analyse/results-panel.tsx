@@ -60,59 +60,50 @@ export function ResultsPanel({ data, formData, onRecalculate, isCalculating }: R
 
   return (
     <div className="flex flex-col gap-4 p-4 h-full overflow-y-auto custom-scrollbar">
-      <Card className="bg-primary/10 border-primary">
-        <CardContent className="p-4">
+      <Card className="relative overflow-hidden border-primary bg-primary/5">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary/5" />
+        <CardContent className="relative p-5">
           <div className="text-center">
-            <p className="text-sm text-muted-foreground mb-1">Geschätzter Marktwert</p>
-            <p className="text-3xl font-bold text-primary">{formatCurrency(data.marktwert)}</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Spanne: {formatCurrency(data.marktwertMin)} - {formatCurrency(data.marktwertMax)}
-            </p>
+            <p className="mb-1 text-xs font-medium uppercase tracking-wider text-primary/70">Geschaetzter Marktwert</p>
+            <p className="text-3xl font-bold tracking-tight text-primary sm:text-4xl">{formatCurrency(data.marktwert)}</p>
+            <div className="mx-auto mt-3 flex max-w-xs items-center justify-between rounded-lg bg-background/60 px-4 py-2 text-xs">
+              <div className="text-center">
+                <p className="text-muted-foreground">Min</p>
+                <p className="font-semibold">{formatCurrency(data.marktwertMin)}</p>
+              </div>
+              <div className="h-6 w-px bg-border" />
+              <div className="text-center">
+                <p className="text-muted-foreground">Marktwert</p>
+                <p className="font-semibold text-primary">{formatCurrency(data.marktwert)}</p>
+              </div>
+              <div className="h-6 w-px bg-border" />
+              <div className="text-center">
+                <p className="text-muted-foreground">Max</p>
+                <p className="font-semibold">{formatCurrency(data.marktwertMax)}</p>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Key Metrics Row */}
-      <div className="grid grid-cols-2 gap-3">
-        <Card className="bg-card border-border">
-          <CardContent className="p-3">
-            <div className="flex items-center gap-2 text-muted-foreground mb-1">
-              <Calculator className="w-3 h-3" />
-              <span className="text-xs">Faktor</span>
-            </div>
-            <p className="text-lg font-bold">{data.faktor.toFixed(1)}x</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-card border-border">
-          <CardContent className="p-3">
-            <div className="flex items-center gap-2 text-muted-foreground mb-1">
-              <Percent className="w-3 h-3" />
-              <span className="text-xs">Brutto-Rendite</span>
-            </div>
-            <p className="text-lg font-bold text-primary">{formatPercent(data.bruttoRendite)}</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-card border-border">
-          <CardContent className="p-3">
-            <div className="flex items-center gap-2 text-muted-foreground mb-1">
-              <Euro className="w-3 h-3" />
-              <span className="text-xs">€/m²</span>
-            </div>
-            <p className="text-lg font-bold">{formatCurrency(data.qmPreis)}</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-card border-border">
-          <CardContent className="p-3">
-            <div className="flex items-center gap-2 text-muted-foreground mb-1">
-              <TrendingUp className="w-3 h-3" />
-              <span className="text-xs">Netto-Rendite</span>
-            </div>
-            <p className="text-lg font-bold">{formatPercent(data.nettoRendite)}</p>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-2 gap-2">
+        {[
+          { icon: Calculator, label: "Faktor", value: `${data.faktor.toFixed(1)}x`, accent: false },
+          { icon: Percent, label: "Brutto-Rendite", value: formatPercent(data.bruttoRendite), accent: true },
+          { icon: Euro, label: "Preis/m\u00B2", value: formatCurrency(data.qmPreis), accent: false },
+          { icon: TrendingUp, label: "Netto-Rendite", value: formatPercent(data.nettoRendite), accent: true },
+        ].map((metric) => (
+          <Card key={metric.label} className="border-border bg-card transition-colors hover:bg-accent/50">
+            <CardContent className="p-3">
+              <div className="mb-1 flex items-center gap-1.5 text-muted-foreground">
+                <metric.icon className="h-3 w-3" />
+                <span className="text-xs">{metric.label}</span>
+              </div>
+              <p className={`text-lg font-bold ${metric.accent ? "text-primary" : ""}`}>{metric.value}</p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Risikoanalyse Section */}

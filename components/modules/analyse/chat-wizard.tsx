@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { Building2, Send, ExternalLink, Loader2 } from "lucide-react"
+import { Send, ExternalLink, Loader2 } from "lucide-react"
+import { ProplyticsLogo } from "@/components/proplytics-logo"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -526,8 +527,8 @@ export function ChatWizard({ onDataChange, onCalculate }: ChatWizardProps) {
         {messages.map((message) => (
           <div key={message.id} className={cn("flex gap-3", message.type === "user" ? "justify-end" : "justify-start")}>
             {message.type === "bot" && (
-              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                <Building2 className="w-4 h-4 text-primary" />
+              <div className="flex-shrink-0">
+                <ProplyticsLogo size="sm" />
               </div>
             )}
             <div

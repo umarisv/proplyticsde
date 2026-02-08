@@ -1,10 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { Building2, Plus, FileDown, MapPin, ArrowLeft, Save, Check, Loader2, LayoutDashboard } from "lucide-react"
+import { Plus, FileDown, MapPin, ArrowLeft, Save, Check, Loader2, LayoutDashboard } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { ProplyticsLogo } from "@/components/proplytics-logo"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { generatePDFReport, downloadPDF } from "@/components/modules/analyse/pdf-report"
 import { saveBewertung, updateBewertung } from "@/lib/api/bewertungen"
@@ -79,7 +80,7 @@ export function AnalyseHeader({ address, onNewAnalysis, resultData, formData, be
   }
 
   return (
-    <header className="sticky top-0 z-50 flex items-center justify-between px-6 py-4 border-b border-border bg-card/80 backdrop-blur-md">
+    <header className="sticky top-0 z-50 flex items-center justify-between border-b border-border bg-card/95 px-4 py-3 backdrop-blur-md sm:px-6">
       {/* Logo & Brand */}
       <div className="flex items-center gap-3">
         <TooltipProvider>
@@ -96,24 +97,10 @@ export function AnalyseHeader({ address, onNewAnalysis, resultData, formData, be
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
-        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="transition-transform hover:scale-105">
-          <defs>
-            <linearGradient id="logoGradientAnalyse" x1="0%" y1="100%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#10B981" />
-              <stop offset="100%" stopColor="#34D399" />
-            </linearGradient>
-          </defs>
-          <path d="M16 2C10.477 2 6 6.477 6 12c0 7.5 10 18 10 18s10-10.5 10-18c0-5.523-4.477-10-10-10z" stroke="url(#logoGradientAnalyse)" strokeWidth="2.5" fill="none"/>
-          <rect x="11" y="10" width="3" height="8" rx="1" fill="url(#logoGradientAnalyse)"/>
-          <rect x="15.5" y="8" width="3" height="10" rx="1" fill="url(#logoGradientAnalyse)"/>
-          <rect x="20" y="12" width="3" height="6" rx="1" fill="url(#logoGradientAnalyse)" opacity="0.7"/>
-        </svg>
-        <div className="flex items-center gap-2">
-          <span className="text-xl font-semibold tracking-tight">Proplytics</span>
-          <Badge variant="secondary" className="hidden sm:inline-flex text-xs">
-            Analyse
-          </Badge>
-        </div>
+        <ProplyticsLogo size="sm" showText />
+        <Badge variant="secondary" className="hidden sm:inline-flex text-xs">
+          Analyse
+        </Badge>
       </div>
 
       {/* Address Display */}

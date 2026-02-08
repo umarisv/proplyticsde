@@ -77,7 +77,7 @@ function AnalysePageContent() {
   // Mobile Layout
   if (isMobile) {
     return (
-      <div className="flex flex-col h-screen bg-background">
+      <div className="fixed inset-0 z-40 flex flex-col bg-background">
         <AnalyseHeader 
           address={address} 
           onNewAnalysis={handleNewAnalysis} 
@@ -114,7 +114,7 @@ function AnalysePageContent() {
 
   // Desktop Layout
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div className="fixed inset-0 z-40 flex flex-col bg-background">
       <AnalyseHeader 
         address={address} 
         onNewAnalysis={handleNewAnalysis} 
