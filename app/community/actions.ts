@@ -2,12 +2,13 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
-import type { CommunityPost, CommunityReply, MeinungsbildRating } from "./types"
 
 // ─── Fetch all posts ─────────────────────────────────────
-export async function getPosts(category?: string): Promise<CommunityPost[]> {
+export async function getPosts(category?: string) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   let query = supabase
     .from("community_posts")
@@ -26,11 +27,22 @@ export async function getPosts(category?: string): Promise<CommunityPost[]> {
   const enriched = await Promise.all(
     posts.map(async (post) => {
       const [replyRes, likeRes, authorRes, userLikeRes] = await Promise.all([
-        supabase.from("community_replies").select("id", { count: "exact", head: true }).eq("post_id", post.id),
-        supabase.from("community_likes").select("id", { count: "exact", head: true }).eq("post_id", post.id),
+        supabase
+          .from("community_replies")
+          .select("id", { count: "exact", head: true })
+          .eq("post_id", post.id),
+        supabase
+          .from("community_likes")
+          .select("id", { count: "exact", head: true })
+          .eq("post_id", post.id),
         supabase.from("profiles").select("full_name").eq("id", post.user_id).single(),
         user
-          ? supabase.from("community_likes").select("id").eq("post_id", post.id).eq("user_id", user.id).maybeSingle()
+          ? supabase
+              .from("community_likes")
+              .select("id")
+              .eq("post_id", post.id)
+              .eq("user_id", user.id)
+              .maybeSingle()
           : { data: null },
       ])
       return {
@@ -47,9 +59,11 @@ export async function getPosts(category?: string): Promise<CommunityPost[]> {
 }
 
 // ─── Fetch single post ───────────────────────────────────
-export async function getPost(id: string): Promise<CommunityPost | null> {
+export async function getPost(id: string) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   const { data: post } = await supabase
     .from("community_posts")
@@ -60,11 +74,22 @@ export async function getPost(id: string): Promise<CommunityPost | null> {
   if (!post) return null
 
   const [replyRes, likeRes, authorRes, userLikeRes] = await Promise.all([
-    supabase.from("community_replies").select("id", { count: "exact", head: true }).eq("post_id", post.id),
-    supabase.from("community_likes").select("id", { count: "exact", head: true }).eq("post_id", post.id),
+    supabase
+      .from("community_replies")
+      .select("id", { count: "exact", head: true })
+      .eq("post_id", post.id),
+    supabase
+      .from("community_likes")
+      .select("id", { count: "exact", head: true })
+      .eq("post_id", post.id),
     supabase.from("profiles").select("full_name").eq("id", post.user_id).single(),
     user
-      ? supabase.from("community_likes").select("id").eq("post_id", post.id).eq("user_id", user.id).maybeSingle()
+      ? supabase
+          .from("community_likes")
+          .select("id")
+          .eq("post_id", post.id)
+          .eq("user_id", user.id)
+          .maybeSingle()
       : { data: null },
   ])
 
@@ -78,7 +103,7 @@ export async function getPost(id: string): Promise<CommunityPost | null> {
 }
 
 // ─── Fetch replies ───────────────────────────────────────
-export async function getReplies(postId: string): Promise<CommunityReply[]> {
+export async function getReplies(postId: string) {
   const supabase = await createClient()
 
   const { data: replies } = await supabase
@@ -104,7 +129,7 @@ export async function getReplies(postId: string): Promise<CommunityReply[]> {
 }
 
 // ─── Fetch Meinungsbild ratings ──────────────────────────
-export async function getRatings(postId: string): Promise<MeinungsbildRating[]> {
+export async function getRatings(postId: string) {
   const supabase = await createClient()
 
   const { data: ratings } = await supabase
@@ -132,7 +157,9 @@ export async function getRatings(postId: string): Promise<MeinungsbildRating[]> 
 // ─── Create post ─────────────────────────────────────────
 export async function createPost(formData: FormData) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) return { error: "Nicht eingeloggt" }
 
   const title = formData.get("title") as string
@@ -174,7 +201,9 @@ export async function createPost(formData: FormData) {
 // ─── Create reply ────────────────────────────────────────
 export async function createReply(postId: string, content: string) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) return { error: "Nicht eingeloggt" }
 
   const { error } = await supabase
@@ -190,7 +219,9 @@ export async function createReply(postId: string, content: string) {
 // ─── Toggle like ─────────────────────────────────────────
 export async function toggleLike(postId: string) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) return { error: "Nicht eingeloggt" }
 
   const { data: existing } = await supabase
@@ -214,7 +245,9 @@ export async function toggleLike(postId: string) {
 // ─── Submit Meinungsbild rating ──────────────────────────
 export async function submitRating(postId: string, formData: FormData) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) return { error: "Nicht eingeloggt" }
 
   const { data: existing } = await supabase
@@ -230,18 +263,17 @@ export async function submitRating(postId: string, formData: FormData) {
   const values: Record<string, number> = {}
   for (const d of dims) {
     const val = parseInt(formData.get(d) as string)
-    if (isNaN(val) || val < 1 || val > 3) return { error: `Ungueltige Bewertung fuer ${d}` }
+    if (isNaN(val) || val < 1 || val > 3)
+      return { error: `Ungueltige Bewertung fuer ${d}` }
     values[d] = val
   }
 
-  const { error } = await supabase
-    .from("community_ratings")
-    .insert({
-      post_id: postId,
-      user_id: user.id,
-      ...values,
-      kommentar: (formData.get("kommentar") as string)?.trim() || null,
-    })
+  const { error } = await supabase.from("community_ratings").insert({
+    post_id: postId,
+    user_id: user.id,
+    ...values,
+    kommentar: (formData.get("kommentar") as string)?.trim() || null,
+  })
 
   if (error) return { error: error.message }
 
@@ -252,6 +284,8 @@ export async function submitRating(postId: string, formData: FormData) {
 // ─── Get current user ────────────────────────────────────
 export async function getCurrentUser() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   return user
 }
