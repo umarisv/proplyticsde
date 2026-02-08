@@ -7,11 +7,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AnalyseHeader, ChatWizard, ResultsPanel, MapPanel } from "@/components/modules/analyse"
 import { calculateValuation } from "@/lib/calculate-valuation"
 import type { AnalyseFormData, AnalyseResultData } from "@/lib/types"
-import { Loader2 } from "lucide-react"
+import { Loader2, MessageSquare, BarChart3, Map } from "lucide-react"
 
 const defaultFormData: AnalyseFormData = {
   plz: "40239",
-  stadt: "Düsseldorf",
+  stadt: "Duesseldorf",
   objekttyp: "mfh",
   wohnflaeche: "850",
   grundstueck: "1200",
@@ -37,10 +37,7 @@ function AnalysePageContent() {
 
   const initialData = useMemo(() => {
     const data: Record<string, string> = {}
-    const keys = [
-      "plz", "stadt", "objekttyp", "baujahr", "wohnflaeche",
-      "grundstueck", "kaufpreis", "mieteinnahmen", "wohneinheiten", "zustand", "zimmer",
-    ]
+    const keys = ["plz", "stadt", "objekttyp", "baujahr", "wohnflaeche", "grundstueck", "kaufpreis", "mieteinnahmen", "wohneinheiten", "zustand", "zimmer"]
     for (const k of keys) {
       const v = searchParams.get(k)
       if (v) data[k] = v
@@ -66,11 +63,7 @@ function AnalysePageContent() {
     if (data.plz) setPlz(data.plz)
     setIsCalculating(true)
     setTimeout(() => {
-      try {
-        setResultData(calculateValuation(data))
-      } catch (e) {
-        console.error("[v0] calculateValuation error:", e)
-      }
+      try { setResultData(calculateValuation(data)) } catch {}
       setIsCalculating(false)
     }, 800)
   }
@@ -78,83 +71,53 @@ function AnalysePageContent() {
   const handleRecalculate = () => {
     setIsCalculating(true)
     setTimeout(() => {
-      try {
-        setResultData(calculateValuation(formData))
-      } catch (e) {
-        console.error("[v0] recalculate error:", e)
-      }
+      try { setResultData(calculateValuation(formData)) } catch {}
       setIsCalculating(false)
     }, 800)
   }
 
+  /* ---- MOBILE ---- */
   if (isMobile) {
     return (
       <div className="fixed inset-0 z-40 flex flex-col bg-background">
-        <AnalyseHeader
-          address={address}
-          onNewAnalysis={() => window.location.reload()}
-          resultData={resultData}
-          formData={formData}
-          bewertungId={bewertungId}
-          onSaved={(id) => setBewertungId(id)}
-        />
-        <Tabs defaultValue="chat" className="flex-1 flex flex-col">
-          <TabsList className="w-full grid grid-cols-3 bg-card border-b border-border rounded-none h-12">
-            <TabsTrigger value="chat">Chat</TabsTrigger>
-            <TabsTrigger value="results">Ergebnisse</TabsTrigger>
-            <TabsTrigger value="map">Karte</TabsTrigger>
+        <AnalyseHeader address={address} onNewAnalysis={() => window.location.reload()} resultData={resultData} formData={formData} bewertungId={bewertungId} onSaved={(id) => setBewertungId(id)} />
+        <Tabs defaultValue="chat" className="flex-1 flex flex-col overflow-hidden">
+          <TabsList className="w-full grid grid-cols-3 bg-card border-b border-border rounded-none h-11 shrink-0">
+            <TabsTrigger value="chat" className="gap-1.5 text-xs"><MessageSquare className="h-3.5 w-3.5" />Chat</TabsTrigger>
+            <TabsTrigger value="results" className="gap-1.5 text-xs"><BarChart3 className="h-3.5 w-3.5" />Ergebnisse</TabsTrigger>
+            <TabsTrigger value="map" className="gap-1.5 text-xs"><Map className="h-3.5 w-3.5" />Karte</TabsTrigger>
           </TabsList>
-          <TabsContent value="chat" className="flex-1 m-0 overflow-hidden">
-            <ChatWizard onDataChange={handleDataChange} onCalculate={handleCalculate} initialQuery={initialQuery} initialData={initialData} />
-          </TabsContent>
-          <TabsContent value="results" className="flex-1 m-0 overflow-hidden">
-            <ResultsPanel data={resultData} formData={formData} onRecalculate={handleRecalculate} isCalculating={isCalculating} />
-          </TabsContent>
-          <TabsContent value="map" className="flex-1 m-0 overflow-hidden">
-            <MapPanel address={address} />
-          </TabsContent>
+          <TabsContent value="chat" className="flex-1 m-0 overflow-hidden"><ChatWizard onDataChange={handleDataChange} onCalculate={handleCalculate} initialQuery={initialQuery} initialData={initialData} /></TabsContent>
+          <TabsContent value="results" className="flex-1 m-0 overflow-auto"><ResultsPanel data={resultData} formData={formData} onRecalculate={handleRecalculate} isCalculating={isCalculating} /></TabsContent>
+          <TabsContent value="map" className="flex-1 m-0 overflow-hidden"><MapPanel address={address} /></TabsContent>
         </Tabs>
       </div>
     )
   }
 
+  /* ---- DESKTOP: Chat links (schmal), Ergebnisse + Karte rechts (gross) ---- */
   return (
     <div className="fixed inset-0 z-40 flex flex-col bg-background">
-      <AnalyseHeader
-        address={address}
-        onNewAnalysis={() => window.location.reload()}
-        resultData={resultData}
-        formData={formData}
-        bewertungId={bewertungId}
-        onSaved={(id) => setBewertungId(id)}
-      />
+      <AnalyseHeader address={address} onNewAnalysis={() => window.location.reload()} resultData={resultData} formData={formData} bewertungId={bewertungId} onSaved={(id) => setBewertungId(id)} />
       <div className="flex-1 flex overflow-hidden">
-        {/* Links: Ergebnisse + Karte (grosser Bereich ~55%) */}
-        <aside className="w-[55%] flex flex-col border-r border-border bg-card/50 overflow-hidden">
-          {/* Oben: Ergebnisse (scrollbar, nimmt den Grossteil ein) */}
-          <div className="flex-1 overflow-y-auto">
-            <ResultsPanel
-              data={resultData}
-              formData={formData}
-              onRecalculate={handleRecalculate}
-              isCalculating={isCalculating}
-            />
-          </div>
-          {/* Unten: Karte (fixe Hoehe) */}
-          <div className="h-[260px] shrink-0 border-t border-border">
-            <MapPanel address={address} />
-          </div>
+
+        {/* Links: Chat (schmaler Bereich, 420px) */}
+        <aside className="w-[420px] shrink-0 flex flex-col border-r border-border bg-background overflow-hidden">
+          <ChatWizard onDataChange={handleDataChange} onCalculate={handleCalculate} initialQuery={initialQuery} initialData={initialData} />
         </aside>
 
-        {/* Rechts: Chat (schmalerer Bereich ~45%) */}
-        <main className="flex-1 min-w-[380px] bg-background">
-          <ChatWizard
-            onDataChange={handleDataChange}
-            onCalculate={handleCalculate}
-            initialQuery={initialQuery}
-            initialData={initialData}
-          />
+        {/* Rechts: Ergebnisse + Karte (grosser Bereich, Rest) */}
+        <main className="flex-1 flex flex-col overflow-hidden">
+          {/* Oben: Ergebnisse (scrollbar, nimmt Grossteil ein) */}
+          <div className="flex-1 overflow-y-auto bg-muted/30">
+            <ResultsPanel data={resultData} formData={formData} onRecalculate={handleRecalculate} isCalculating={isCalculating} />
+          </div>
+          {/* Unten: Karte (fixe Hoehe) */}
+          <div className="h-[220px] shrink-0 border-t border-border">
+            <MapPanel address={address} />
+          </div>
         </main>
+
       </div>
     </div>
   )

@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Loader2, Send } from "lucide-react"
-import { createReply } from "../actions"
+import { createReply } from "../community-api"
 
 export function ReplyForm({ postId }: { postId: string }) {
   const [content, setContent] = useState("")

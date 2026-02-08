@@ -3,7 +3,7 @@
 import { useTransition, useOptimistic } from "react"
 import { Heart } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { toggleLike } from "../actions"
+import { toggleLike } from "../community-api"
 
 interface Props {
   postId: string

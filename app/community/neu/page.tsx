@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { ArrowLeft, Loader2, MessageSquare, BarChart3 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { createPost } from "../actions"
+import { createPost } from "../community-api"
 
 const categories = [
   { value: "deal-analyse", label: "Deal-Analyse" },

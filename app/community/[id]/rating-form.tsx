@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { submitRating } from "../actions"
+import { submitRating } from "../community-api"
 
 const dimensions = [
   { key: "rendite", label: "Rendite", desc: "Bruttomietrendite, Cashflow, IRR" },
