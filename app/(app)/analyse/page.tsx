@@ -37,7 +37,10 @@ function AnalysePageContent() {
 
   const initialData = useMemo(() => {
     const data: Record<string, string> = {}
-    const keys = ["plz", "stadt", "objekttyp", "baujahr", "wohnflaeche", "grundstueck", "kaufpreis", "mieteinnahmen", "wohneinheiten", "zustand", "zimmer"]
+    const keys = [
+      "plz", "stadt", "objekttyp", "baujahr", "wohnflaeche",
+      "grundstueck", "kaufpreis", "mieteinnahmen", "wohneinheiten", "zustand", "zimmer",
+    ]
     for (const k of keys) {
       const v = searchParams.get(k)
       if (v) data[k] = v
@@ -115,7 +118,6 @@ function AnalysePageContent() {
     )
   }
 
-  // Desktop: Chat links, Karte mitte-rechts, Ergebnisse rechts
   return (
     <div className="fixed inset-0 z-40 flex flex-col bg-background">
       <AnalyseHeader
@@ -127,20 +129,32 @@ function AnalysePageContent() {
         onSaved={(id) => setBewertungId(id)}
       />
       <div className="flex-1 flex overflow-hidden">
-        {/* Left: Chat Wizard */}
-        <main className="flex-1 min-w-[400px] bg-background">
-          <ChatWizard onDataChange={handleDataChange} onCalculate={handleCalculate} initialQuery={initialQuery} initialData={initialData} />
+        {/* Links: Ergebnisse + Karte (grosser Bereich ~55%) */}
+        <aside className="w-[55%] flex flex-col border-r border-border bg-card/50 overflow-hidden">
+          {/* Oben: Ergebnisse (scrollbar, nimmt den Grossteil ein) */}
+          <div className="flex-1 overflow-y-auto">
+            <ResultsPanel
+              data={resultData}
+              formData={formData}
+              onRecalculate={handleRecalculate}
+              isCalculating={isCalculating}
+            />
+          </div>
+          {/* Unten: Karte (fixe Hoehe) */}
+          <div className="h-[260px] shrink-0 border-t border-border">
+            <MapPanel address={address} />
+          </div>
+        </aside>
+
+        {/* Rechts: Chat (schmalerer Bereich ~45%) */}
+        <main className="flex-1 min-w-[380px] bg-background">
+          <ChatWizard
+            onDataChange={handleDataChange}
+            onCalculate={handleCalculate}
+            initialQuery={initialQuery}
+            initialData={initialData}
+          />
         </main>
-
-        {/* Center-Right: Map */}
-        <aside className="w-[28%] min-w-[300px] max-w-[400px] border-l border-border bg-card/50">
-          <MapPanel address={address} />
-        </aside>
-
-        {/* Right: Results */}
-        <aside className="w-[28%] min-w-[320px] max-w-[400px] border-l border-border bg-card/50">
-          <ResultsPanel data={resultData} formData={formData} onRecalculate={handleRecalculate} isCalculating={isCalculating} />
-        </aside>
       </div>
     </div>
   )
