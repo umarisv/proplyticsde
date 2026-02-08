@@ -46,7 +46,7 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   // Define protected routes
-  const protectedRoutes = ['/vergleich']
+  const protectedRoutes = ['/portal', '/vergleich']
   const authRoutes = ['/login', '/register']
   const pathname = request.nextUrl.pathname
 
@@ -58,10 +58,10 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // If user is logged in and trying to access auth routes
+  // If user is logged in and trying to access auth routes, send to portal
   if (user && authRoutes.some(route => pathname.startsWith(route))) {
     const url = request.nextUrl.clone()
-    url.pathname = '/'
+    url.pathname = '/portal'
     return NextResponse.redirect(url)
   }
 
