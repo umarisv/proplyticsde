@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import {
-  ArrowUp,
+  ArrowRight,
   Paperclip,
   Image as ImageIcon,
   FileText,
@@ -14,25 +14,38 @@ import {
   BookOpen,
   Users,
   LayoutDashboard,
-  ArrowRight,
+  Check,
+  AlertCircle,
+  Info,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react"
-import { ProplyticsLogo } from "@/components/proplytics-logo"
+import {
+  parsePropertyText,
+  getParsedFields,
+  getMissingFields,
+  getCompleteness,
+  buildAnalyseParams,
+} from "@/lib/property-parser"
 
 const suggestions = [
   {
     icon: Building2,
-    label: "Wohnung bewerten",
-    prompt: "Ich moechte eine 3-Zimmer-Wohnung in Muenchen Schwabing bewerten lassen. Baujahr 1985, ca. 78 qm, guter Zustand.",
+    label: "MFH bewerten",
+    prompt:
+      "Mehrfamilienhaus in Leipzig, 24 Wohneinheiten, Baujahr 1985, 1.850 qm, Kaufpreis 2,1 Mio, Mieteinnahmen 14.500 EUR/Monat",
   },
   {
     icon: TrendingUp,
-    label: "Rendite berechnen",
-    prompt: "Ich habe ein Mehrfamilienhaus zum Kauf gefunden und moechte die Rendite und den Cashflow analysieren.",
+    label: "ETW analysieren",
+    prompt:
+      "3-Zimmer-Wohnung in Muenchen Schwabing, 78 qm, Baujahr 1998, guter Zustand, Kaufpreis 520.000 EUR",
   },
   {
     icon: BarChart3,
-    label: "Markt analysieren",
-    prompt: "Wie entwickelt sich der Immobilienmarkt in Berlin aktuell? Ich suche nach Investitionsmoeglichkeiten.",
+    label: "Rendite pruefen",
+    prompt:
+      "Zinshaus Berlin Neukoelln, 12 WE, Bj. 1907 kernsaniert, 950 qm, KP 3,8 Mio, Kaltmiete 22.000/Monat",
   },
 ]
 
@@ -55,15 +68,27 @@ export default function HomePage() {
   const [query, setQuery] = useState("")
   const [files, setFiles] = useState<UploadedFile[]>([])
   const [isDragging, setIsDragging] = useState(false)
+  const [showAllMissing, setShowAllMissing] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const router = useRouter()
 
+  // Parse in real-time
+  const parsed = useMemo(() => parsePropertyText(query), [query])
+  const fields = useMemo(() => getParsedFields(parsed), [parsed])
+  const missing = useMemo(() => getMissingFields(parsed), [parsed])
+  const completeness = useMemo(() => getCompleteness(parsed), [parsed])
+
+  const highMissing = missing.filter((m) => m.priority === "hoch")
+  const otherMissing = missing.filter((m) => m.priority !== "hoch")
+  const hasInput = query.trim().length > 8
+
   const handleSubmit = () => {
     if (!query.trim() && files.length === 0) return
-    const params = new URLSearchParams()
+    const params = buildAnalyseParams(parsed)
+    // Also pass the raw text for the chat wizard to use
     if (query.trim()) params.set("q", query.trim())
-    router.push(`/analyse${params.toString() ? "?" + params.toString() : ""}`)
+    router.push(`/analyse?${params.toString()}`)
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -93,9 +118,7 @@ export default function HomePage() {
     e.preventDefault()
     setIsDragging(true)
   }
-
   const handleDragLeave = () => setIsDragging(false)
-
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
     setIsDragging(false)
@@ -121,6 +144,13 @@ export default function HomePage() {
   }
 
   const isImage = (type: string) => type.startsWith("image/")
+
+  const completenessColor =
+    completeness >= 70
+      ? "bg-emerald-500"
+      : completeness >= 40
+        ? "bg-amber-500"
+        : "bg-primary/40"
 
   return (
     <div
@@ -152,7 +182,7 @@ export default function HomePage() {
             <span className="text-gradient">analysieren</span>?
           </h1>
           <p className="text-muted-foreground">
-            Beschreiben Sie Ihre Immobilie oder laden Sie Dokumente hoch.
+            Beschreiben Sie Ihre Immobilie - wir erkennen die Eckdaten automatisch.
           </p>
         </div>
 
@@ -194,10 +224,27 @@ export default function HomePage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="z.B. 3-Zimmer-Wohnung in Berlin, 85qm, Baujahr 1998..."
+            placeholder="z.B. MFH Leipzig, 24 WE, Bj. 1985, 1.850qm, Kaufpreis 2,1 Mio, Miete 14.500/Monat..."
             className="w-full resize-none bg-transparent px-4 pt-4 pb-2 text-sm leading-relaxed outline-none placeholder:text-muted-foreground/40"
             rows={3}
           />
+
+          {/* Completeness bar - only show when typing */}
+          {hasInput && (
+            <div className="px-4 pb-2">
+              <div className="flex items-center gap-2">
+                <div className="h-1 flex-1 overflow-hidden rounded-full bg-secondary">
+                  <div
+                    className={`h-full rounded-full transition-all duration-500 ${completenessColor}`}
+                    style={{ width: `${completeness}%` }}
+                  />
+                </div>
+                <span className="text-[10px] tabular-nums text-muted-foreground">
+                  {completeness}%
+                </span>
+              </div>
+            </div>
+          )}
 
           <div className="flex items-center justify-between px-3 pb-3">
             <div className="flex items-center gap-0.5">
@@ -234,15 +281,102 @@ export default function HomePage() {
             <button
               onClick={handleSubmit}
               disabled={!query.trim() && files.length === 0}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground transition-all hover:bg-primary/90 disabled:opacity-20"
+              className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-1.5 text-xs font-medium text-primary-foreground transition-all hover:bg-primary/90 disabled:opacity-20"
             >
-              <ArrowUp className="h-4 w-4" />
+              Analyse starten
+              <ArrowRight className="h-3.5 w-3.5" />
             </button>
           </div>
         </div>
 
+        {/* Live parsed fields */}
+        {hasInput && fields.length > 0 && (
+          <div className="mt-3 rounded-lg border border-border/50 bg-card/50 p-3">
+            <div className="mb-2 flex items-center gap-2 text-xs font-medium text-muted-foreground">
+              <Check className="h-3.5 w-3.5 text-emerald-500" />
+              Erkannte Daten
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {fields.map((f) => (
+                <span
+                  key={f.key}
+                  className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-1 text-xs text-emerald-700 dark:text-emerald-400"
+                >
+                  <span className="font-medium">{f.label}:</span> {f.value}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Missing fields - hints */}
+        {hasInput && highMissing.length > 0 && (
+          <div className="mt-2 rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
+            <div className="mb-2 flex items-center gap-2 text-xs font-medium text-amber-700 dark:text-amber-400">
+              <AlertCircle className="h-3.5 w-3.5" />
+              {completeness >= 60
+                ? "Noch nuetzlich fuer eine genauere Analyse:"
+                : "Diese Infos verbessern die Analyse deutlich:"}
+            </div>
+            <div className="space-y-1.5">
+              {highMissing.map((m) => (
+                <div key={m.key} className="flex items-start gap-2 text-xs">
+                  <span className="mt-0.5 h-1 w-1 shrink-0 rounded-full bg-amber-500" />
+                  <div>
+                    <span className="font-medium text-foreground">{m.label}</span>
+                    <span className="text-muted-foreground"> - {m.hint}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {otherMissing.length > 0 && (
+              <button
+                onClick={() => setShowAllMissing(!showAllMissing)}
+                className="mt-2 flex items-center gap-1 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
+              >
+                {showAllMissing ? (
+                  <>
+                    <ChevronUp className="h-3 w-3" /> Weniger anzeigen
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="h-3 w-3" /> {otherMissing.length} weitere optionale Angaben
+                  </>
+                )}
+              </button>
+            )}
+
+            {showAllMissing && (
+              <div className="mt-2 space-y-1.5 border-t border-amber-500/10 pt-2">
+                {otherMissing.map((m) => (
+                  <div key={m.key} className="flex items-start gap-2 text-xs">
+                    <Info className="mt-0.5 h-3 w-3 shrink-0 text-muted-foreground/50" />
+                    <div>
+                      <span className="font-medium text-foreground">{m.label}</span>
+                      <span className="text-muted-foreground"> - {m.hint}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Ready to go message */}
+        {hasInput && completeness >= 60 && (
+          <div className="mt-2 flex items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-3 py-2">
+            <Check className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
+            <span className="text-xs text-emerald-700 dark:text-emerald-400">
+              {completeness >= 80
+                ? "Sehr gute Datenlage - die Analyse wird umfassend ausfallen."
+                : "Genug Daten fuer eine solide Erstbewertung. Sie koennen jederzeit Details ergaenzen."}
+            </span>
+          </div>
+        )}
+
         {/* Suggestions */}
-        <div className="mt-4 flex flex-wrap justify-center gap-2">
+        <div className="mt-5 flex flex-wrap justify-center gap-2">
           {suggestions.map((s) => (
             <button
               key={s.label}
