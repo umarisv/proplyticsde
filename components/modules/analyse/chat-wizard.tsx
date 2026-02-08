@@ -79,12 +79,10 @@ function findFirstMissingStep(data: Record<string, string>): StepType {
   if (!data.objekttyp) return "objekttyp"
   if (!data.wohnflaeche) return "flaechen"
   if (!data.baujahr) return "baujahr"
-  // ausstattung, lage, energie are subjective - always ask if not provided
-  // But we can skip to miete if we have baujahr + zustand
-  // Let's skip the "nice to have" qualitative steps if we have the core quantitative data
   if (!data.mieteinnahmen) return "miete"
   if (!data.kaufpreis) return "kaufpreis"
-  return "kaufpreis" // All data present, go to final step
+  // All core data present - go directly to complete
+  return "complete"
 }
 
 function mapInitialToFormData(data: Record<string, string>): Partial<AnalyseFormData> {
@@ -226,10 +224,20 @@ export function ChatWizard({ onDataChange, onCalculate, initialQuery, initialDat
           inputType: "number",
         }, 300)
         break
+      case "complete":
+        // All data already present - trigger calculation immediately
+        addBotMessage({
+          content: "Alle Eckdaten sind vorhanden - ich starte jetzt die Analyse mit Investmentlogik, Renditeberechnung und Risikobewertung.",
+          isComplete: true,
+        }, 300)
+        setTimeout(() => {
+          onCalculate(formData)
+        }, 800)
+        break
       default:
         break
     }
-  }, [addBotMessage, formData.objekttyp, initialData?.objekttyp])
+  }, [addBotMessage, formData, onCalculate, initialData?.objekttyp])
 
   // --- INITIAL: show summary of pre-parsed data, then jump to first missing step ---
   useEffect(() => {

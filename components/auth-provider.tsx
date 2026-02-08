@@ -30,20 +30,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    console.log("[v0] AuthProvider useEffect running")
-    
     const configured = isClientConfigured()
-    console.log("[v0] AuthProvider - configured:", configured)
     
     if (!configured) {
-      console.log("[v0] AuthProvider - not configured, skipping")
       setLoading(false)
       return
     }
 
     const supabase = createClient()
     if (!supabase) {
-      console.log("[v0] AuthProvider - no supabase client")
       setLoading(false)
       return
     }
@@ -61,16 +56,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
+    let cancelled = false
     const getSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession()
+        if (cancelled) return
         setSession(session)
         setUser(session?.user ?? null)
         if (session?.user) await fetchProfile(session.user.id)
-      } catch (e) {
+      } catch (e: unknown) {
+        if (e instanceof Error && e.name === 'AbortError') return
         console.error("[v0] getSession error:", e)
       }
-      setLoading(false)
+      if (!cancelled) setLoading(false)
     }
 
     getSession()
@@ -89,6 +87,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     )
 
     return () => {
+      cancelled = true
       subscription.unsubscribe()
     }
   }, [])
