@@ -82,15 +82,16 @@ function InvestmentScoreCard({ score }: { score: InvestmentScore }) {
 
   return (
     <Card className="border-border bg-card overflow-hidden">
-      <CardHeader
-        className="pb-2 cursor-pointer"
+      <button
+        type="button"
+        className="w-full px-6 py-4 cursor-pointer text-left"
         onClick={() => setExpanded(!expanded)}
       >
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
+          <div className="text-sm font-semibold flex items-center gap-2">
             <Shield className="w-4 h-4 text-primary" />
             Investment-Score
-          </CardTitle>
+          </div>
           <div className="flex items-center gap-2">
             <Badge variant="outline" className={empfehlungColor}>
               {score.empfehlung} ({score.gesamtScore}/100)
@@ -102,7 +103,7 @@ function InvestmentScoreCard({ score }: { score: InvestmentScore }) {
             )}
           </div>
         </div>
-      </CardHeader>
+      </button>
 
       {expanded && (
         <CardContent className="pt-0 space-y-4">
@@ -156,8 +157,9 @@ function InvestmentScoreCard({ score }: { score: InvestmentScore }) {
           {/* Stress-Tests */}
           <div className="pt-2 border-t border-border">
             <button
-              onClick={() => setShowStress(!showStress)}
-              className="flex items-center justify-between w-full text-xs font-medium text-muted-foreground uppercase tracking-wider"
+              type="button"
+              onClick={(e) => { e.stopPropagation(); setShowStress(!showStress); }}
+              className="flex items-center justify-between w-full text-xs font-medium text-muted-foreground uppercase tracking-wider cursor-pointer"
             >
               Stress-Tests
               {showStress ? (
@@ -204,8 +206,9 @@ function DimensionRow({
   return (
     <div>
       <button
-        onClick={() => setOpen(!open)}
-        className="flex w-full items-center gap-3 text-left group"
+        type="button"
+        onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
+        className="flex w-full items-center gap-3 text-left group cursor-pointer"
       >
         <AmpelIcon ampel={dim.ampel} className="w-4 h-4 shrink-0" />
         <div className="flex-1 min-w-0">
