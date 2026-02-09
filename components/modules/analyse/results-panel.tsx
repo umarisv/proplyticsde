@@ -71,6 +71,8 @@ function InvestmentScoreCard({ score }: { score: InvestmentScore }) {
   const [expanded, setExpanded] = useState(true)
   const [showStress, setShowStress] = useState(false)
 
+  console.log("[v0] InvestmentScoreCard render, expanded:", expanded)
+
   const empfehlungColor =
     score.empfehlung === "Go"
       ? "bg-emerald-500/10 text-emerald-700 border-emerald-500/30"
@@ -80,14 +82,22 @@ function InvestmentScoreCard({ score }: { score: InvestmentScore }) {
 
   const dims = Object.values(score.dimensionen) as DimensionScore[]
 
+  const handleToggle = () => {
+    console.log("[v0] InvestmentScore toggle clicked, current expanded:", expanded)
+    setExpanded(prev => {
+      console.log("[v0] InvestmentScore setting expanded from", prev, "to", !prev)
+      return !prev
+    })
+  }
+
   return (
-    <Card className="border-border bg-card overflow-hidden">
+    <div className="rounded-xl border border-border bg-card text-card-foreground shadow-sm overflow-hidden">
       <div
         role="button"
         tabIndex={0}
-        className="w-full px-6 py-4 cursor-pointer text-left select-none"
-        onClick={() => setExpanded(prev => !prev)}
-        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setExpanded(prev => !prev); } }}
+        className="relative z-10 w-full px-6 py-4 cursor-pointer text-left select-none hover:bg-muted/50 transition-colors"
+        onClick={handleToggle}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleToggle(); } }}
       >
         <div className="flex items-center justify-between">
           <div className="text-sm font-semibold flex items-center gap-2">
@@ -108,7 +118,7 @@ function InvestmentScoreCard({ score }: { score: InvestmentScore }) {
       </div>
 
       {expanded && (
-        <CardContent className="pt-0 space-y-4">
+        <div className="px-6 pb-4 space-y-4">
           {/* Deal-Killer Warnung */}
           {score.dealKillers.length > 0 && (
             <div className="rounded-lg border border-red-500/30 bg-red-500/5 p-3">
@@ -189,9 +199,9 @@ function InvestmentScoreCard({ score }: { score: InvestmentScore }) {
               </div>
             )}
           </div>
-        </CardContent>
+        </div>
       )}
-    </Card>
+    </div>
   )
 }
 
@@ -311,7 +321,7 @@ export function ResultsPanel({
     <div className="flex flex-col gap-4 p-4 h-full overflow-y-auto custom-scrollbar">
       {/* Marktwert Card */}
       <Card className="relative overflow-hidden border-primary bg-primary/5">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary/5" />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary/5 pointer-events-none" />
         <CardContent className="relative p-5">
           <div className="text-center">
             <p className="mb-1 text-xs font-medium uppercase tracking-wider text-primary/70">
@@ -375,11 +385,11 @@ export function ResultsPanel({
 
       {/* Risikoanalyse Section (Monte Carlo) */}
       {riskAnalysis && (
-        <Card className="bg-card border-border">
+        <div className="rounded-xl border border-border bg-card text-card-foreground shadow-sm overflow-hidden">
           <div
             role="button"
             tabIndex={0}
-            className="px-6 py-4 cursor-pointer select-none"
+            className="relative z-10 w-full px-6 py-4 cursor-pointer select-none hover:bg-muted/50 transition-colors"
             onClick={() => setShowRiskAnalysis(prev => !prev)}
             onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setShowRiskAnalysis(prev => !prev); } }}
           >
@@ -412,7 +422,7 @@ export function ResultsPanel({
               </div>
             </div>
           </div>
-          <CardContent className="pt-0">
+          <div className="px-6 pb-4">
             <div className="grid grid-cols-2 gap-2 text-xs mb-3">
               <div className="p-2 bg-muted/50 rounded">
                 <p className="text-muted-foreground">90% Konfidenz</p>
@@ -438,16 +448,16 @@ export function ResultsPanel({
                 <RiskGauge riskData={riskAnalysis} />
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       {/* Ertragswert */}
-      <Card className="bg-card border-border">
+      <div className="rounded-xl border border-border bg-card text-card-foreground shadow-sm overflow-hidden">
         <div
           role="button"
           tabIndex={0}
-          className="px-6 py-4 cursor-pointer select-none"
+          className="relative z-10 w-full px-6 py-4 cursor-pointer select-none hover:bg-muted/50 transition-colors"
           onClick={() => setShowErtragswertDetails(prev => !prev)}
           onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setShowErtragswertDetails(prev => !prev); } }}
         >
@@ -464,7 +474,7 @@ export function ResultsPanel({
           </div>
         </div>
         {showErtragswertDetails && (
-          <CardContent className="pt-0 text-xs space-y-1">
+          <div className="px-6 pb-4 text-xs space-y-1">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Jahresrohertrag:</span>
               <span>{formatCurrency(data.jahresrohertrag)}</span>
@@ -515,16 +525,16 @@ export function ResultsPanel({
               <span className="text-muted-foreground">Vervielfaeltiger:</span>
               <span>{data.vervielfaeltiger.toFixed(2)}</span>
             </div>
-          </CardContent>
+          </div>
         )}
-      </Card>
+      </div>
 
       {/* Sachwert */}
-      <Card className="bg-card border-border">
+      <div className="rounded-xl border border-border bg-card text-card-foreground shadow-sm overflow-hidden">
         <div
           role="button"
           tabIndex={0}
-          className="px-6 py-4 cursor-pointer select-none"
+          className="relative z-10 w-full px-6 py-4 cursor-pointer select-none hover:bg-muted/50 transition-colors"
           onClick={() => setShowSachwertDetails(prev => !prev)}
           onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setShowSachwertDetails(prev => !prev); } }}
         >
@@ -541,7 +551,7 @@ export function ResultsPanel({
           </div>
         </div>
         {showSachwertDetails && (
-          <CardContent className="pt-0 text-xs space-y-1">
+          <div className="px-6 pb-4 text-xs space-y-1">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Bodenwert:</span>
               <span>{formatCurrency(data.bodenwert)}</span>
@@ -566,9 +576,9 @@ export function ResultsPanel({
               <span className="text-muted-foreground">Sachwertfaktor:</span>
               <span>{data.sachwertfaktor.toFixed(2)}</span>
             </div>
-          </CardContent>
+          </div>
         )}
-      </Card>
+      </div>
 
       {/* Mietpotenzial */}
       <Card className="bg-card border-border">
