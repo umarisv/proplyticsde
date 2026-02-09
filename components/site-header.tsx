@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation"
 import { useState } from "react"
 import { Menu, X } from "lucide-react"
 import { ProplyticsLogo } from "@/components/proplytics-logo"
+import { UserMenu } from "@/components/user-menu"
+import { useAuth } from "@/hooks/use-auth"
 
 const navLinks = [
   { href: "/analyse", label: "Analyse" },
@@ -18,6 +20,7 @@ const navLinks = [
 export function SiteHeader() {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const { user, loading } = useAuth()
 
   // Analyse page has its own header with PDF/Save/etc.
   if (pathname === "/analyse") return null
@@ -49,18 +52,9 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-3">
-          <Link
-            href="/login"
-            className="hidden text-[13px] text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
-          >
-            Anmelden
-          </Link>
-          <Link
-            href="/register"
-            className="inline-flex h-8 items-center rounded-md border border-primary/50 bg-primary/10 px-4 text-[13px] font-medium text-primary transition-all hover:bg-primary/20"
-          >
-            Kostenlos starten
-          </Link>
+          {/* Auth-aware: show UserMenu when logged in, login/register when not */}
+          {!loading && <UserMenu />}
+
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
             className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground md:hidden"
@@ -89,15 +83,17 @@ export function SiteHeader() {
                 </Link>
               )
             })}
-            <div className="mt-2 border-t border-border/50 pt-2">
-              <Link
-                href="/login"
-                onClick={() => setMobileOpen(false)}
-                className="block rounded-md px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground"
-              >
-                Anmelden
-              </Link>
-            </div>
+            {!user && (
+              <div className="mt-2 border-t border-border/50 pt-2">
+                <Link
+                  href="/login"
+                  onClick={() => setMobileOpen(false)}
+                  className="block rounded-md px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground"
+                >
+                  Anmelden
+                </Link>
+              </div>
+            )}
           </nav>
         </div>
       )}

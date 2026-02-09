@@ -3,6 +3,7 @@ import { Inter, Geist_Mono } from "next/font/google"
 import "./globals.css"
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
+import { AuthProvider } from "@/components/auth-provider"
 import { Toaster } from "sonner"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -48,10 +49,12 @@ export default function RootLayout({
   return (
     <html lang="de">
       <body className="min-h-screen bg-background text-foreground font-sans antialiased">
-        <SiteHeader />
-        <main>{children}</main>
-        <SiteFooter />
-        <Toaster richColors position="top-right" closeButton />
+        <AuthProvider>
+          <SiteHeader />
+          <main>{children}</main>
+          <SiteFooter />
+          <Toaster richColors position="top-right" closeButton />
+        </AuthProvider>
       </body>
     </html>
   )

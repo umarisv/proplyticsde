@@ -32,16 +32,18 @@ export function UserMenu() {
 
   if (!user) {
     return (
-      <div className="flex items-center gap-2">
-        <Link href="/login">
-          <Button variant="ghost" size="sm">
-            Anmelden
-          </Button>
+      <div className="flex items-center gap-3">
+        <Link
+          href="/login"
+          className="hidden text-[13px] text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
+        >
+          Anmelden
         </Link>
-        <Link href="/register">
-          <Button size="sm">
-            Registrieren
-          </Button>
+        <Link
+          href="/register"
+          className="inline-flex h-8 items-center rounded-md border border-primary/50 bg-primary/10 px-4 text-[13px] font-medium text-primary transition-all hover:bg-primary/20"
+        >
+          Kostenlos starten
         </Link>
       </div>
     )
