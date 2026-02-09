@@ -17,10 +17,13 @@ function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirect = searchParams.get('redirect') || '/portal'
+  const callbackError = searchParams.get('error')
+  const [error, setError] = useState<string | null>(
+    callbackError === 'auth_callback_failed' ? 'E-Mail-Bestaetigung fehlgeschlagen. Bitte erneut versuchen.' : null
+  )
   const supabase = createClient()
 
   const handleLogin = async (e: React.FormEvent) => {
