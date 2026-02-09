@@ -1,13 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import { Plus, FileDown, MapPin, ArrowLeft, Save, Check, Loader2, LayoutDashboard } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ProplyticsLogo } from "@/components/proplytics-logo"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { generatePDFReport, downloadPDF } from "@/components/modules/analyse/pdf-report"
+import { toast } from "sonner"
 import { saveBewertung, updateBewertung } from "@/lib/api/bewertungen"
 import { useAuth } from "@/hooks/use-auth"
 import { LoginPromptModal } from "@/components/login-prompt-modal"
@@ -28,13 +28,61 @@ export function AnalyseHeader({ address, onNewAnalysis, resultData, formData, be
   const [isSaving, setIsSaving] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [showLoginPrompt, setShowLoginPrompt] = useState(false)
+  const [isPdfGenerating, setIsPdfGenerating] = useState(false)
 
-  const handlePDFExport = () => {
-    if (resultData && formData) {
-      const htmlContent = generatePDFReport({ resultData, formData, address })
-      downloadPDF(htmlContent, `Marktpreiseinschaetzung_${formData.plz}.pdf`)
+  const handlePDFExport = useCallback(async () => {
+    if (!resultData || !formData) return
+    setIsPdfGenerating(true)
+    toast.info("PDF wird erstellt...")
+
+    try {
+      // 1. Create the job (server renders HTML -> PDF with Chromium)
+      const createRes = await fetch("/api/pdf/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ resultData, formData, address }),
+      })
+      if (!createRes.ok) throw new Error("Fehler beim Erstellen des PDF-Jobs")
+      const { jobId } = await createRes.json()
+
+      // 2. Poll for completion (max 30s)
+      const maxAttempts = 30
+      for (let i = 0; i < maxAttempts; i++) {
+        await new Promise((r) => setTimeout(r, 1000))
+        const statusRes = await fetch(`/api/pdf/status?jobId=${jobId}`)
+        const { status, error } = await statusRes.json()
+
+        if (status === "done") {
+          // 3. Download the PDF
+          const pdfRes = await fetch(`/api/pdf/download?jobId=${jobId}`)
+          if (!pdfRes.ok) throw new Error("Fehler beim Herunterladen des PDFs")
+          const pdfBlob = await pdfRes.blob()
+          const url = URL.createObjectURL(pdfBlob)
+          const a = document.createElement("a")
+          a.href = url
+          a.download = `Marktpreiseinschaetzung_${formData.plz}.pdf`
+          document.body.appendChild(a)
+          a.click()
+          document.body.removeChild(a)
+          setTimeout(() => URL.revokeObjectURL(url), 10000)
+          toast.success("PDF erfolgreich heruntergeladen!")
+          setIsPdfGenerating(false)
+          return
+        }
+
+        if (status === "error") {
+          throw new Error(error || "PDF-Generierung fehlgeschlagen")
+        }
+      }
+
+      throw new Error("PDF-Generierung Timeout - bitte erneut versuchen")
+    } catch (err) {
+      console.error("PDF export error:", err)
+      toast.error(err instanceof Error ? err.message : "PDF Export fehlgeschlagen")
+    } finally {
+      setIsPdfGenerating(false)
     }
-  }
+  }, [resultData, formData, address])
 
   const handleSave = async () => {
     if (!resultData || !formData) return
@@ -175,10 +223,16 @@ export function AnalyseHeader({ address, onNewAnalysis, resultData, formData, be
                 variant="default" 
                 size="sm" 
                 onClick={handlePDFExport} 
-                disabled={!resultData || !formData}
+                disabled={!resultData || !formData || isPdfGenerating}
               >
-                <FileDown className="w-4 h-4 sm:mr-2" />
-                <span className="hidden sm:inline">PDF Export</span>
+                {isPdfGenerating ? (
+                  <Loader2 className="w-4 h-4 sm:mr-2 animate-spin" />
+                ) : (
+                  <FileDown className="w-4 h-4 sm:mr-2" />
+                )}
+                <span className="hidden sm:inline">
+                  {isPdfGenerating ? "Generiere..." : "PDF Export"}
+                </span>
               </Button>
             </TooltipTrigger>
             <TooltipContent>
