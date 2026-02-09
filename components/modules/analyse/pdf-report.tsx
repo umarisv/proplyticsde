@@ -792,13 +792,39 @@ function generateImagePages(uploadedFiles: UploadedFile[], resultData: AnalyseRe
   return imagePageHtml
 }
 
-export function downloadPDF(htmlContent: string, filename: string) {
-  const printWindow = window.open("", "_blank")
-  if (printWindow) {
-    printWindow.document.write(htmlContent)
-    printWindow.document.close()
-    printWindow.onload = () => {
-      printWindow.print()
-    }
+ export function downloadPDF(htmlContent: string, filename: string) {
+  // Use an iframe instead of window.open to avoid popup blockers
+  const iframe = document.createElement("iframe")
+  iframe.style.position = "fixed"
+  iframe.style.right = "0"
+  iframe.style.bottom = "0"
+  iframe.style.width = "0"
+  iframe.style.height = "0"
+  iframe.style.border = "none"
+  document.body.appendChild(iframe)
+
+  const doc = iframe.contentDocument || iframe.contentWindow?.document
+  if (doc) {
+    doc.open()
+    doc.write(htmlContent)
+    doc.close()
+
+    // Wait for content to render then trigger print
+    setTimeout(() => {
+      try {
+        iframe.contentWindow?.focus()
+        iframe.contentWindow?.print()
+      } catch (e) {
+        // Fallback: open in new tab if iframe print fails
+        const blob = new Blob([htmlContent], { type: "text/html" })
+        const url = URL.createObjectURL(blob)
+        window.open(url, "_blank")
+        setTimeout(() => URL.revokeObjectURL(url), 10000)
+      }
+      // Clean up iframe after a delay
+      setTimeout(() => {
+        document.body.removeChild(iframe)
+      }, 5000)
+    }, 500)
   }
 }

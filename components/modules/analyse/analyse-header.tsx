@@ -30,23 +30,13 @@ export function AnalyseHeader({ address, onNewAnalysis, resultData, formData, be
   const [showLoginPrompt, setShowLoginPrompt] = useState(false)
 
   const handlePDFExport = () => {
-    console.log("[v0] PDF Export clicked, resultData:", !!resultData, "formData:", !!formData)
     if (resultData && formData) {
-      try {
-        const htmlContent = generatePDFReport({ resultData, formData, address })
-        console.log("[v0] PDF HTML generated, length:", htmlContent.length)
-        downloadPDF(htmlContent, `Marktpreiseinschaetzung_${formData.plz}.pdf`)
-        console.log("[v0] downloadPDF called successfully")
-      } catch (err) {
-        console.error("[v0] PDF generation error:", err)
-      }
-    } else {
-      console.log("[v0] PDF Export skipped - missing data")
+      const htmlContent = generatePDFReport({ resultData, formData, address })
+      downloadPDF(htmlContent, `Marktpreiseinschaetzung_${formData.plz}.pdf`)
     }
   }
 
   const handleSave = async () => {
-    console.log("[v0] Save clicked, resultData:", !!resultData, "formData:", !!formData, "user:", !!user)
     if (!resultData || !formData) return
 
     // Check if user is authenticated
