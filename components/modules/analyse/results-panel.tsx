@@ -273,29 +273,31 @@ export function ResultsPanel({ data, formData, onRecalculate, isCalculating }: R
     )
   }
 
+  console.log("[v0] ResultsPanel render, marktwert:", data.marktwert, "min:", data.marktwertMin, "max:", data.marktwertMax, "investmentScore:", !!data.investmentScore)
+
   return (
     <div className="flex flex-col gap-4 p-4 h-full overflow-y-auto custom-scrollbar">
 
       {/* ── Marktwert ──────────────────────────────────────────────────── */}
-      <div className="relative rounded-xl border border-primary bg-primary/5 text-card-foreground shadow-sm overflow-hidden">
+      <div className="relative rounded-xl border-2 border-primary bg-primary/5 text-card-foreground shadow-md overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary/5 pointer-events-none" />
         <div className="relative p-5 text-center">
-          <p className="mb-1 text-xs font-medium uppercase tracking-wider text-primary/70">Geschaetzter Marktwert</p>
-          <p className="text-3xl font-bold tracking-tight text-primary sm:text-4xl">{formatCurrency(data.marktwert)}</p>
-          <div className="mx-auto mt-3 flex max-w-xs items-center justify-between rounded-lg bg-background/60 px-4 py-2 text-xs">
+          <p className="mb-1 text-xs font-medium uppercase tracking-wider text-foreground/70">Geschaetzter Marktwert</p>
+          <p className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">{formatCurrency(data.marktwert)}</p>
+          <div className="mx-auto mt-3 flex max-w-xs items-center justify-between rounded-lg bg-background px-4 py-2 text-xs border border-border">
             <div className="text-center">
               <p className="text-muted-foreground">Min</p>
-              <p className="font-semibold">{formatCurrency(data.marktwertMin)}</p>
+              <p className="font-semibold text-foreground">{formatCurrency(data.marktwertMin)}</p>
             </div>
             <div className="h-6 w-px bg-border" />
             <div className="text-center">
               <p className="text-muted-foreground">Marktwert</p>
-              <p className="font-semibold text-primary">{formatCurrency(data.marktwert)}</p>
+              <p className="font-semibold text-foreground">{formatCurrency(data.marktwert)}</p>
             </div>
             <div className="h-6 w-px bg-border" />
             <div className="text-center">
               <p className="text-muted-foreground">Max</p>
-              <p className="font-semibold">{formatCurrency(data.marktwertMax)}</p>
+              <p className="font-semibold text-foreground">{formatCurrency(data.marktwertMax)}</p>
             </div>
           </div>
         </div>
