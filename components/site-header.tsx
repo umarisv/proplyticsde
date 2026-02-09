@@ -19,6 +19,9 @@ export function SiteHeader() {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
 
+  // Analyse page has its own header with PDF/Save/etc.
+  if (pathname === "/analyse") return null
+
   return (
     <header className="sticky top-0 z-50 border-b border-border/50 bg-background/60 backdrop-blur-xl supports-[backdrop-filter]:bg-background/40">
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
