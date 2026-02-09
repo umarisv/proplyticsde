@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { getJob } from "@/lib/pdf/job-store"
+import { getPDFJobStatus } from "@/lib/aws/pdf-jobs"
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
@@ -9,14 +9,19 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Missing jobId" }, { status: 400 })
   }
 
-  const job = getJob(jobId)
-  if (!job) {
-    return NextResponse.json({ error: "Job not found" }, { status: 404 })
-  }
+  try {
+    const job = await getPDFJobStatus(jobId)
+    if (!job) {
+      return NextResponse.json({ error: "Job not found" }, { status: 404 })
+    }
 
-  return NextResponse.json({
-    jobId: job.id,
-    status: job.status,
-    error: job.error,
-  })
+    return NextResponse.json({
+      jobId: job.jobId,
+      status: job.status,
+      error: job.error,
+    })
+  } catch (err) {
+    console.error("PDF status error:", err)
+    return NextResponse.json({ error: "Failed to fetch job status" }, { status: 500 })
+  }
 }
