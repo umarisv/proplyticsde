@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { getJob } from "@/lib/pdf/job-store"
+import { getPDFJobStatus, getPDFDownloadUrl } from "@/lib/aws/pdf-jobs"
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
@@ -9,20 +9,21 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Missing jobId" }, { status: 400 })
   }
 
-  const job = getJob(jobId)
-  if (!job) {
-    return NextResponse.json({ error: "Job not found" }, { status: 404 })
-  }
+  try {
+    const job = await getPDFJobStatus(jobId)
+    if (!job) {
+      return NextResponse.json({ error: "Job not found" }, { status: 404 })
+    }
 
-  if (job.status !== "done" || !job.pdf) {
-    return NextResponse.json({ error: "PDF not ready", status: job.status }, { status: 202 })
-  }
+    if (job.status !== "done" || !job.s3Key) {
+      return NextResponse.json({ error: "PDF not ready", status: job.status }, { status: 202 })
+    }
 
-  return new NextResponse(job.pdf, {
-    headers: {
-      "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="Marktpreiseinschaetzung.pdf"`,
-      "Content-Length": String(job.pdf.length),
-    },
-  })
+    // Return a presigned S3 URL (redirect)
+    const downloadUrl = await getPDFDownloadUrl(job.s3Key)
+    return NextResponse.redirect(downloadUrl)
+  } catch (err) {
+    console.error("PDF download error:", err)
+    return NextResponse.json({ error: "Failed to get download URL" }, { status: 500 })
+  }
 }

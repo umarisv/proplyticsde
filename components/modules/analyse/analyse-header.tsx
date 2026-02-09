@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { ProplyticsLogo } from "@/components/proplytics-logo"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { toast } from "sonner"
+import { generatePDFReport, downloadPDF } from "@/components/modules/analyse/pdf-report"
 import { saveBewertung, updateBewertung } from "@/lib/api/bewertungen"
 import { useAuth } from "@/hooks/use-auth"
 import { LoginPromptModal } from "@/components/login-prompt-modal"
@@ -36,49 +37,56 @@ export function AnalyseHeader({ address, onNewAnalysis, resultData, formData, be
     toast.info("PDF wird erstellt...")
 
     try {
-      // 1. Create the job (server renders HTML -> PDF with Chromium)
+      // Try server-side PDF generation (AWS worker)
       const createRes = await fetch("/api/pdf/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ resultData, formData, address }),
       })
-      if (!createRes.ok) throw new Error("Fehler beim Erstellen des PDF-Jobs")
-      const { jobId } = await createRes.json()
 
-      // 2. Poll for completion (max 30s)
-      const maxAttempts = 30
-      for (let i = 0; i < maxAttempts; i++) {
-        await new Promise((r) => setTimeout(r, 1000))
-        const statusRes = await fetch(`/api/pdf/status?jobId=${jobId}`)
-        const { status, error } = await statusRes.json()
+      if (createRes.ok) {
+        const { jobId } = await createRes.json()
 
-        if (status === "done") {
-          // 3. Download the PDF
-          const pdfRes = await fetch(`/api/pdf/download?jobId=${jobId}`)
-          if (!pdfRes.ok) throw new Error("Fehler beim Herunterladen des PDFs")
-          const pdfBlob = await pdfRes.blob()
-          const url = URL.createObjectURL(pdfBlob)
-          const a = document.createElement("a")
-          a.href = url
-          a.download = `Marktpreiseinschaetzung_${formData.plz}.pdf`
-          document.body.appendChild(a)
-          a.click()
-          document.body.removeChild(a)
-          setTimeout(() => URL.revokeObjectURL(url), 10000)
-          toast.success("PDF erfolgreich heruntergeladen!")
-          setIsPdfGenerating(false)
-          return
+        // Poll for completion (max 30s)
+        for (let i = 0; i < 30; i++) {
+          await new Promise((r) => setTimeout(r, 1000))
+          const statusRes = await fetch(`/api/pdf/status?jobId=${jobId}`)
+          const { status, error } = await statusRes.json()
+
+          if (status === "done") {
+            const pdfRes = await fetch(`/api/pdf/download?jobId=${jobId}`)
+            if (!pdfRes.ok) throw new Error("Download fehlgeschlagen")
+            const pdfBlob = await pdfRes.blob()
+            const url = URL.createObjectURL(pdfBlob)
+            const a = document.createElement("a")
+            a.href = url
+            a.download = `Marktpreiseinschaetzung_${formData.plz}.pdf`
+            document.body.appendChild(a)
+            a.click()
+            document.body.removeChild(a)
+            setTimeout(() => URL.revokeObjectURL(url), 10000)
+            toast.success("PDF erfolgreich heruntergeladen!")
+            return
+          }
+          if (status === "error") throw new Error(error || "Generierung fehlgeschlagen")
         }
-
-        if (status === "error") {
-          throw new Error(error || "PDF-Generierung fehlgeschlagen")
-        }
+        throw new Error("Timeout")
       }
 
-      throw new Error("PDF-Generierung Timeout - bitte erneut versuchen")
+      // Fallback: client-side HTML export (when AWS worker not available)
+      const htmlContent = generatePDFReport({ resultData, formData, address })
+      downloadPDF(htmlContent, `Marktpreiseinschaetzung_${formData.plz}.pdf`)
+      toast.success("Bericht heruntergeladen! Oeffnen Sie die Datei und drucken Sie als PDF (Strg+P).")
     } catch (err) {
-      console.error("PDF export error:", err)
-      toast.error(err instanceof Error ? err.message : "PDF Export fehlgeschlagen")
+      // On any server-side error, fall back to client-side HTML export
+      try {
+        const htmlContent = generatePDFReport({ resultData, formData, address })
+        downloadPDF(htmlContent, `Marktpreiseinschaetzung_${formData.plz}.pdf`)
+        toast.success("Bericht heruntergeladen! Oeffnen Sie die Datei und drucken Sie als PDF (Strg+P).")
+      } catch (fallbackErr) {
+        console.error("PDF fallback error:", fallbackErr)
+        toast.error("PDF Export fehlgeschlagen")
+      }
     } finally {
       setIsPdfGenerating(false)
     }
