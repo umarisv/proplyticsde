@@ -793,12 +793,15 @@ function generateImagePages(uploadedFiles: UploadedFile[], resultData: AnalyseRe
 }
 
 export function downloadPDF(htmlContent: string, filename: string) {
-  const printWindow = window.open("", "_blank")
-  if (printWindow) {
-    printWindow.document.write(htmlContent)
-    printWindow.document.close()
-    printWindow.onload = () => {
-      printWindow.print()
-    }
-  }
+  // Download as HTML file directly – avoids window.open which triggers
+  // Supabase GoTrueClient AbortError from navigator.locks
+  const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement("a")
+  a.href = url
+  a.download = filename.replace(".pdf", ".html")
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  setTimeout(() => URL.revokeObjectURL(url), 10000)
 }

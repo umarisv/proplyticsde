@@ -101,6 +101,8 @@ export function ChatWizard({ onDataChange, onCalculate, initialQuery, initialDat
   const [input, setInput] = useState("")
   const [typing, setTyping] = useState(false)
   const [savedId, setSavedId] = useState<string | null>(null)
+  const msgIdRef = useRef(0)
+  const nextId = () => ++msgIdRef.current
   const [formData, setFormData] = useState<AnalyseFormData>(() => {
     const base: AnalyseFormData = {
       plz: "", stadt: "", objekttyp: "", wohnflaeche: "", grundstueck: "",
@@ -135,12 +137,12 @@ export function ChatWizard({ onDataChange, onCalculate, initialQuery, initialDat
     setTyping(true)
     setTimeout(() => {
       setTyping(false)
-      setMessages(p => [...p, { ...msg, id: Date.now(), type: "bot" }])
+      setMessages(p => [...p, { ...msg, id: nextId(), type: "bot" }])
     }, delay)
   }, [])
 
   const usr = useCallback((content: string) => {
-    setMessages(p => [...p, { id: Date.now(), type: "user", content }])
+    setMessages(p => [...p, { id: nextId(), type: "user", content }])
   }, [])
 
   // ─── Auto-scroll ───
@@ -237,7 +239,7 @@ export function ChatWizard({ onDataChange, onCalculate, initialQuery, initialDat
         } catch { /* silent */ }
       }
       setMessages(p => [...p, {
-        id: Date.now(), type: "bot",
+        id: nextId(), type: "bot",
         content: "Fertig! Die Ergebnisse mit Investment-Score und Ampelbewertung finden Sie links im Panel. Nutzen Sie den PDF-Export oben fuer den Download.",
         done: true,
       }])
@@ -253,7 +255,7 @@ export function ChatWizard({ onDataChange, onCalculate, initialQuery, initialDat
     if (initialData && Object.keys(initialData).length > 0) {
       onDataChange(formData)
       if (initialQuery) {
-        setMessages([{ id: 1, type: "user", content: initialQuery }])
+        setMessages([{ id: nextId(), type: "user", content: initialQuery }])
       }
       const lines = summaryLines(initialData)
       const firstMissing = findFirstMissing(initialData)

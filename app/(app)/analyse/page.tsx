@@ -95,28 +95,26 @@ function AnalysePageContent() {
     )
   }
 
-  /* ---- DESKTOP: Chat links (schmal), Ergebnisse + Karte rechts (gross) ---- */
+  /* ---- DESKTOP: Chat links | Ergebnisse mitte | Karte rechts ---- */
   return (
     <div className="fixed inset-0 z-40 flex flex-col bg-background">
       <AnalyseHeader address={address} onNewAnalysis={() => window.location.reload()} resultData={resultData} formData={formData} bewertungId={bewertungId} onSaved={(id) => setBewertungId(id)} />
       <div className="flex-1 flex overflow-hidden">
 
-        {/* Links: Chat (schmaler Bereich, 420px) */}
+        {/* Links: Chat */}
         <aside className="w-[420px] shrink-0 flex flex-col border-r border-border bg-background overflow-hidden">
           <ChatWizard onDataChange={handleDataChange} onCalculate={handleCalculate} initialQuery={initialQuery} initialData={initialData} />
         </aside>
 
-        {/* Rechts: Ergebnisse + Karte (grosser Bereich, Rest) */}
-        <main className="flex-1 flex flex-col overflow-hidden">
-          {/* Oben: Ergebnisse (scrollbar, nimmt Grossteil ein) */}
-          <div className="flex-1 overflow-y-auto bg-muted/30">
-            <ResultsPanel data={resultData} formData={formData} onRecalculate={handleRecalculate} isCalculating={isCalculating} />
-          </div>
-          {/* Unten: Karte (fixe Hoehe) */}
-          <div className="h-[220px] shrink-0 border-t border-border">
-            <MapPanel address={address} />
-          </div>
+        {/* Mitte: Ergebnisse */}
+        <main className="flex-1 overflow-y-auto bg-muted/30">
+          <ResultsPanel data={resultData} formData={formData} onRecalculate={handleRecalculate} isCalculating={isCalculating} />
         </main>
+
+        {/* Rechts: Karte */}
+        <aside className="w-[380px] shrink-0 border-l border-border">
+          <MapPanel address={address} />
+        </aside>
 
       </div>
     </div>
