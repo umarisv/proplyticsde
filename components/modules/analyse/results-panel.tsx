@@ -82,10 +82,12 @@ function InvestmentScoreCard({ score }: { score: InvestmentScore }) {
 
   return (
     <Card className="border-border bg-card overflow-hidden">
-      <button
-        type="button"
-        className="w-full px-6 py-4 cursor-pointer text-left"
-        onClick={() => setExpanded(!expanded)}
+      <div
+        role="button"
+        tabIndex={0}
+        className="w-full px-6 py-4 cursor-pointer text-left select-none"
+        onClick={() => setExpanded(prev => !prev)}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setExpanded(prev => !prev); } }}
       >
         <div className="flex items-center justify-between">
           <div className="text-sm font-semibold flex items-center gap-2">
@@ -103,7 +105,7 @@ function InvestmentScoreCard({ score }: { score: InvestmentScore }) {
             )}
           </div>
         </div>
-      </button>
+      </div>
 
       {expanded && (
         <CardContent className="pt-0 space-y-4">
@@ -374,15 +376,18 @@ export function ResultsPanel({
       {/* Risikoanalyse Section (Monte Carlo) */}
       {riskAnalysis && (
         <Card className="bg-card border-border">
-          <CardHeader
-            className="pb-2 cursor-pointer"
-            onClick={() => setShowRiskAnalysis(!showRiskAnalysis)}
+          <div
+            role="button"
+            tabIndex={0}
+            className="px-6 py-4 cursor-pointer select-none"
+            onClick={() => setShowRiskAnalysis(prev => !prev)}
+            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setShowRiskAnalysis(prev => !prev); } }}
           >
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <div className="text-sm font-medium flex items-center gap-2">
                 <Shield className="w-4 h-4 text-primary" />
                 Risikoanalyse (Monte-Carlo)
-              </CardTitle>
+              </div>
               <div className="flex items-center gap-2">
                 <Badge
                   variant="outline"
@@ -406,7 +411,7 @@ export function ResultsPanel({
                 )}
               </div>
             </div>
-          </CardHeader>
+          </div>
           <CardContent className="pt-0">
             <div className="grid grid-cols-2 gap-2 text-xs mb-3">
               <div className="p-2 bg-muted/50 rounded">
@@ -439,22 +444,25 @@ export function ResultsPanel({
 
       {/* Ertragswert */}
       <Card className="bg-card border-border">
-        <CardHeader
-          className="pb-2 cursor-pointer"
-          onClick={() => setShowErtragswertDetails(!showErtragswertDetails)}
+        <div
+          role="button"
+          tabIndex={0}
+          className="px-6 py-4 cursor-pointer select-none"
+          onClick={() => setShowErtragswertDetails(prev => !prev)}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setShowErtragswertDetails(prev => !prev); } }}
         >
           <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <div className="text-sm font-medium flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-primary" />
               Ertragswert: {formatCurrency(data.ertragswert)}
-            </CardTitle>
+            </div>
             {showErtragswertDetails ? (
               <ChevronUp className="w-4 h-4" />
             ) : (
               <ChevronDown className="w-4 h-4" />
             )}
           </div>
-        </CardHeader>
+        </div>
         {showErtragswertDetails && (
           <CardContent className="pt-0 text-xs space-y-1">
             <div className="flex justify-between">
@@ -513,22 +521,25 @@ export function ResultsPanel({
 
       {/* Sachwert */}
       <Card className="bg-card border-border">
-        <CardHeader
-          className="pb-2 cursor-pointer"
-          onClick={() => setShowSachwertDetails(!showSachwertDetails)}
+        <div
+          role="button"
+          tabIndex={0}
+          className="px-6 py-4 cursor-pointer select-none"
+          onClick={() => setShowSachwertDetails(prev => !prev)}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setShowSachwertDetails(prev => !prev); } }}
         >
           <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <div className="text-sm font-medium flex items-center gap-2">
               <Home className="w-4 h-4" />
               Sachwert: {formatCurrency(data.sachwert)}
-            </CardTitle>
+            </div>
             {showSachwertDetails ? (
               <ChevronUp className="w-4 h-4" />
             ) : (
               <ChevronDown className="w-4 h-4" />
             )}
           </div>
-        </CardHeader>
+        </div>
         {showSachwertDetails && (
           <CardContent className="pt-0 text-xs space-y-1">
             <div className="flex justify-between">
