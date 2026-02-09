@@ -792,31 +792,16 @@ function generateImagePages(uploadedFiles: UploadedFile[], resultData: AnalyseRe
   return imagePageHtml
 }
 
-export function downloadPDF(htmlContent: string, _filename: string) {
-  // Create a blob URL and open in a new tab, then trigger print
+export function downloadPDF(htmlContent: string, filename: string) {
+  // Download as HTML file directly – avoids window.open which triggers
+  // Supabase GoTrueClient AbortError from navigator.locks
   const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" })
   const url = URL.createObjectURL(blob)
-
-  // Open the HTML in a new tab
-  const win = window.open(url, "_blank")
-
-  if (win) {
-    // Once the page loads, trigger print dialog
-    win.addEventListener("load", () => {
-      setTimeout(() => {
-        win.print()
-      }, 300)
-    })
-    // Revoke the blob URL after a delay
-    setTimeout(() => URL.revokeObjectURL(url), 60000)
-  } else {
-    // If popup is blocked, fall back to direct download as HTML file
-    const a = document.createElement("a")
-    a.href = url
-    a.download = _filename.replace(".pdf", ".html")
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    setTimeout(() => URL.revokeObjectURL(url), 10000)
-  }
+  const a = document.createElement("a")
+  a.href = url
+  a.download = filename.replace(".pdf", ".html")
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  setTimeout(() => URL.revokeObjectURL(url), 10000)
 }
