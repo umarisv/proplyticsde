@@ -10,23 +10,27 @@ export function MarketingHeader() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   
   useEffect(() => {
-    const supabase = createClient()
-    if (!supabase) return
-    
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setIsLoggedIn(!!session)
-    })
-    
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsLoggedIn(!!session)
-    })
-    
-    return () => subscription.unsubscribe()
+    try {
+      const supabase = createClient()
+      if (!supabase) return
+      
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        setIsLoggedIn(!!session)
+      }).catch(() => {})
+      
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        setIsLoggedIn(!!session)
+      })
+      
+      return () => subscription.unsubscribe()
+    } catch (e) {
+      console.error("[v0] MarketingHeader auth error:", e)
+    }
   }, [])
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-transparent">
-      <div className="absolute inset-0 bg-white/80 backdrop-blur-xl border-b border-black/5" />
+      <div className="absolute inset-0 bg-card/80 backdrop-blur-xl border-b border-border" />
       <div className="relative mx-auto w-full max-w-6xl px-4 h-16 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 group">
@@ -42,23 +46,23 @@ export function MarketingHeader() {
             <rect x="15.5" y="8" width="3" height="10" rx="1" fill="url(#logoGradient)"/>
             <rect x="20" y="12" width="3" height="6" rx="1" fill="url(#logoGradient)" opacity="0.7"/>
           </svg>
-          <span className="text-base font-semibold tracking-tight text-black">
+          <span className="text-base font-semibold tracking-tight text-foreground">
             Proplytics
           </span>
         </Link>
 
         {/* Navigation */}
         <nav className="hidden md:flex items-center gap-6">
-          <Link href="/blog" className="text-sm text-black/60 hover:text-black transition-colors">
+          <Link href="/blog" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
             Blog
           </Link>
-          <Link href="/portal/academy" className="text-sm text-black/60 hover:text-black transition-colors">
+          <Link href="/portal/academy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
             Academy
           </Link>
-          <Link href="/portal/marktplatz" className="text-sm text-black/60 hover:text-black transition-colors">
+          <Link href="/portal/marktplatz" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
             Marktplatz
           </Link>
-          <Link href="/community" className="text-sm text-black/60 hover:text-black transition-colors">
+          <Link href="/community" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
             Community
           </Link>
         </nav>
@@ -71,9 +75,9 @@ export function MarketingHeader() {
               asChild
               className="bg-emerald-500 text-white hover:bg-emerald-600 rounded-full px-5 font-medium shadow-lg shadow-emerald-500/25 transition-all hover:shadow-emerald-500/40"
             >
-              <Link href="https://dashboard.proplytics.de" className="flex items-center gap-2">
+              <Link href="/portal" className="flex items-center gap-2">
                 <LayoutDashboard className="h-4 w-4" />
-                Dashboard
+                Portal
               </Link>
             </Button>
           ) : (
@@ -82,7 +86,7 @@ export function MarketingHeader() {
                 variant="ghost"
                 size="sm"
                 asChild
-                className="hidden sm:flex text-black/70 hover:text-black hover:bg-black/5"
+                className="hidden sm:flex text-muted-foreground hover:text-foreground hover:bg-accent"
               >
                 <Link href="/login">Anmelden</Link>
               </Button>

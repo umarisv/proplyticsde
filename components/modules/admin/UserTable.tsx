@@ -21,7 +21,7 @@ const MOCK_USERS = [
 
 export function UserTable() {
   return (
-    <div className="rounded-md border bg-white">
+    <div className="rounded-md border border-border bg-card">
       <Table>
         <TableHeader>
           <TableRow>

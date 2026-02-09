@@ -67,19 +67,19 @@ export default function AdminDashboardPage() {
             </TabsContent>
             
             <TabsContent value="partners" className="m-0">
-              <div className="p-12 text-center bg-white border rounded-md">
+              <div className="p-12 text-center bg-card border border-border rounded-md">
                 <p className="text-muted-foreground">Partner-Modul wird geladen...</p>
               </div>
             </TabsContent>
 
             <TabsContent value="courses" className="m-0">
-              <div className="p-12 text-center bg-white border rounded-md">
+              <div className="p-12 text-center bg-card border border-border rounded-md">
                 <p className="text-muted-foreground">Kurs-Modul wird geladen...</p>
               </div>
             </TabsContent>
 
             <TabsContent value="revenue" className="m-0">
-              <div className="p-12 text-center bg-white border rounded-md">
+              <div className="p-12 text-center bg-card border border-border rounded-md">
                 <p className="text-muted-foreground">Umsatz-Analyse wird geladen...</p>
               </div>
             </TabsContent>

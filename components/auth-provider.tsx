@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { createClient, isClientConfigured } from '@/lib/supabase/client'
 import type { User, Session } from '@supabase/supabase-js'
 import type { Profile } from '@/lib/database.types'
 
@@ -28,68 +28,101 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
-  const supabase = createClient()
-
-  const fetchProfile = async (userId: string) => {
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single()
-    
-    if (data) {
-      setProfile(data)
-    }
-  }
-
-  const refreshProfile = async () => {
-    if (user) {
-      await fetchProfile(user.id)
-    }
-  }
 
   useEffect(() => {
-    // Get initial session
-    const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      setSession(session)
-      setUser(session?.user ?? null)
-      
-      if (session?.user) {
-        await fetchProfile(session.user.id)
-      }
-      
+    const configured = isClientConfigured()
+    
+    if (!configured) {
       setLoading(false)
+      return
+    }
+
+    const supabase = createClient()
+    if (!supabase) {
+      setLoading(false)
+      return
+    }
+
+    const fetchProfile = async (userId: string) => {
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single()
+        if (data) setProfile(data)
+      } catch {
+        // silently fail
+      }
+    }
+
+    let cancelled = false
+    const getSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (cancelled) return
+        setSession(session)
+        setUser(session?.user ?? null)
+        if (session?.user) await fetchProfile(session.user.id)
+      } catch (e: unknown) {
+        if (cancelled) return
+        if (e instanceof Error && (e.name === 'AbortError' || e.message?.includes('aborted'))) return
+      }
+      if (!cancelled) setLoading(false)
     }
 
     getSession()
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (_event, session) => {
         setSession(session)
         setUser(session?.user ?? null)
-        
         if (session?.user) {
           await fetchProfile(session.user.id)
         } else {
           setProfile(null)
         }
-        
         setLoading(false)
       }
     )
 
     return () => {
+      cancelled = true
       subscription.unsubscribe()
     }
   }, [])
 
   const signOut = async () => {
-    await supabase.auth.signOut()
+    try {
+      const configured = isClientConfigured()
+      if (configured) {
+        const supabase = createClient()
+        if (supabase) await supabase.auth.signOut()
+      }
+    } catch {
+      // silently fail
+    }
     setUser(null)
     setProfile(null)
     setSession(null)
+  }
+
+  const refreshProfile = async () => {
+    if (!user) return
+    try {
+      const configured = isClientConfigured()
+      if (!configured) return
+      const supabase = createClient()
+      if (!supabase) return
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+      if (data) setProfile(data)
+    } catch {
+      // silently fail
+    }
   }
 
   return (

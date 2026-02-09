@@ -1,50 +1,55 @@
-import React from "react"
-import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
-import { Analytics } from '@vercel/analytics/next'
-import { AuthProvider } from '@/components/auth-provider'
-import { Toaster } from '@/components/ui/sonner'
-import './globals.css'
+import type { Metadata, Viewport } from "next"
+import { Inter, Geist_Mono } from "next/font/google"
+import "./globals.css"
+import { SiteHeader } from "@/components/site-header"
+import { SiteFooter } from "@/components/site-footer"
 
-const _geist = Geist({ subsets: ["latin"] });
-const _geistMono = Geist_Mono({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"] })
+const geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: 'proplytics.de – Bewertungsübersicht',
-  description: 'Immobilienbewertungen verwalten und mit KI-Agent besprechen',
-  generator: 'v0.app',
-  icons: {
-    icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
-    ],
-    apple: '/apple-icon.png',
+  title: {
+    default: "proplytics.de - KI-Immobilienbewertung",
+    template: "%s | proplytics.de",
   },
+  description:
+    "Professionelle Immobilienbewertung mit KI-Technologie. Detaillierte Marktanalyse, Wirtschaftlichkeitsberechnung und Bewertung nach ImmoWertV 2024.",
+  keywords: [
+    "Immobilienbewertung",
+    "KI",
+    "Marktanalyse",
+    "Immobilien",
+    "Bewertung",
+    "ImmoWertV",
+    "Rendite",
+  ],
+  openGraph: {
+    title: "proplytics.de - KI-Immobilienbewertung",
+    description:
+      "Professionelle Immobilienbewertung mit KI-Technologie in unter 60 Sekunden.",
+    siteName: "proplytics.de",
+    locale: "de_DE",
+    type: "website",
+  },
+}
+
+export const viewport: Viewport = {
+  themeColor: "#34d399",
+  width: "device-width",
+  initialScale: 1,
 }
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode
-}>) {
+}) {
   return (
-    <html lang="de" suppressHydrationWarning>
-      <body className={`font-sans antialiased`}>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
-        <Toaster />
-        <Analytics />
+    <html lang="de">
+      <body className="min-h-screen bg-background text-foreground font-sans antialiased">
+        <SiteHeader />
+        <main>{children}</main>
+        <SiteFooter />
       </body>
     </html>
   )

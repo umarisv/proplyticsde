@@ -1,142 +1,154 @@
+import type { Metadata } from "next"
 import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Calendar, Clock, User, ArrowRight, Building2 } from "lucide-react"
+import { ArrowRight, Clock, User, BookOpen } from "lucide-react"
+import { PageHero } from "@/components/page-hero"
+import { getAllPosts, blogCategories, type BlogPost } from "@/lib/blog-data"
+import { BlogCategoryFilter } from "./category-filter"
 
-// Simple blog data
-const blogPosts = [
-  {
-    id: "immobilienmarkt-2024-trends",
-    title: "Immobilienmarkt 2024: Trends und Entwicklungen",
-    excerpt: "Entdecken Sie die wichtigsten Entwicklungen am Immobilienmarkt 2024.",
-    author: "Proplytics Team",
-    date: "2024-01-15",
-    readTime: "5 min",
-    category: "Marktanalyse",
-    tags: ["Trends", "2024", "Marktanalyse"]
+export const metadata: Metadata = {
+  title: "Immobilien-Wissen & Marktanalysen | Proplytics Blog",
+  description:
+    "Rendite-Kennzahlen, Risikomanagement, Finanzierungsstrategien, Deal Sourcing und Investmentlogik - datenbasiertes Expertenwissen fuer Immobilieninvestoren.",
+  keywords: [
+    "Immobilien Blog",
+    "Rendite Kennzahlen",
+    "Immobilien Risikomanagement",
+    "Finanzierungsstrategie",
+    "Deal Sourcing",
+    "Immobilien Investment",
+    "Marktanalyse",
+  ],
+  openGraph: {
+    title: "Immobilien-Wissen & Marktanalysen | Proplytics Blog",
+    description:
+      "Datenbasiertes Expertenwissen fuer Immobilieninvestoren: Rendite, Risiko, Finanzierung, Strategie.",
+    type: "website",
   },
-  {
-    id: "ki-immobilienbewertung-zukunft",
-    title: "KI in der Immobilienbewertung",
-    excerpt: "Wie künstliche Intelligenz die Immobilienbewertung revolutioniert.",
-    author: "Dr. Sarah Weber",
-    date: "2024-01-10",
-    readTime: "7 min",
-    category: "Technologie",
-    tags: ["KI", "Bewertung", "Innovation"]
-  },
-  {
-    id: "immobilien-kaufen-2024-guide",
-    title: "Immobilien kaufen 2024: Leitfaden für Erstkäufer",
-    excerpt: "Alles was Sie über den Immobilienkauf 2024 wissen müssen.",
-    author: "Michael Bauer",
-    date: "2024-01-10",
-    readTime: "12 min",
-    category: "Ratgeber",
-    tags: ["Erstkäufer", "Immobilienkauf", "Finanzierung"]
-  }
-]
+}
 
-export default function BlogPage() {
-  const featuredPosts = blogPosts.slice(0, 1)
-  const recentPosts = blogPosts.slice(1, 4)
+function PostCard({ post, featured = false }: { post: BlogPost; featured?: boolean }) {
+  return (
+    <Card
+      className={`flex flex-col border-border transition-all hover:shadow-lg ${
+        featured ? "sm:col-span-2" : ""
+      }`}
+    >
+      <CardHeader className="pb-3">
+        <div className="mb-2 flex flex-wrap items-center gap-2">
+          <Badge className="border-none bg-primary/10 text-primary hover:bg-primary/10">
+            {post.category}
+          </Badge>
+          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+            <Clock className="h-3 w-3" />
+            {post.readTime}
+          </span>
+          {post.featured && (
+            <Badge variant="secondary" className="text-xs">
+              Featured
+            </Badge>
+          )}
+        </div>
+        <CardTitle className={featured ? "text-2xl md:text-3xl" : "text-lg"}>
+          <Link
+            href={`/blog/${post.slug}`}
+            className="transition-colors hover:text-primary"
+          >
+            {post.title}
+          </Link>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-1 flex-col">
+        <p className="mb-4 flex-1 text-sm leading-relaxed text-muted-foreground">
+          {post.excerpt}
+        </p>
+        <div className="flex flex-wrap gap-1.5 mb-4">
+          {post.tags.slice(0, 4).map((tag) => (
+            <span
+              key={tag}
+              className="rounded-full bg-secondary px-2.5 py-0.5 text-[11px] font-medium text-secondary-foreground"
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span className="flex items-center gap-1">
+            <User className="h-3 w-3" />
+            {post.author}
+          </span>
+          <Button asChild variant="ghost" size="sm" className="text-primary">
+            <Link href={`/blog/${post.slug}`}>
+              Lesen <ArrowRight className="ml-1 h-3.5 w-3.5" />
+            </Link>
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+export default async function BlogPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ kategorie?: string }>
+}) {
+  const params = await searchParams
+  const category = params.kategorie || "Alle"
+  const allPosts = getAllPosts()
+  const filteredPosts =
+    category === "Alle"
+      ? allPosts
+      : allPosts.filter((p) => p.category === category)
+  const featuredPost = allPosts.find((p) => p.featured) || allPosts[0]
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <div className="bg-white border-b border-slate-200">
-        <div className="max-w-6xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2">
-              <Building2 className="w-6 h-6 text-emerald-600" />
-              <span className="text-lg font-semibold">Proplytics</span>
-            </Link>
-            <Link href="/analyse">
-              <Button>Analyse starten</Button>
-            </Link>
-          </div>
-        </div>
-      </div>
+    <div className="bg-background text-foreground">
+      <PageHero
+        badge="Immobilien-Wissen"
+        badgeIcon={<BookOpen className="h-4 w-4 text-primary" />}
+        title="Expertenwissen &"
+        titleAccent="Definitionen"
+        description="Rendite-Kennzahlen, Risikomanagement, Finanzierung und Investmentlogik - fundiert und datenbasiert."
+      />
 
-      {/* Hero */}
-      <div className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white">
-        <div className="max-w-6xl mx-auto px-4 py-16">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">Immobilien-Blog</h1>
-            <p className="text-xl opacity-90 max-w-2xl mx-auto">
-              Aktuelle Trends, Marktanalysen und Expertenwissen für Immobilieninvestoren.
-            </p>
-          </div>
-        </div>
-      </div>
+      <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 md:py-16">
+        {/* Featured (only on Alle) */}
+        {category === "Alle" && (
+          <section className="mb-12">
+            <h2 className="mb-6 text-xl font-bold">Featured</h2>
+            <PostCard post={featuredPost} featured />
+          </section>
+        )}
 
-      <div className="max-w-6xl mx-auto px-4 py-12">
-        {/* Featured Posts */}
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold text-slate-900 mb-6">Featured Artikel</h2>
-          <div className="grid grid-cols-1 gap-6">
-            {featuredPosts.map((post) => (
-              <Card key={post.id} className="border-0 shadow-lg">
-                <CardHeader>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Badge>{post.category}</Badge>
-                  </div>
-                  <CardTitle className="text-2xl">
-                    <Link href={`/blog/${post.id}`} className="hover:text-emerald-600 transition-colors">
-                      {post.title}
-                    </Link>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-slate-600 mb-4">{post.excerpt}</p>
-                  <div className="flex items-center justify-between text-sm text-slate-500">
-                    <div className="flex items-center gap-4">
-                      <span>von {post.author}</span>
-                      <span>{post.date}</span>
-                      <span>{post.readTime}</span>
-                    </div>
-                    <Link href={`/blog/${post.id}`}>
-                      <Button variant="outline" size="sm">
-                        Lesen <ArrowRight className="w-4 h-4 ml-1" />
-                      </Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
+        {/* Category Filter */}
+        <section className="mb-8">
+          <BlogCategoryFilter
+            categories={blogCategories as unknown as string[]}
+            active={category}
+          />
+        </section>
 
-        {/* Recent Posts */}
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900 mb-6">Aktuelle Artikel</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {recentPosts.map((post) => (
-              <Card key={post.id} className="border-0 shadow-md hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <Badge className="w-fit mb-2">{post.category}</Badge>
-                  <CardTitle className="text-lg">
-                    <Link href={`/blog/${post.id}`} className="hover:text-emerald-600 transition-colors">
-                      {post.title}
-                    </Link>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-slate-600 text-sm mb-4 line-clamp-3">{post.excerpt}</p>
-                  <div className="flex items-center justify-between text-xs text-slate-500">
-                    <span>{post.author}</span>
-                    <Link href={`/blog/${post.id}`}>
-                      <Button variant="ghost" size="sm" className="p-0 h-auto">
-                        Lesen →
-                      </Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+        {/* Posts Grid */}
+        <section>
+          <div className="grid gap-6 sm:grid-cols-2">
+            {filteredPosts
+              .filter((p) => category !== "Alle" || p.slug !== featuredPost.slug)
+              .map((post) => (
+                <PostCard key={post.slug} post={post} />
+              ))}
           </div>
-        </div>
+
+          {filteredPosts.length === 0 && (
+            <div className="py-16 text-center">
+              <p className="text-muted-foreground">
+                Keine Artikel in dieser Kategorie.
+              </p>
+            </div>
+          )}
+        </section>
       </div>
     </div>
   )

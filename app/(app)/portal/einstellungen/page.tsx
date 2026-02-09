@@ -1,56 +1,65 @@
-"use client"
-
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import { User, Shield, CreditCard, Bell, ArrowLeft } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { User, Shield, CreditCard, ArrowLeft } from "lucide-react"
+import Link from "next/link"
+import { createClient } from "@/lib/supabase/server"
+import { redirect } from "next/navigation"
+import { updateProfile, updatePassword } from "./actions"
+import { ProfileForm } from "./profile-form"
+import { PasswordForm } from "./password-form"
 
-export default function EinstellungenPage() {
-  const router = useRouter()
+export default async function EinstellungenPage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    redirect("/login")
+  }
+
+  // Load profile
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", user.id)
+    .single()
+
+  const fullName = profile?.full_name ?? ""
+  const email = user.email ?? ""
 
   return (
-    <div className="min-h-screen bg-muted/30 pb-20">
-      <header className="bg-white border-b py-8 px-6">
+    <div className="bg-background pb-20">
+      <div className="border-b border-border bg-card py-8 px-4 sm:px-6">
         <div className="max-w-4xl mx-auto space-y-4">
-          <Button variant="ghost" size="sm" onClick={() => router.push('/portal')} className="-ml-2">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Zurück zum Portal
+          <Button variant="ghost" size="sm" asChild className="-ml-2">
+            <Link href="/portal">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Zurueck zum Portal
+            </Link>
           </Button>
           <h1 className="text-3xl font-bold tracking-tight">Einstellungen</h1>
-          <p className="text-muted-foreground">Verwalten Sie Ihr Konto, Abonnements und Benachrichtigungen.</p>
+          <p className="text-muted-foreground">Verwalten Sie Ihr Konto und Sicherheitseinstellungen.</p>
         </div>
-      </header>
+      </div>
 
-      <main className="max-w-4xl mx-auto px-6 py-8 space-y-8">
-        {/* Profil Section */}
+      <main className="max-w-4xl mx-auto px-4 py-8 sm:px-6 space-y-8">
+        {/* Profile */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <User className="w-5 h-5 text-primary" />
               Profil-Informationen
             </CardTitle>
-            <CardDescription>Aktualisieren Sie Ihre persönlichen Daten.</CardDescription>
+            <CardDescription>Aktualisieren Sie Ihre persoenlichen Daten.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
-                <Input id="name" defaultValue="Umar" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">E-Mail</Label>
-                <Input id="email" defaultValue="umar@example.de" disabled />
-              </div>
-            </div>
-            <Button>Speichern</Button>
+          <CardContent>
+            <ProfileForm fullName={fullName} email={email} />
           </CardContent>
         </Card>
 
-        {/* Subscription Section */}
+        {/* Subscription */}
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -58,28 +67,26 @@ export default function EinstellungenPage() {
                 <CreditCard className="w-5 h-5 text-primary" />
                 Abonnement
               </CardTitle>
-              <Badge>Pro Plan</Badge>
+              <Badge variant="secondary">Free Plan</Badge>
             </div>
-            <CardDescription>Verwalten Sie Ihre Zahlungen und Pläne.</CardDescription>
+            <CardDescription>Verwalten Sie Ihre Zahlungen und Plaene.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="p-4 rounded-lg bg-primary/5 border border-primary/10">
+            <div className="rounded-lg bg-secondary/50 p-4 border border-border">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-bold">Pro Plan (Jährlich)</p>
-                  <p className="text-sm text-muted-foreground">Nächste Abrechnung: 15.02.2026</p>
+                  <p className="font-bold">Kostenloser Zugang</p>
+                  <p className="text-sm text-muted-foreground">Basis-Funktionen fuer Immobilienanalysen</p>
                 </div>
-                <p className="text-xl font-bold">299 € / Jahr</p>
               </div>
             </div>
-            <div className="flex gap-3">
-              <Button variant="outline">Zahlungsmethode ändern</Button>
-              <Button variant="outline" className="text-destructive hover:text-destructive">Abo kündigen</Button>
-            </div>
+            <Button variant="outline" asChild>
+              <Link href="/analyse">Upgrade auf Pro</Link>
+            </Button>
           </CardContent>
         </Card>
 
-        {/* Security Section */}
+        {/* Security */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -88,22 +95,8 @@ export default function EinstellungenPage() {
             </CardTitle>
             <CardDescription>Passwort und Sicherheitseinstellungen.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="current-pass">Aktuelles Passwort</Label>
-              <Input id="current-pass" type="password" />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="new-pass">Neues Passwort</Label>
-                <Input id="new-pass" type="password" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirm-pass">Passwort bestätigen</Label>
-                <Input id="confirm-pass" type="password" />
-              </div>
-            </div>
-            <Button variant="secondary">Passwort aktualisieren</Button>
+          <CardContent>
+            <PasswordForm />
           </CardContent>
         </Card>
       </main>

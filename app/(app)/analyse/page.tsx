@@ -1,18 +1,17 @@
 "use client"
 
-import { useState, Suspense } from "react"
+import { useState, useMemo, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AnalyseHeader, ChatWizard, ResultsPanel, MapPanel } from "@/components/modules/analyse"
 import { calculateValuation } from "@/lib/calculate-valuation"
 import type { AnalyseFormData, AnalyseResultData } from "@/lib/types"
-import { Loader2 } from "lucide-react"
+import { Loader2, MessageSquare, BarChart3, Map } from "lucide-react"
 
-// Default data for initial display
 const defaultFormData: AnalyseFormData = {
   plz: "40239",
-  stadt: "Düsseldorf",
+  stadt: "Duesseldorf",
   objekttyp: "mfh",
   wohnflaeche: "850",
   grundstueck: "1200",
@@ -34,110 +33,91 @@ const defaultFormData: AnalyseFormData = {
 function AnalysePageContent() {
   const isMobile = useIsMobile()
   const searchParams = useSearchParams()
-  const initialAddress = searchParams.get('address') || "Musterstraße 123, 40239 Düsseldorf"
-  
+  const initialQuery = searchParams.get("q") || ""
+
+  const initialData = useMemo(() => {
+    const data: Record<string, string> = {}
+    const keys = ["plz", "stadt", "objekttyp", "baujahr", "wohnflaeche", "grundstueck", "kaufpreis", "mieteinnahmen", "wohneinheiten", "zustand", "zimmer"]
+    for (const k of keys) {
+      const v = searchParams.get(k)
+      if (v) data[k] = v
+    }
+    return Object.keys(data).length > 0 ? data : undefined
+  }, [searchParams])
+
   const [formData, setFormData] = useState<AnalyseFormData>(defaultFormData)
-  const [address, setAddress] = useState(initialAddress)
+  const [plz, setPlz] = useState(initialData?.plz || "40239")
   const [isCalculating, setIsCalculating] = useState(false)
   const [resultData, setResultData] = useState<AnalyseResultData>(() => calculateValuation(defaultFormData))
   const [bewertungId, setBewertungId] = useState<string | null>(null)
 
-  const handleNewAnalysis = () => {
-    window.location.reload()
+  const address = `${formData.plz || plz} ${formData.stadt || "Deutschland"}`
+
+  const handleDataChange = (data: Partial<AnalyseFormData>) => {
+    setFormData((prev) => ({ ...prev, ...data }))
+    if (data.plz) setPlz(data.plz)
+  }
+
+  const handleCalculate = (data: AnalyseFormData) => {
+    setFormData(data)
+    if (data.plz) setPlz(data.plz)
+    setIsCalculating(true)
+    setTimeout(() => {
+      try { setResultData(calculateValuation(data)) } catch {}
+      setIsCalculating(false)
+    }, 800)
   }
 
   const handleRecalculate = () => {
     setIsCalculating(true)
     setTimeout(() => {
-      setResultData(calculateValuation(formData))
+      try { setResultData(calculateValuation(formData)) } catch {}
       setIsCalculating(false)
     }, 800)
   }
 
-  const handleDataChange = (data: Partial<AnalyseFormData>) => {
-    setFormData((prev) => ({ ...prev, ...data }))
-    if (data.plz && data.stadt) {
-      setAddress(`${data.plz} ${data.stadt}`)
-    }
-  }
-
-  const handleCalculate = (data: AnalyseFormData) => {
-    setFormData(data)
-    setIsCalculating(true)
-    setTimeout(() => {
-      setResultData(calculateValuation(data))
-      setIsCalculating(false)
-    }, 1000)
-  }
-
-  const handleSaved = (id: string) => {
-    setBewertungId(id)
-  }
-
-  // Mobile Layout
+  /* ---- MOBILE ---- */
   if (isMobile) {
     return (
-      <div className="flex flex-col h-screen bg-background">
-        <AnalyseHeader 
-          address={address} 
-          onNewAnalysis={handleNewAnalysis} 
-          resultData={resultData} 
-          formData={formData}
-          bewertungId={bewertungId}
-          onSaved={handleSaved}
-        />
-        <Tabs defaultValue="chat" className="flex-1 flex flex-col">
-          <TabsList className="w-full grid grid-cols-3 bg-card border-b border-border rounded-none h-12">
-            <TabsTrigger value="chat" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
-              Chat
-            </TabsTrigger>
-            <TabsTrigger value="map" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
-              Karte
-            </TabsTrigger>
-            <TabsTrigger value="results" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
-              Ergebnisse
-            </TabsTrigger>
+      <div className="fixed inset-0 z-40 flex flex-col bg-background">
+        <AnalyseHeader address={address} onNewAnalysis={() => window.location.reload()} resultData={resultData} formData={formData} bewertungId={bewertungId} onSaved={(id) => setBewertungId(id)} />
+        <Tabs defaultValue="chat" className="flex-1 flex flex-col overflow-hidden">
+          <TabsList className="w-full grid grid-cols-3 bg-card border-b border-border rounded-none h-11 shrink-0">
+            <TabsTrigger value="chat" className="gap-1.5 text-xs"><MessageSquare className="h-3.5 w-3.5" />Chat</TabsTrigger>
+            <TabsTrigger value="results" className="gap-1.5 text-xs"><BarChart3 className="h-3.5 w-3.5" />Ergebnisse</TabsTrigger>
+            <TabsTrigger value="map" className="gap-1.5 text-xs"><Map className="h-3.5 w-3.5" />Karte</TabsTrigger>
           </TabsList>
-          <TabsContent value="chat" className="flex-1 m-0 overflow-hidden">
-            <ChatWizard onDataChange={handleDataChange} onCalculate={handleCalculate} />
-          </TabsContent>
-          <TabsContent value="map" className="flex-1 m-0 overflow-hidden">
-            <MapPanel address={address} />
-          </TabsContent>
-          <TabsContent value="results" className="flex-1 m-0 overflow-hidden">
-            <ResultsPanel data={resultData} formData={formData} onRecalculate={handleRecalculate} isCalculating={isCalculating} />
-          </TabsContent>
+          <TabsContent value="chat" className="flex-1 m-0 overflow-hidden"><ChatWizard onDataChange={handleDataChange} onCalculate={handleCalculate} initialQuery={initialQuery} initialData={initialData} /></TabsContent>
+          <TabsContent value="results" className="flex-1 m-0 overflow-auto"><ResultsPanel data={resultData} formData={formData} onRecalculate={handleRecalculate} isCalculating={isCalculating} /></TabsContent>
+          <TabsContent value="map" className="flex-1 m-0 overflow-hidden"><MapPanel address={address} /></TabsContent>
         </Tabs>
       </div>
     )
   }
 
-  // Desktop Layout
+  /* ---- DESKTOP: Chat links (schmal), Ergebnisse + Karte rechts (gross) ---- */
   return (
-    <div className="flex flex-col h-screen bg-background">
-      <AnalyseHeader 
-        address={address} 
-        onNewAnalysis={handleNewAnalysis} 
-        resultData={resultData} 
-        formData={formData}
-        bewertungId={bewertungId}
-        onSaved={handleSaved}
-      />
+    <div className="fixed inset-0 z-40 flex flex-col bg-background">
+      <AnalyseHeader address={address} onNewAnalysis={() => window.location.reload()} resultData={resultData} formData={formData} bewertungId={bewertungId} onSaved={(id) => setBewertungId(id)} />
       <div className="flex-1 flex overflow-hidden">
-        {/* Left Panel - Results */}
-        <aside className="w-[28%] min-w-[320px] max-w-[400px] border-r border-border bg-card/50">
-          <ResultsPanel data={resultData} formData={formData} onRecalculate={handleRecalculate} isCalculating={isCalculating} />
+
+        {/* Links: Chat (schmaler Bereich, 420px) */}
+        <aside className="w-[420px] shrink-0 flex flex-col border-r border-border bg-background overflow-hidden">
+          <ChatWizard onDataChange={handleDataChange} onCalculate={handleCalculate} initialQuery={initialQuery} initialData={initialData} />
         </aside>
 
-        {/* Center Panel - Chat */}
-        <main className="flex-1 min-w-[400px] bg-background">
-          <ChatWizard onDataChange={handleDataChange} onCalculate={handleCalculate} />
+        {/* Rechts: Ergebnisse + Karte (grosser Bereich, Rest) */}
+        <main className="flex-1 flex flex-col overflow-hidden">
+          {/* Oben: Ergebnisse (scrollbar, nimmt Grossteil ein) */}
+          <div className="flex-1 overflow-y-auto bg-muted/30">
+            <ResultsPanel data={resultData} formData={formData} onRecalculate={handleRecalculate} isCalculating={isCalculating} />
+          </div>
+          {/* Unten: Karte (fixe Hoehe) */}
+          <div className="h-[220px] shrink-0 border-t border-border">
+            <MapPanel address={address} />
+          </div>
         </main>
 
-        {/* Right Panel - Map */}
-        <aside className="w-[28%] min-w-[300px] max-w-[400px] border-l border-border bg-card/50">
-          <MapPanel address={address} />
-        </aside>
       </div>
     </div>
   )
@@ -145,11 +125,7 @@ function AnalysePageContent() {
 
 export default function AnalysePage() {
   return (
-    <Suspense fallback={
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    }>
+    <Suspense fallback={<div className="flex h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>}>
       <AnalysePageContent />
     </Suspense>
   )

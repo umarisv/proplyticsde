@@ -92,11 +92,26 @@ export interface RiskAnalysisResult {
 }
 
 /**
- * Box-Muller Transform für normalverteilte Zufallszahlen
+ * Seeded PRNG (Mulberry32) for deterministic results across server/client
+ */
+function createSeededRandom(seed: number) {
+  return function () {
+    seed |= 0
+    seed = (seed + 0x6d2b79f5) | 0
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed)
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+}
+
+let seededRandom: () => number = createSeededRandom(42)
+
+/**
+ * Box-Muller Transform für normalverteilte Zufallszahlen (deterministisch)
  */
 function randomNormal(mean: number, stdDev: number): number {
-  const u1 = Math.random()
-  const u2 = Math.random()
+  const u1 = seededRandom()
+  const u2 = seededRandom()
   const z0 = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2)
   return z0 * stdDev + mean
 }
@@ -142,6 +157,9 @@ function runMonteCarloSimulation(
   volatility: number,
   iterations: number = 10000
 ): number[] {
+  // Reset seed for deterministic results (prevents hydration mismatch)
+  seededRandom = createSeededRandom(Math.round(baseValue) ^ (Math.round(volatility * 10000)))
+  
   const results: number[] = []
   
   for (let i = 0; i < iterations; i++) {

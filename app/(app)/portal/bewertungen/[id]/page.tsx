@@ -46,12 +46,12 @@ export default function BewertungPortalPage({ params }: { params: Promise<{ id: 
   if (!formData || !resultData) return <ErrorState title="Fehler" message="Daten konnten nicht geladen werden" />
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <div className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur px-6 h-14 flex items-center justify-between">
+    <div className="bg-background">
+      <div className="sticky top-0 z-40 w-full border-b border-border bg-card/95 backdrop-blur px-4 sm:px-6 h-14 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="sm" onClick={() => router.back()}>
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Zurück
+            Zurueck
           </Button>
           <div className="h-4 w-px bg-border hidden sm:block" />
           <span className="text-sm font-medium hidden sm:block truncate max-w-[300px]">
@@ -60,15 +60,15 @@ export default function BewertungPortalPage({ params }: { params: Promise<{ id: 
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" asChild>
-            <Link href="https://dashboard.proplytics.de">
+            <Link href="/portal">
               <LayoutDashboard className="w-4 h-4 mr-2" />
-              Dashboard
+              Portal
             </Link>
           </Button>
         </div>
       </div>
 
-      <main className="container py-8">
+      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
         <BankMappe 
           data={resultData} 
           formData={formData} 
