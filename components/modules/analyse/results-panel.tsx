@@ -273,8 +273,6 @@ export function ResultsPanel({ data, formData, onRecalculate, isCalculating }: R
     )
   }
 
-  console.log("[v0] ResultsPanel render, marktwert:", data.marktwert, "min:", data.marktwertMin, "max:", data.marktwertMax, "investmentScore:", !!data.investmentScore)
-
   return (
     <div className="flex flex-col gap-4 p-4 h-full overflow-y-auto custom-scrollbar">
 
