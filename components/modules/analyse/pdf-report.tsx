@@ -792,39 +792,31 @@ function generateImagePages(uploadedFiles: UploadedFile[], resultData: AnalyseRe
   return imagePageHtml
 }
 
- export function downloadPDF(htmlContent: string, filename: string) {
-  // Use an iframe instead of window.open to avoid popup blockers
-  const iframe = document.createElement("iframe")
-  iframe.style.position = "fixed"
-  iframe.style.right = "0"
-  iframe.style.bottom = "0"
-  iframe.style.width = "0"
-  iframe.style.height = "0"
-  iframe.style.border = "none"
-  document.body.appendChild(iframe)
+export function downloadPDF(htmlContent: string, _filename: string) {
+  // Create a blob URL and open in a new tab, then trigger print
+  const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" })
+  const url = URL.createObjectURL(blob)
 
-  const doc = iframe.contentDocument || iframe.contentWindow?.document
-  if (doc) {
-    doc.open()
-    doc.write(htmlContent)
-    doc.close()
+  // Open the HTML in a new tab
+  const win = window.open(url, "_blank")
 
-    // Wait for content to render then trigger print
-    setTimeout(() => {
-      try {
-        iframe.contentWindow?.focus()
-        iframe.contentWindow?.print()
-      } catch (e) {
-        // Fallback: open in new tab if iframe print fails
-        const blob = new Blob([htmlContent], { type: "text/html" })
-        const url = URL.createObjectURL(blob)
-        window.open(url, "_blank")
-        setTimeout(() => URL.revokeObjectURL(url), 10000)
-      }
-      // Clean up iframe after a delay
+  if (win) {
+    // Once the page loads, trigger print dialog
+    win.addEventListener("load", () => {
       setTimeout(() => {
-        document.body.removeChild(iframe)
-      }, 5000)
-    }, 500)
+        win.print()
+      }, 300)
+    })
+    // Revoke the blob URL after a delay
+    setTimeout(() => URL.revokeObjectURL(url), 60000)
+  } else {
+    // If popup is blocked, fall back to direct download as HTML file
+    const a = document.createElement("a")
+    a.href = url
+    a.download = _filename.replace(".pdf", ".html")
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    setTimeout(() => URL.revokeObjectURL(url), 10000)
   }
 }
